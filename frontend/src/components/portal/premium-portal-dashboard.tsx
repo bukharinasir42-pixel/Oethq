@@ -15,7 +15,7 @@ import { cohortApi, type CohortMe, type CohortDay } from "@/lib/cohort-api";
 import { apiFetch } from "@/lib/api";
 import { isDayPracticeComplete } from "@/lib/portal-utils";
 import { SkillUpgradeModal } from "@/components/portal/skill-upgrade-modal";
-import { moduleUnlockedForTier, type ModuleKey } from "@/lib/portal-tier-access";
+import { moduleUnlockedForTier, moduleUnlockedForTrial, type ModuleKey } from "@/lib/portal-tier-access";
 import type { SkillAccess } from "@/lib/products-api";
 import type { SkillKey } from "@/hooks/use-ownership";
 import type { DashboardDto, TaskItem } from "@/lib/types";
@@ -59,24 +59,33 @@ type Props = {
   ownedSkills?: string[];
   /** Per-skill effective tier access (drives tier-level tile locking). */
   skillAccess?: Record<string, SkillAccess>;
-  /** Complete Course / free-trial: every skill's tiles are unlocked. */
+  /** Complete Course: every skill's tiles are unlocked. */
   fullAccess?: boolean;
+  /** Free trial (STARTER): only the modules the Tier 0 card advertises are open. */
+  isFreeTrial?: boolean;
   /** Pass Predictor unlocked (Precision+ or Complete). Hides the meter when false. */
   passPredictor?: boolean;
   /** True remaining access days (course entitlement OR subscription, whichever is longer). */
   accessDaysLeft?: number | null;
 };
 
-export function PremiumPortalDashboard({ profileName, dashboard, tasks, completedTestIds, ownedSkills = [], skillAccess = {}, fullAccess = true, passPredictor = true, accessDaysLeft = null }: Props) {
+export function PremiumPortalDashboard({ profileName, dashboard, tasks, completedTestIds, ownedSkills = [], skillAccess = {}, fullAccess = true, isFreeTrial: isFreeTrialProp = false, passPredictor = true, accessDaysLeft = null }: Props) {
+  // Prefer the caller's value (from the subscription hook, authoritative even
+  // before the dashboard payload lands); fall back to the dashboard's own plan.
+  const isFreeTrial = isFreeTrialProp || dashboard?.subscription?.plan?.tier === "STARTER";
   const [lockedSkill, setLockedSkill] = useState<SkillKey | null>(null);
   // A tile is locked when the skill isn't owned, OR it is owned but the student's
   // tier doesn't unlock that module (e.g. cheat sheets below Precision).
   const tileLocked = useCallback((s: SkillKey, module?: ModuleKey) => {
+    // The trial has no entitlements, so tier rank says nothing about it: gate on
+    // the advertised trial module list instead of showing everything as open and
+    // letting the student hit a 403.
+    if (isFreeTrial) return module ? !moduleUnlockedForTrial(module) : false;
     if (fullAccess) return false;
     if (!ownedSkills.includes(s)) return true;
     if (module && !moduleUnlockedForTier(skillAccess[s], module)) return true;
     return false;
-  }, [fullAccess, ownedSkills, skillAccess]);
+  }, [fullAccess, isFreeTrial, ownedSkills, skillAccess]);
   const firstOwned = (ownedSkills[0] as SkillKey | undefined) ?? "READING";
   const [cohort, setCohort] = useState<CohortMe | null>(null);
   const [today, setToday] = useState<(Partial<CohortDay> & { state?: string }) | null>(null);
@@ -100,7 +109,6 @@ export function PremiumPortalDashboard({ profileName, dashboard, tasks, complete
   const accessEnd = daysLeft != null ? new Date(now + daysLeft * DAY_MS) : subEnd;
   const runwayPct = daysLeft != null ? Math.max(4, Math.min(100, Math.round((daysLeft / Math.max(totalDays, daysLeft)) * 100))) : 0;
 
-  const isFreeTrial = dashboard?.subscription?.plan?.tier === "STARTER";
   const passProb = Math.round(dashboard?.summary?.passProbability ?? 0);
   const bandIdx = NASIR.reduce((acc, b, i) => (passProb >= b.floor ? i : acc), 0);
   const bandName = (dashboard?.summary?.nasirBand ?? NASIR[bandIdx].name).toString().replace(/_/g, " ").toUpperCase();

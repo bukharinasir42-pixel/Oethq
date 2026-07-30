@@ -118,6 +118,10 @@ export function usePortalPlanAccess() {
   // trial preview). Standalone-only buyers (no active subscription) DON'T get it,
   // so cohort + study plan lock for them. See standalone-vs-complete-portal-scope.
   const completeExperienceAccess = Boolean(subscriptionAccessGranted);
+  // On the free trial (STARTER) rather than a paid plan. The trial previews the
+  // cohort + study plan but only a named subset of modules, so callers must not
+  // treat it as full access — see moduleUnlockedForTrial.
+  const isFreeTrial = Boolean(subscriptionAccessGranted) && planTier === "STARTER";
   // Owns the paid Complete Course specifically (not just a free-trial preview).
   const hasCompleteCourse =
     (Boolean(subscriptionAccessGranted) && planTier !== null && planTier !== "STARTER") ||
@@ -152,6 +156,7 @@ export function usePortalPlanAccess() {
     accessDaysLeft,
     completeExperienceAccess,
     hasCompleteCourse,
+    isFreeTrial,
     loading,
     loaded
   };

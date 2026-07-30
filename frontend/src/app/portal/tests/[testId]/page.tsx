@@ -22,6 +22,16 @@ type SubscriptionStatusDto = {
 
 type ExamGate = "loading" | "reading-intro" | "pretest" | "runner";
 
+/**
+ * The pre-OET relational exam engine (`components/exam/*` + `TestRunner`) is
+ * retired. It scores from the `Question` table rather than `Test.contentJson`,
+ * so for every current test it yields 0 / CRITICAL and cannot show an answer key.
+ * It stays behind this flag only as an escape hatch for legacy tests that still
+ * carry relational questions; leave it off unless you have verified such a test
+ * exists. Set NEXT_PUBLIC_LEGACY_EXAM_ENGINE=1 to re-enable.
+ */
+const LEGACY_EXAM_ENGINE_ENABLED = process.env.NEXT_PUBLIC_LEGACY_EXAM_ENGINE === "1";
+
 export default function PortalTestPage() {
   const params = useParams<{ testId: string }>();
   const { token, profile, status, error, refresh, logout } = useSession();
@@ -34,6 +44,7 @@ export default function PortalTestPage() {
   // Imported (contentJson) OET tests take over with their own exact-match engine.
   const [oetPlayable, setOetPlayable] = useState<OetPlayable | null>(null);
   const [oetChecked, setOetChecked] = useState(false);
+  const [oetError, setOetError] = useState<string | null>(null);
 
   const testId = params.testId;
   const isExamMode = examGate === "reading-intro" || examGate === "pretest" || examGate === "runner";
@@ -105,13 +116,18 @@ export default function PortalTestPage() {
   }, []);
 
   // Detect an imported OET test — if so, hand off to the exact-match engine.
+  // The failure reason is kept: it is the difference between "not in your plan",
+  // "not published yet" and "never imported", and the student must be told which.
   useEffect(() => {
     if (!token || !profile) return;
     let cancelled = false;
     oetTestsApi
       .play(testId)
-      .then((p) => { if (!cancelled) setOetPlayable(p); })
-      .catch(() => {})
+      .then((p) => { if (!cancelled) { setOetPlayable(p); setOetError(null); } })
+      .catch((caughtError: unknown) => {
+        if (cancelled) return;
+        setOetError(caughtError instanceof Error ? caughtError.message : "This test could not be loaded.");
+      })
       .finally(() => { if (!cancelled) setOetChecked(true); });
     return () => { cancelled = true; };
   }, [token, profile, testId]);
@@ -138,6 +154,30 @@ export default function PortalTestPage() {
 
   if (oetPlayable) {
     return <OetExamRunner testId={testId} playable={oetPlayable} />;
+  }
+
+  // No imported (contentJson) test could be loaded.
+  //
+  // Below this point sits the legacy relational engine, which scores against the
+  // `Question` table. No current test populates that table (it is placeholder-only
+  // and is excluded from the content export), so the legacy engine returns a
+  // 0 / CRITICAL / 8% result with no answer key. Falling through to it silently
+  // turned every access or lookup failure into a bogus score, so it is now opt-in
+  // only. Surface the real reason instead.
+  if (!LEGACY_EXAM_ENGINE_ENABLED) {
+    return (
+      <WorkspaceAccessDeniedState
+        title="This test can't be opened"
+        description={
+          oetError
+            ? `${oetError} If you believe this is wrong, contact support — do not record this as an attempt.`
+            : "This test has not been imported into the OET exam engine yet, so it cannot be scored. Contact support."
+        }
+        actionHref="/portal/tasks"
+        actionLabel="Back to Task Management"
+        onRetry={refresh}
+      />
+    );
   }
 
   return (

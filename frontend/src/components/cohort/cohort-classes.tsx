@@ -801,7 +801,7 @@ export function CohortClasses({ variant = "page" }: { variant?: "page" | "dashbo
                         </button>
                       ) : (
                         <a
-                          href={`/test?testId=${encodeURIComponent(t.testId)}`}
+                          href={`/portal/tests/${encodeURIComponent(t.testId)}`}
                           className="shrink-0 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-800"
                         >
                           {t.action}

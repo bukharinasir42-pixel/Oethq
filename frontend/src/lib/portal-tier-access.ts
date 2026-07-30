@@ -48,3 +48,22 @@ export function moduleUnlockedForTier(access: SkillAccess | null | undefined, mo
 export function moduleMinTier(skill: string, module: ModuleKey): number | null {
   return MIN_TIER[skill]?.[module] ?? null;
 }
+
+/**
+ * Modules the free trial (STARTER) previews, per the Tier 0 card on the Complete
+ * Course page: one lecture, one Reading + one Listening mock, one day of live
+ * spelling, one podcast episode — and explicitly "No past papers, cheat sheets,
+ * live drills or Pass Predictor".
+ *
+ * A trial holds no entitlements, so tier rank cannot express this; without an
+ * explicit list the dashboard rendered every tile as open and the student hit a
+ * 403 on click.
+ */
+const TRIAL_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
+  "lectures", "tests", "spellings", "part-c-podcasts"
+]);
+
+/** Does the free trial preview `module`? */
+export function moduleUnlockedForTrial(module: ModuleKey): boolean {
+  return TRIAL_MODULES.has(module);
+}
