@@ -85,6 +85,7 @@
 .oet-reading .subbar{min-height:52px;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:6px 26px;position:sticky;top:70px;z-index:30;gap:12px;flex-wrap:wrap}
 .oet-reading .subbar .part{display:flex;align-items:center;gap:14px}
 .oet-reading .subbar .badge{background:var(--navy);color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;padding:5px 12px;border-radius:7px}
+.oet-reading .subbar-note{font-size:12.5px;color:var(--muted);font-weight:600}
 .oet-reading .subbar .txt-title{font-weight:700;color:var(--ink);font-size:15px}
 .oet-reading .subbar .txt-title span{color:var(--muted-2);font-weight:600}
 .oet-reading .tabs{display:flex;gap:6px}
@@ -298,9 +299,36 @@
 .oet-reading .result-footer b{color:var(--muted)}
 
 @media (max-width:960px){
-  .oet-reading .body-split{grid-template-columns:1fr}
-  .oet-reading .pane{max-height:none;overflow:visible}
-  .oet-reading .pane-text{border-right:none;border-bottom:2px solid var(--line)}
+  /* Two stacked panes, each scrolling on its own — the passage on top, the
+     questions underneath. Previously these collapsed into one long page
+     (`max-height:none;overflow:visible`), so the passage pushed the questions
+     off-screen and the student scrolled the whole paper end to end.
+
+     The shell becomes a fixed-height flex column so the split owns the leftover
+     space instead of the page growing. `dvh` tracks the mobile browser's
+     collapsing URL bar; the `vh` line above it is the fallback. */
+  .oet-reading #app{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+  /* `.screen` sits between #app and the split, so it has to carry the column
+     too — otherwise the panes size to their content and push the footer off. */
+  .oet-reading .screen.active{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+  .oet-reading .topbar,
+  .oet-reading .subbar,
+  .oet-reading .footerbar{position:static;flex:0 0 auto}
+
+  .oet-reading .body-split{
+    grid-template-columns:1fr;
+    /* Passage / questions. Tunable in one place. */
+    grid-template-rows:var(--pane-split,46%) 1fr;
+    flex:1 1 auto;min-height:0;height:auto;
+  }
+  /* min-height:0 is what actually lets a grid/flex child scroll instead of
+     stretching to fit its content. */
+  .oet-reading .pane{min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .oet-reading .pane-text{border-right:none;border-bottom:2px solid var(--line-strong)}
+  .oet-reading .body-single{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* Tighter type and padding so each pane shows real content, not chrome. */
+  .oet-reading .passage{padding:18px 18px 28px}
+  .oet-reading .qwrap{padding:16px 16px 28px}
   .oet-reading .parts-grid{grid-template-columns:1fr}
   .oet-reading .part-card.together{grid-column:span 1}
   .oet-reading .part-card.together .inner2{grid-template-columns:1fr}
@@ -314,13 +342,40 @@
 }
 @media (max-width:640px){
   .oet-reading .pa-table-wrap{overflow-x:auto}.oet-reading .pa-table{min-width:520px}
-  .oet-reading .topbar{padding:0 14px;height:62px;flex-basis:62px}
-  .oet-reading .brand .titles .t{font-size:15px}
+  /* Chrome is kept deliberately short here: every pixel spent on the header and
+     sub-bar is taken straight out of the two scrolling panes below. */
+  .oet-reading .topbar{padding:0 12px;height:52px;flex-basis:52px;gap:10px}
+  /* The title must be the thing that shrinks, or it slides under the timer —
+     min-width:0 on every flex ancestor is what allows the ellipsis to kick in. */
+  .oet-reading .brand{gap:9px;flex:1 1 auto;min-width:0}
+  .oet-reading .brand .titles{min-width:0}
+  .oet-reading .tb-right{flex:0 0 auto;gap:10px}
+  .oet-reading .brand .logo-chip{padding:5px 8px}
+  .oet-reading .brand .titles .k{font-size:9.5px}
+  .oet-reading .brand .titles .t{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .oet-reading .brand .sep{display:none}
   .oet-reading .stagepill{display:none}
-  .oet-reading .timer{padding:7px 12px}.oet-reading .timer .tv{font-size:17px}
-  .oet-reading .subbar{padding:8px 14px;top:62px}
-  .oet-reading .passage{padding:24px 20px 44px}.oet-reading .passage h1{font-size:24px}
-  .oet-reading .qwrap{padding:22px 16px 44px}.oet-reading .pb-wrap{padding:22px 16px 44px}
+  .oet-reading .timer{padding:5px 10px}.oet-reading .timer .tv{font-size:15px}
+  /* One line only — the note is repeated in the question header below. */
+  .oet-reading .subbar{padding:6px 12px;top:52px;min-height:40px;flex-wrap:nowrap;gap:8px}
+  .oet-reading .subbar-note{display:none}
+  .oet-reading .subbar .part{min-width:0}
+  .oet-reading .subbar .txt-title{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .oet-reading .subbar .badge{font-size:9.5px;padding:4px 7px;white-space:nowrap}
+  /* Parts B & C: the text tabs scroll sideways rather than wrapping the sub-bar
+     onto a second row and stealing height from the panes. */
+  .oet-reading .tabs{flex:0 1 auto;overflow-x:auto;max-width:52%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .oet-reading .tabs::-webkit-scrollbar{display:none}
+  .oet-reading .tab{padding:5px 9px;font-size:12px;white-space:nowrap}
+  .oet-reading .footerbar{height:56px;flex-basis:56px}
+  .oet-reading .tally{font-size:12.5px}
+  /* Padding stays tight here: inside a scrolling pane the old 44px tail just
+     pushed content out of a viewport that is already short. */
+  .oet-reading .passage{padding:16px 16px 26px}.oet-reading .passage h1{font-size:20px;margin-bottom:8px}
+  .oet-reading .qwrap{padding:14px 14px 26px}.oet-reading .pb-wrap{padding:16px 14px 26px}
+  .oet-reading .qwrap .qhead{margin-bottom:14px}
+  .oet-reading .qwrap .qhead .t{font-size:18px}
+  .oet-reading .qwrap .qhead .d{font-size:12px}
   .oet-reading .cover-head, .oet-reading .cover-body{padding-left:22px;padding-right:22px}
   .oet-reading .cover-head h1{font-size:24px}
   .oet-reading .footerbar{padding:0 14px}

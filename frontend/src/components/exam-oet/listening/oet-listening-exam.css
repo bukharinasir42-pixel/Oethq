@@ -383,12 +383,21 @@
   }
 
   @media (max-width:640px){
-    .oet-listening .extract-card{padding:24px 20px}
-    .oet-listening .mcq{padding:20px 18px}
+    /* Phones: the paper is what matters, so the surrounding chrome and card
+       padding shrink and the question text gets the room instead. */
+    .oet-listening #exambar .inner{padding:8px 14px;gap:12px}
+    .oet-listening .bar-timer{font-size:15px;padding:5px 10px}
+    .oet-listening .bar-progress .label{font-size:10px}
+    .oet-listening .container{padding:0 14px}
+    .oet-listening #test{padding:20px 0 48px}
+    .oet-listening .part-head{margin:30px 0 8px}
+    .oet-listening .part-title{font-size:24px}
+    .oet-listening .extract-card{padding:18px 15px}
+    .oet-listening .mcq{padding:16px 14px}
     .oet-listening .opts{margin-left:0}
     .oet-listening .res-grid{grid-template-columns:1fr}
     .oet-listening input.gap{width:100%;max-width:100%;margin-top:4px}
-
+    .oet-listening .stepnav{margin-top:20px;padding:10px 0 12px;gap:10px}
   }
   @media (prefers-reduced-motion:reduce){
     .oet-listening *{animation:none!important;transition:none!important}

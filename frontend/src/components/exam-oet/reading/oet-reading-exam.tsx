@@ -597,9 +597,10 @@ export function OetReadingExam({
                 {content.partA.topic} <span>&middot;</span> Texts A&ndash;D
               </span>
             </div>
-            <div style={{ fontSize: "12.5px", color: "var(--muted)", fontWeight: 600 }}>
-              Answers must come only from Texts A&ndash;D
-            </div>
+            {/* Hidden on phones (see .subbar-note in the stylesheet): the same
+                instruction is repeated in the question pane's header, and on a
+                narrow screen it wrapped the sub-bar onto a third line. */}
+            <div className="subbar-note">Answers must come only from Texts A&ndash;D</div>
           </div>
           <div className="body-split">
             <HighlightablePassage html={partAHtml} paneId="paneAText" paneClassName="pane pane-text" />
