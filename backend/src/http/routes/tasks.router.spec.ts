@@ -59,10 +59,10 @@ function container(prisma: PrismaStub): AppContainer {
   } as unknown as AppContainer;
 }
 
-function request(slot = "lecture") {
+function request(slot = "lecture", dayNumber = "1") {
   return {
     query: { slot },
-    params: { dayNumber: "1" },
+    params: { dayNumber },
     user: { id: "user-123", role: Role.CANDIDATE }
   } as unknown as Request;
 }
@@ -129,17 +129,31 @@ describe("GET /tasks/:dayNumber/embed", () => {
     expect(res.json).toHaveBeenCalledWith({ error: "No video for this lesson" });
   });
 
-  it("returns 403 when a starter user requests a locked core skills embed", async () => {
+  // The free trial includes the Day-1 core-skills item (one Reading Part A skill
+  // drill), so Day 1 is allowed and Day 2 onwards is not. This previously asserted
+  // 403 on Day 1 and had been failing on main.
+  it("returns 403 when a starter user requests a core skills embed beyond day one", async () => {
     prisma.subscription.findMany.mockResolvedValue([activeSubscription()]);
     pickEffectiveSubscriptionForAccessMock.mockReturnValue(activeSubscription());
     prisma.dailyTask.findUnique.mockResolvedValue({ lectureBunnyVideoId: null, articleBunnyVideoId: "coreskill-video" });
     const res = response();
 
-    await getTaskEmbed(container(prisma), request("coreskill"), res as unknown as Response);
+    await getTaskEmbed(container(prisma), request("coreskill", "2"), res as unknown as Response);
 
     expect(res.statusCode).toBe(403);
     expect(res.json).toHaveBeenCalledWith({ error: "Core skills video not included in your plan" });
     expect(prisma.dailyTask.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("allows a starter user the day-one core skills embed", async () => {
+    prisma.subscription.findMany.mockResolvedValue([activeSubscription()]);
+    pickEffectiveSubscriptionForAccessMock.mockReturnValue(activeSubscription());
+    prisma.dailyTask.findUnique.mockResolvedValue({ lectureBunnyVideoId: null, articleBunnyVideoId: "coreskill-video" });
+    const res = response();
+
+    await getTaskEmbed(container(prisma), request("coreskill", "1"), res as unknown as Response);
+
+    expect(res.statusCode).not.toBe(403);
   });
 
   it("returns a private, no-store signed Bunny embed URL for an entitled user", async () => {

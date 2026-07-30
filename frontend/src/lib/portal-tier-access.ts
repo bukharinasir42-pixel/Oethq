@@ -60,8 +60,14 @@ export function moduleMinTier(skill: string, module: ModuleKey): number | null {
  * 403 on click.
  */
 const TRIAL_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
-  "lectures", "tests", "spellings", "part-c-podcasts"
+  "lectures",         // 1 cohort lecture
+  "tests",            // 1 Reading + 1 Listening mock (resolveTrialAccess picks exactly one each)
+  "spellings",        // 1 day of live spelling
+  "part-c-podcasts",  // 1 podcast episode
+  "part-a-core"       // 1 Reading Part A skill drill
 ]);
+// Deliberately NOT in the trial: cheat-sheets, past-papers, part-bc-core
+// (Part B/C articles) and writing. Anything absent here stays locked.
 
 /** Does the free trial preview `module`? */
 export function moduleUnlockedForTrial(module: ModuleKey): boolean {

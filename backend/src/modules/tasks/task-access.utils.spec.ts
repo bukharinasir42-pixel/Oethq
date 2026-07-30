@@ -25,7 +25,7 @@ describe("task access utils", () => {
     });
   });
 
-  it("unlocks day one lecture and reading test for starter but keeps core skills video and article text locked", () => {
+  it("unlocks the free trial Day-1 items (lecture, both mocks, skill drill) and keeps articles, cheat sheets and past papers locked", () => {
     const day1Starter = buildTaskLocks({
       planTier: PlanTier.STARTER,
       dayIndex: 1,
@@ -39,15 +39,12 @@ describe("task access utils", () => {
 
     expect(day1Starter.lectureLocked).toBe(false);
     expect(day1Starter.readingLocked).toBe(false);
-    // NOTE (pre-existing failure, unchanged by the plan-limit work): buildTaskLocks
-    // currently unlocks BOTH the Day-1 listening mock and the Day-1 core-skills
-    // item for a trial user, so these two expectations fail on main. The Tier 0
-    // card advertises a Listening mock (so `listeningLocked: false` looks correct)
-    // but also says "no live drills" (so core skills is genuinely ambiguous).
-    // Left as-is deliberately: settling it changes what the free trial includes,
-    // which is a product decision, not a refactor.
-    expect(day1Starter.listeningLocked).toBe(true);
-    expect(day1Starter.coreSkillsLocked).toBe(true);
+    // The free trial includes, on Day 1 only: 1 lecture, 1 Reading mock,
+    // 1 Listening mock, 1 day of spelling, 1 podcast and 1 Reading Part A skill
+    // drill (the "core skills" item). Cheat sheets, Part B/C articles and past
+    // papers stay locked. These two expectations predated that and were failing.
+    expect(day1Starter.listeningLocked).toBe(false);
+    expect(day1Starter.coreSkillsLocked).toBe(false);
     expect(day1Starter.articleLocked).toBe(true);
     expect(day1Starter.cheatSheetLocked).toBe(true);
   });
