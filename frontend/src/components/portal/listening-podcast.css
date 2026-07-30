@@ -1,0 +1,89 @@
+/* Premium podcast-of-the-day player for the Listening Part C surface. */
+
+.oethq-portal .pod-hero {
+  background: linear-gradient(135deg, #0D2A5E 0%, #123B77 55%, #0B63B0 120%);
+  border-radius: 20px; padding: 26px 28px; color: #fff; margin-bottom: 20px;
+  box-shadow: 0 18px 46px rgba(11, 42, 94, .28); position: relative; overflow: hidden;
+}
+.oethq-portal .pod-hero::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(520px 240px at 88% -12%, rgba(56, 189, 248, .28), transparent 60%);
+  pointer-events: none;
+}
+.oethq-portal .pod-hero-top { display: flex; align-items: center; gap: 15px; position: relative; }
+.oethq-portal .pod-ico {
+  flex: 0 0 auto; width: 52px; height: 52px; border-radius: 15px;
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .2);
+  display: flex; align-items: center; justify-content: center;
+}
+.oethq-portal .pod-ico svg { width: 26px; height: 26px; fill: none; stroke: #9FD4FF; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oethq-portal .pod-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #8FC4F2; }
+.oethq-portal .pod-hero-head h2 { margin: 3px 0 0; font-size: 23px; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.15; }
+.oethq-portal .pod-desc { position: relative; margin: 14px 0 0; font-size: 14px; line-height: 1.6; color: #CFE2F7; max-width: 640px; }
+
+/* player */
+.oethq-portal .pod-player { position: relative; display: flex; align-items: center; gap: 16px; margin-top: 20px; }
+.oethq-portal .pod-play {
+  flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #38BDF8, #0B8FE0); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 22px rgba(11, 143, 224, .5); transition: transform .12s ease, filter .12s ease;
+}
+.oethq-portal .pod-play:hover { transform: scale(1.05); filter: brightness(1.05); }
+.oethq-portal .pod-play svg { width: 24px; height: 24px; }
+.oethq-portal .pod-main { flex: 1; min-width: 0; }
+
+.oethq-portal .pod-scrub input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 99px; cursor: pointer;
+  background: linear-gradient(90deg, #8FC4F2 var(--pct, 0%), rgba(255, 255, 255, .18) var(--pct, 0%));
+}
+.oethq-portal .pod-scrub input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: #fff; border: 3px solid #38BDF8; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); margin-top: -1px;
+}
+.oethq-portal .pod-scrub input[type="range"]::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 3px solid #38BDF8; box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+}
+.oethq-portal .pod-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 9px; }
+.oethq-portal .pod-time { font-size: 13px; font-weight: 600; color: #CFE2F7; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.oethq-portal .pod-time span { color: #8FA9CA; }
+.oethq-portal .pod-btns { display: flex; align-items: center; gap: 8px; }
+.oethq-portal .pod-skip, .oethq-portal .pod-rate {
+  font-size: 12px; font-weight: 700; color: #EAF3FC; background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .18); border-radius: 8px; padding: 5px 10px; cursor: pointer; white-space: nowrap;
+  transition: background .12s ease;
+}
+.oethq-portal .pod-skip:hover, .oethq-portal .pod-rate:hover { background: rgba(255, 255, 255, .2); }
+.oethq-portal .pod-rate { min-width: 42px; }
+
+/* stats */
+.oethq-portal .pod-stats {
+  position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px;
+}
+.oethq-portal .pod-stat {
+  display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 12px;
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14);
+}
+.oethq-portal .pod-stat.done { background: rgba(56, 189, 248, .18); border-color: rgba(56, 189, 248, .4); }
+.oethq-portal .pod-stat-ico { font-size: 18px; line-height: 1; flex: 0 0 auto; }
+.oethq-portal .pod-stat.done .pod-stat-ico { color: #7EE0A6; font-weight: 800; }
+.oethq-portal .pod-stat-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.oethq-portal .pod-stat-t b { font-size: 13.5px; font-weight: 800; color: #fff; }
+.oethq-portal .pod-stat-t span { font-size: 11px; color: #A9C4E4; }
+.oethq-portal .pod-meta { position: relative; display: block; margin-top: 16px; font-size: 12px; color: #9FBEDE; }
+
+.oethq-portal .pod-eyebrow .oethq-livebadge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 800; letter-spacing: .06em; color: #fff;
+  background: linear-gradient(90deg, #F43F5E, #E11D48); border-radius: 5px;
+  padding: 1px 6px; margin-right: 8px; vertical-align: 1px; line-height: 1.5;
+  animation: oethqPodLive 1.7s ease-in-out infinite;
+}
+@keyframes oethqPodLive { 0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,.5); } 55% { box-shadow: 0 0 0 5px rgba(244,63,94,0); } }
+
+@media (max-width: 640px) {
+  .oethq-portal .pod-hero { padding: 20px 18px; }
+  .oethq-portal .pod-stats { grid-template-columns: 1fr; }
+  .oethq-portal .pod-controls { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .oethq-portal .pod-eyebrow .oethq-livebadge { animation: none; } }

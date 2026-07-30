@@ -1,0 +1,99 @@
+/* =====================================================================
+   OnboardingGate — flagship mandatory "how to use the course" takeover.
+   Scoped under .obg. Dark premium backdrop + animated mesh, glass card,
+   video with glow frame, progress ring, and a lock→unlock start button. */
+
+.obg {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(120% 120% at 50% 0%, #0b1e42 0%, #071022 55%, #04070f 100%);
+  overflow: auto;
+  animation: obg-fade .35s ease both;
+  font-family: 'Archivo', 'Inter', system-ui, sans-serif;
+}
+@keyframes obg-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.obg-mesh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.obg-mesh .b { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
+.obg-mesh .b1 { width: 42vw; height: 42vw; left: -8vw; top: -10vw; background: #1F6BFF; animation: obg-drift 16s ease-in-out infinite; }
+.obg-mesh .b2 { width: 36vw; height: 36vw; right: -6vw; top: 10vh; background: #38BDF8; animation: obg-drift 20s ease-in-out infinite reverse; }
+.obg-mesh .b3 { width: 30vw; height: 30vw; left: 30vw; bottom: -12vw; background: #7C3AED; opacity: .35; animation: obg-drift 24s ease-in-out infinite; }
+@keyframes obg-drift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(4vw,3vh) scale(1.08); } }
+
+.obg-card {
+  position: relative; width: min(920px, 100%);
+  border-radius: 26px; padding: 30px clamp(18px, 3vw, 40px) 26px;
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 40px 120px -30px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter: blur(14px) saturate(1.3);
+  animation: obg-rise .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes obg-rise { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: none; } }
+
+.obg-head { text-align: center; max-width: 60ch; margin: 0 auto 20px; }
+.obg-eyebrow {
+  display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: #7fb0ff;
+  padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(127,176,255,.3); background: rgba(31,107,255,.12);
+}
+.obg-head h1 {
+  margin: 14px 0 8px; font-size: clamp(26px, 4vw, 42px); font-weight: 900; letter-spacing: -.03em; line-height: 1.05;
+  background: linear-gradient(92deg, #ffffff, #b9d4ff 60%, #7fb0ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.obg-head p { margin: 0; color: rgba(226,238,255,.72); font-size: 15px; line-height: 1.6; font-family: 'Inter', sans-serif; }
+
+.obg-stage {
+  position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 16 / 9;
+  background: #04070f; border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 24px 70px -24px rgba(31,107,255,.55), inset 0 0 0 1px rgba(255,255,255,.05);
+  transition: box-shadow .5s ease, border-color .5s ease;
+}
+.obg-stage.done { border-color: rgba(52,211,153,.5); box-shadow: 0 24px 80px -20px rgba(16,185,129,.6); }
+.obg-video { width: 100%; height: 100%; border: 0; display: block; }
+
+.obg-burst { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(52,211,153,.28), transparent 70%);
+  animation: obg-burst 1s ease-out both; }
+@keyframes obg-burst { from { opacity: 0; transform: scale(.6); } 40% { opacity: 1; } to { opacity: 0; transform: scale(1.15); } }
+
+.obg-foot { display: flex; align-items: center; gap: 18px; margin-top: 20px; flex-wrap: wrap; justify-content: space-between; }
+
+.obg-prog { display: flex; align-items: center; gap: 12px; }
+.obg-ring { width: 52px; height: 52px; transform: rotate(-90deg); }
+.obg-ring-bg { fill: none; stroke: rgba(255,255,255,.14); stroke-width: 5; }
+.obg-ring-fg { fill: none; stroke: url(#none); stroke: #38BDF8; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset .3s ease; }
+.obg-stage.done ~ .obg-foot .obg-ring-fg, .obg .obg-start.ready ~ * .obg-ring-fg { stroke: #34D399; }
+.obg-prog-t { display: flex; flex-direction: column; line-height: 1.1; }
+.obg-prog-t b { color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+.obg-prog-t span { color: rgba(226,238,255,.55); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+
+.obg-start {
+  position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 9px;
+  font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 15.5px; letter-spacing: -.01em;
+  padding: 14px 26px; border-radius: 14px; border: 1px solid rgba(255,255,255,.16); cursor: not-allowed;
+  color: rgba(226,238,255,.6); background: rgba(255,255,255,.06); transition: all .25s ease;
+}
+.obg-start svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.obg-start .obg-lock { width: 16px; height: 16px; }
+.obg-start.ready {
+  cursor: pointer; color: #04101f; border-color: transparent;
+  background: linear-gradient(135deg, #38BDF8, #1F6BFF 55%, #6366F1);
+  box-shadow: 0 16px 40px -12px rgba(31,107,255,.8);
+  animation: obg-cta 2.4s ease-in-out infinite;
+}
+.obg-start.ready:hover { transform: translateY(-2px); box-shadow: 0 22px 52px -12px rgba(31,107,255,.9); }
+@keyframes obg-cta { 0%,100% { box-shadow: 0 16px 40px -14px rgba(31,107,255,.7); } 50% { box-shadow: 0 20px 52px -12px rgba(56,189,248,.9), 0 0 30px rgba(56,189,248,.4); } }
+.obg-start-sheen { position: absolute; top: 0; left: -140%; width: 55%; height: 100%; transform: skewX(-18deg); pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); }
+.obg-start.ready .obg-start-sheen { animation: obg-sheen 2.8s ease-in-out infinite; }
+@keyframes obg-sheen { 0% { left: -140%; } 55% { left: 150%; } 100% { left: 150%; } }
+
+@media (max-width: 560px) {
+  .obg-foot { flex-direction: column; align-items: stretch; }
+  .obg-start { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obg, .obg-card, .obg-mesh .b, .obg-start.ready, .obg-start.ready .obg-start-sheen, .obg-burst { animation: none !important; }
+}

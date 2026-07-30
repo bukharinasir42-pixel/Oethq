@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "OTPPurpose" ADD VALUE 'PASSWORD_RESET';

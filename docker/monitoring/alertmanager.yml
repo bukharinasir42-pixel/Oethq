@@ -1,0 +1,11 @@
+route:
+  receiver: default-webhook
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 2h
+
+receivers:
+  - name: default-webhook
+    webhook_configs:
+      - url: http://host.docker.internal:4010/alerts
+        send_resolved: true

@@ -1,0 +1,628 @@
+{
+  "schemaVersion": 1,
+  "type": "LISTENING",
+  "title": "LISTENING TEST TITLE",
+  "description": "optional short description",
+  "instructions": "optional exam-wide instructions",
+  "audioUrl": "optional — you can also attach the audio in the builder after import",
+  "timing": {
+    "totalMinutes": 45
+  },
+  "partA": {
+    "instructions": "optional Part A instructions",
+    "extracts": [
+      {
+        "heading": "Extract heading (questions 1–12)",
+        "contextHtml": "<p>Context/intro booklet for this extract. HTML allowed.</p>",
+        "groups": [
+          {
+            "heading": "Sub-heading grouping some questions",
+            "questionNumbers": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "n": 1,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q1 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 2,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q2 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 3,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q3 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 4,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q4 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 5,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q5 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 6,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q6 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 7,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q7 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 8,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q8 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 9,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q9 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 10,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q10 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 11,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q11 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 12,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q12 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          }
+        ]
+      },
+      {
+        "heading": "Extract heading (questions 13–24)",
+        "contextHtml": "<p>Context/intro booklet for this extract. HTML allowed.</p>",
+        "groups": [
+          {
+            "heading": "Sub-heading grouping some questions",
+            "questionNumbers": [
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "n": 13,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q13 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 14,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q14 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 15,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q15 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 16,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q16 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 17,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q17 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 18,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q18 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 19,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q19 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 20,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q20 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 21,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q21 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 22,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q22 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 23,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q23 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          },
+          {
+            "n": 24,
+            "type": "fill_blank",
+            "prompt": "PROMPT for Q24 (use [blank] where the input goes, or omit it for a trailing input)",
+            "answer": {
+              "display": "canonical answer shown on key",
+              "mode": "or",
+              "terms": [
+                "accepted answer",
+                "alt spelling"
+              ],
+              "caseSensitive": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "partB": {
+    "instructions": "optional Part B instructions",
+    "items": [
+      {
+        "n": 25,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q25",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 26,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q26",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 27,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q27",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 28,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q28",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 29,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q29",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 30,
+        "extractLabel": "Extract N",
+        "contextHtml": "<p>Per-question context. HTML allowed.</p>",
+        "prompt": "PROMPT for Q30",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      }
+    ]
+  },
+  "partC": {
+    "instructions": "optional Part C instructions",
+    "extracts": [
+      {
+        "heading": "Part C extract heading (questions 31–36)",
+        "contextHtml": "<p>Shared context for the extract. HTML allowed.</p>",
+        "questions": [
+          {
+            "n": 31,
+            "type": "mcq",
+            "prompt": "PROMPT for Q31",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 32,
+            "type": "mcq",
+            "prompt": "PROMPT for Q32",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 33,
+            "type": "mcq",
+            "prompt": "PROMPT for Q33",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 34,
+            "type": "mcq",
+            "prompt": "PROMPT for Q34",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 35,
+            "type": "mcq",
+            "prompt": "PROMPT for Q35",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 36,
+            "type": "mcq",
+            "prompt": "PROMPT for Q36",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          }
+        ]
+      },
+      {
+        "heading": "Part C extract heading (questions 37–42)",
+        "contextHtml": "<p>Shared context for the extract. HTML allowed.</p>",
+        "questions": [
+          {
+            "n": 37,
+            "type": "mcq",
+            "prompt": "PROMPT for Q37",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 38,
+            "type": "mcq",
+            "prompt": "PROMPT for Q38",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 39,
+            "type": "mcq",
+            "prompt": "PROMPT for Q39",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 40,
+            "type": "mcq",
+            "prompt": "PROMPT for Q40",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 41,
+            "type": "mcq",
+            "prompt": "PROMPT for Q41",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 42,
+            "type": "mcq",
+            "prompt": "PROMPT for Q42",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text"
+            },
+            "answer": "A"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "type": "LISTENING",
+  "title": "OET Listening — Practice Test 5",
+  "description": "Complete Listening Sub-test · Parts A, B & C · 2026 Edition (ETHQ · Dr Nasir Academy). 42 questions, scored out of 500.",
+  "instructions": "This test has three parts. Play your audio and answer live as you listen — type your answers for Part A, and select A, B or C for Parts B and C. The audio is played once only. When you finish, press Submit answers to receive your score out of 500 and your grade prediction. The timer starts as soon as you begin.",
+  "audioUrl": "",
+  "timing": { "totalMinutes": 45 },
+  "partA": {
+    "instructions": "In this part of the test, you will hear two different extracts. In each extract, a health professional is talking to a patient. For questions 1–24, complete the notes with information that you hear. Where a speaker corrects themselves, record the final, corrected version.",
+    "extracts": [
+      {
+        "heading": "Extract 1 · Questions 1–12",
+        "contextHtml": "You hear a GP talking to a patient called Grace Whitfield. Complete the notes with a word or short phrase that you hear. Patient: Grace Whitfield",
+        "groups": [
+          { "heading": "Onset and general symptoms", "questionNumbers": [1, 2] },
+          { "heading": "Energy and mood", "questionNumbers": [3, 4] },
+          { "heading": "Physical signs", "questionNumbers": [5, 6] },
+          { "heading": "Other symptoms", "questionNumbers": [7, 8] },
+          { "heading": "Impact on work and social life", "questionNumbers": [9, 10] },
+          { "heading": "Medical and family history", "questionNumbers": [11, 12] }
+        ],
+        "questions": [
+          { "n": 1, "type": "fill_blank", "prompt": "earliest sign reported: [blank]", "answer": { "display": "feeling the cold", "mode": "or", "terms": ["feeling the cold", "feeling cold", "the cold"] } },
+          { "n": 2, "type": "fill_blank", "prompt": "change in body weight — amount: [blank]", "answer": { "display": "five kilos", "mode": "or", "terms": ["five kilos", "5 kilos", "5kg", "5 kg"] } },
+          { "n": 3, "type": "fill_blank", "prompt": "level of energy described as: [blank]", "answer": { "display": "sluggish", "mode": "or", "terms": ["sluggish", "wading through treacle"] } },
+          { "n": 4, "type": "fill_blank", "prompt": "what she says about her feelings: [blank]", "answer": { "display": "interested in anything", "mode": "or", "terms": ["interested in anything", "not interested in anything", "no longer interested in anything"] } },
+          { "n": 5, "type": "fill_blank", "prompt": "skin appearance noted as: [blank]", "answer": { "display": "dry and flaky", "mode": "or", "terms": ["dry and flaky", "dry", "flaky", "dry flaky"] } },
+          { "n": 6, "type": "fill_blank", "prompt": "hair condition noted as: [blank]", "answer": { "display": "thinner", "mode": "or", "terms": ["thinner", "coming out more", "thinner overall", "thinning"] } },
+          { "n": 7, "type": "fill_blank", "prompt": "timing of muscle cramps: [blank]", "answer": { "display": "at night", "mode": "or", "terms": ["at night", "mostly at night", "night-time", "night time"] } },
+          { "n": 8, "type": "fill_blank", "prompt": "cognitive symptom noted: [blank]", "answer": { "display": "forgetting words", "mode": "or", "terms": ["forgetting words", "forgetting words mid-sentence", "forgetting words midsentence"] } },
+          { "n": 9, "type": "fill_blank", "prompt": "occupation: [blank]", "answer": { "display": "solicitor", "mode": "or", "terms": ["solicitor", "conveyancing solicitor"] } },
+          { "n": 10, "type": "fill_blank", "prompt": "activity given up: [blank]", "answer": { "display": "running club", "mode": "or", "terms": ["running club", "running", "the running"] } },
+          { "n": 11, "type": "fill_blank", "prompt": "relevant family background: [blank]", "answer": { "display": "mother, underactive thyroid", "mode": "or", "terms": ["mother, underactive thyroid", "mother underactive thyroid", "mother's underactive thyroid", "mother underactive thyroid"] } },
+          { "n": 12, "type": "fill_blank", "prompt": "previous thyroid treatment: [blank]", "answer": { "display": "never", "mode": "or", "terms": ["never", "none", "no"] } }
+        ]
+      },
+      {
+        "heading": "Extract 2 · Questions 13–24",
+        "contextHtml": "You hear a nurse talking to a patient called Marcus Bello. Complete the notes with a word or short phrase that you hear. Patient: Marcus Bello",
+        "groups": [
+          { "heading": "Onset and general symptoms", "questionNumbers": [13, 14] },
+          { "heading": "Symptom pattern", "questionNumbers": [15, 16] },
+          { "heading": "New / alarm symptoms", "questionNumbers": [17, 18] },
+          { "heading": "Other symptoms", "questionNumbers": [19, 20] },
+          { "heading": "Impact on work and social life", "questionNumbers": [21, 22] },
+          { "heading": "Medical and family history", "questionNumbers": [23, 24] }
+        ],
+        "questions": [
+          { "n": 13, "type": "fill_blank", "prompt": "presenting complaint: [blank]", "answer": { "display": "headache", "mode": "or", "terms": ["headache", "this headache"] } },
+          { "n": 14, "type": "fill_blank", "prompt": "duration: [blank]", "answer": { "display": "nine weeks", "mode": "or", "terms": ["nine weeks", "around nine weeks", "9 weeks"] } },
+          { "n": 15, "type": "fill_blank", "prompt": "factor that worsens it: [blank]", "answer": { "display": "bending down", "mode": "or", "terms": ["bending down", "coughing or sneezing", "bending"] } },
+          { "n": 16, "type": "fill_blank", "prompt": "worst time: [blank]", "answer": { "display": "first thing", "mode": "or", "terms": ["first thing", "first thing when i wake up", "first thing when he wakes up"] } },
+          { "n": 17, "type": "fill_blank", "prompt": "additional complaint (recent days): [blank]", "answer": { "display": "vomiting", "mode": "or", "terms": ["vomiting", "being sick"] } },
+          { "n": 18, "type": "fill_blank", "prompt": "associated symptom, location: [blank]", "answer": { "display": "blurry, left eye", "mode": "or", "terms": ["blurry, left eye", "blurred vision, left eye", "blurry left eye", "blurred vision left eye", "blurred left eye"] } },
+          { "n": 19, "type": "fill_blank", "prompt": "change in body mass: [blank]", "answer": { "display": "four kilos", "mode": "or", "terms": ["four kilos", "4 kilos", "4kg", "4 kg"] } },
+          { "n": 20, "type": "fill_blank", "prompt": "abnormal observation noted: [blank]", "answer": { "display": "veering to one side", "mode": "or", "terms": ["veering to one side", "catching against furniture", "catching myself against the furniture", "catching himself against the furniture"] } },
+          { "n": 21, "type": "fill_blank", "prompt": "occupation: [blank]", "answer": { "display": "delivery van driver", "mode": "or", "terms": ["delivery van driver", "drive a delivery van", "delivery driver", "delivery van"] } },
+          { "n": 22, "type": "fill_blank", "prompt": "activity reduced: [blank]", "answer": { "display": "motorbike", "mode": "or", "terms": ["motorbike", "the motorbike", "riding the motorbike"] } },
+          { "n": 23, "type": "fill_blank", "prompt": "remedy tried independently: [blank]", "answer": { "display": "paracetamol", "mode": "or", "terms": ["paracetamol"] } },
+          { "n": 24, "type": "fill_blank", "prompt": "relevant family background: [blank]", "answer": { "display": "mother, migraine with visual aura", "mode": "or", "terms": ["mother, migraine with visual aura", "mother migraine with visual aura", "mother's migraine with visual aura"] } }
+        ]
+      }
+    ]
+  },
+  "partB": {
+    "instructions": "In this part of the test, you will hear six different extracts. In each extract, you will hear health professionals talking about workplace situations. For questions 25–30, choose the answer (A, B or C) which fits best according to what you hear.",
+    "items": [
+      {
+        "n": 25,
+        "extractLabel": "Extract 1",
+        "contextHtml": "You hear a midwife talking to a patient at a home visit.",
+        "prompt": "Why has the midwife arranged this follow-up visit?",
+        "options": {
+          "A": "To weigh the baby again, since Tuesday's reading raised concern.",
+          "B": "To follow up on something the community nurse noticed at yesterday's dressing change.",
+          "C": "To check in generally, as agreed during a phone call earlier in the week."
+        },
+        "answer": "B"
+      },
+      {
+        "n": 26,
+        "extractLabel": "Extract 2",
+        "contextHtml": "You hear two doctors discussing a patient's discharge.",
+        "prompt": "What is the actual source of disagreement between the two doctors?",
+        "options": {
+          "A": "Whether the stair assessment should happen before or after discharge.",
+          "B": "Whether Mr Yusuf is medically stable enough to leave hospital.",
+          "C": "Whether Mr Yusuf's blood results justify discharge today."
+        },
+        "answer": "A"
+      },
+      {
+        "n": 27,
+        "extractLabel": "Extract 3",
+        "contextHtml": "You hear a patient speaking to a dental clinic on the telephone.",
+        "prompt": "What is the main purpose of the patient's call?",
+        "options": {
+          "A": "To request emergency treatment for a worsening toothache.",
+          "B": "To find out whether it is safe to keep taking pain relief.",
+          "C": "To ask whether the appointment could be brought forward."
+        },
+        "answer": "C"
+      },
+      {
+        "n": 28,
+        "extractLabel": "Extract 4",
+        "contextHtml": "You hear two diabetes specialist nurses discussing a patient's insulin dose.",
+        "prompt": "Why does Nurse 2 want to delay changing the insulin dose?",
+        "options": {
+          "A": "Because her hip operation makes an insulin increase unsafe for now.",
+          "B": "Because her hypo awareness has not been formally reassessed since before her operation.",
+          "C": "Because she has asked for more time before any change is made."
+        },
+        "answer": "B"
+      },
+      {
+        "n": 29,
+        "extractLabel": "Extract 5",
+        "contextHtml": "You hear two paramedics handing over a patient.",
+        "prompt": "What does Paramedic 1 suggest about the significance of the raised temperature?",
+        "options": {
+          "A": "It may indicate that an infection triggered the fall, rather than a simple trip.",
+          "B": "It is unlikely to be relevant, since twenty minutes on the floor is too short to explain it.",
+          "C": "It confirms that Mrs Okafor already had a diagnosed infection before the fall."
+        },
+        "answer": "A"
+      },
+      {
+        "n": 30,
+        "extractLabel": "Extract 6",
+        "contextHtml": "You hear a ward manager speaking to staff about a new medication-incident reporting system.",
+        "prompt": "What does the manager say staff specifically must do before Monday?",
+        "options": {
+          "A": "Attend Thursday's team meeting to raise any concerns before the system goes live.",
+          "B": "Contact IT in advance if they anticipate difficulties logging in.",
+          "C": "Complete the online training module so it shows as finished before Monday."
+        },
+        "answer": "C"
+      }
+    ]
+  },
+  "partC": {
+    "instructions": "In this part of the test, you will hear two different extracts. In each extract, you will hear a health professional talking about an aspect of their work. For questions 31–42, choose the answer (A, B or C) which fits best according to what you hear.",
+    "extracts": [
+      {
+        "heading": "Extract 1 · Questions 31–36",
+        "contextHtml": "You hear an interview with a pharmacist, Amara Chen, about a medication reconciliation service for patients being discharged from hospital.",
+        "questions": [
+          {
+            "n": 31,
+            "type": "mcq",
+            "prompt": "What is Amara's attitude toward expanding the service to cover every hospital discharge, and why?",
+            "options": {
+              "A": "Opposed, because she no longer believes higher-risk patients need this level of oversight.",
+              "B": "Supportive, since covering every discharge would make the service's headline figures look stronger.",
+              "C": "Cautious, since extending the service without extra staffing would likely thin out protection exactly where it currently does the most good."
+            },
+            "answer": "C"
+          },
+          {
+            "n": 32,
+            "type": "mcq",
+            "prompt": "What did Amara initially assume was the main source of the mismatches, before the team reviewed the data properly?",
+            "options": {
+              "A": "That errors were mostly introduced later, once patients reached their community pharmacy.",
+              "B": "That hospital doctors were frequently getting the discharge letter itself wrong.",
+              "C": "That patients themselves were misreading or losing their own instructions."
+            },
+            "answer": "B"
+          },
+          {
+            "n": 33,
+            "type": "mcq",
+            "prompt": "How and why did the follow-up approach for higher-risk patients change from the service's original design?",
+            "options": {
+              "A": "It moved from phone calls to visits, mainly because staff could check what a patient actually had at home instead of trusting a verbal description.",
+              "B": "It moved from home visits to phone calls, because visits proved too expensive to sustain.",
+              "C": "The method stayed the same, but coverage was extended after patients asked for more face-to-face contact."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 34,
+            "type": "mcq",
+            "prompt": "Which best describes how Amara's account of Mrs Ilić's case develops over the course of her answer?",
+            "options": {
+              "A": "She begins by suspecting a lapse in the reconciliation check itself, then reframes the problem as a question the team had never thought to ask.",
+              "B": "She begins confident that home visits are reliable, then concludes they are no less error-prone than phone calls.",
+              "C": "She begins uncertain about the cause, then decides the daughter's actions were entirely to blame."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 35,
+            "type": "mcq",
+            "prompt": "What does Amara's insistence on a confirmed electronic read receipt — rather than accepting that a fax or email was simply sent — imply about her attitude to responsibility?",
+            "options": {
+              "A": "She believes responsibility should shift to community pharmacy as soon as possible, to ease pressure on hospital staff.",
+              "B": "She believes both sides share responsibility equally, whether or not either can prove what happened.",
+              "C": "She believes being accountable only counts once there's proof the information actually arrived, not just proof it was sent."
+            },
+            "answer": "C"
+          },
+          {
+            "n": 36,
+            "type": "mcq",
+            "prompt": "Which service-performance measure does Amara currently find most useful, and why?",
+            "options": {
+              "A": "Patient satisfaction scores, since they capture how the whole discharge experience felt.",
+              "B": "The share of discrepancies caught and fixed before a patient's first dose in the community, since it shows the process is preventing harm rather than just logging it.",
+              "C": "Readmission rate, since it remains the outcome patients and the board care about most."
+            },
+            "answer": "B"
+          }
+        ]
+      },
+      {
+        "heading": "Extract 2 · Questions 37–42",
+        "contextHtml": "You hear a presentation by a researcher, Dr Marcus Webb, about a trial of a wearable patch for detecting atrial fibrillation after a suspected TIA.",
+        "questions": [
+          {
+            "n": 37,
+            "type": "mcq",
+            "prompt": "Taking together the twelve per cent early-removal rate and the cost findings, which best reflects Dr Webb's overall view of the practical case for using the patch in patients under eighty?",
+            "options": {
+              "A": "The tolerability problem is serious enough that funding should be withheld from all age groups despite the favourable cost figures.",
+              "B": "The tolerability issue is worth addressing honestly, but it does not outweigh the combined detection and cost advantages that support funding the patch for this age group now.",
+              "C": "Because the cost per detection is lower for this group, the removal-rate finding can be set aside as unimportant."
+            },
+            "answer": "B"
+          },
+          {
+            "n": 38,
+            "type": "mcq",
+            "prompt": "What methodological risk was the blinded committee specifically designed to reduce?",
+            "options": {
+              "A": "The risk that reviewers unconsciously judge a borderline case differently depending on what they already know about it.",
+              "B": "The risk that patients might guess which group they had been assigned to.",
+              "C": "The risk that the trial would run over its planned six-month follow-up."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 39,
+            "type": "mcq",
+            "prompt": "Which best reflects Dr Webb's own level of confidence about why the result was weaker for patients over eighty?",
+            "options": {
+              "A": "He is confident the smaller subgroup size fully explains the weaker result.",
+              "B": "He concludes the patch performs no better than standard care for any patient, regardless of age.",
+              "C": "He considers a signal-quality problem the more likely explanation, though he stops short of ruling out that AF is simply more persistent in this group."
+            },
+            "answer": "C"
+          },
+          {
+            "n": 40,
+            "type": "mcq",
+            "prompt": "Why does Dr Webb treat detection rate and stroke prevention as related but not identical measures?",
+            "options": {
+              "A": "Finding the irregular rhythm only opens the door to a lower stroke risk — what happens afterwards, with medication started and kept up, is what actually closes the gap.",
+              "B": "Because identifying AF automatically triggers a fall in stroke rates.",
+              "C": "Because a patient's age is the only factor that determines whether a stroke is prevented."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 41,
+            "type": "mcq",
+            "prompt": "What is Dr Webb's final position on whether the trial's findings can be trusted long-term?",
+            "options": {
+              "A": "He believes the two-week recording window makes the result unreliable.",
+              "B": "He leans toward treating the result as stable, based on the pattern across the follow-up period, while still wanting longer confirmation.",
+              "C": "He remains genuinely undecided and offers no leaning either way."
+            },
+            "answer": "B"
+          },
+          {
+            "n": 42,
+            "type": "mcq",
+            "prompt": "What does Dr Webb imply is the main obstacle to recommending the patch for patients over eighty right now?",
+            "options": {
+              "A": "The trial would need to be repeated in a different healthcare system first.",
+              "B": "Staff would need to supervise patch application on the ward each day.",
+              "C": "The device isn't yet capturing reliable data in exactly the group where stroke risk tends to be highest."
+            },
+            "answer": "C"
+          }
+        ]
+      }
+    ]
+  }
+}

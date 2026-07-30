@@ -1,0 +1,112 @@
+/* =====================================================================
+   "What's inside OET HQ" accordion — client "whats-inside.html" design,
+   ported to a scoped React section. All selectors nested under
+   `.wi-section`, classes prefixed `wi-*`, keyframe renamed `wi-beat`.
+   ===================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+.wi-section{
+  --ink:#050F22; --ink-2:#0A1B3A; --panel:#0B1B38; --raise:#102546;
+  --edge:rgba(255,255,255,.085); --edge-2:rgba(255,255,255,.16);
+  --chalk:#EAF1FC; --dim:#9AB0D2; --faint:#6B82A8;
+  --blue:#2E7CFF; --blue-2:#6BA5FF; --gold:#F5A524; --green:#17C77C;
+  --wi-maxw:1120px;
+  position:relative;padding:88px 0 96px;overflow:hidden;
+  background:radial-gradient(90% 70% at 50% -10%, rgba(46,124,255,.16), transparent 60%), var(--ink);
+  color:var(--chalk);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.wi-section *{box-sizing:border-box}
+.wi-section h2,.wi-section h3,.wi-section h4{font-family:'Archivo',sans-serif;font-weight:900;letter-spacing:-.038em;line-height:1.05;margin:0;text-wrap:balance}
+.wi-section p{margin:0}
+.wi-section :focus-visible{outline:2px solid var(--blue-2);outline-offset:3px;border-radius:8px}
+.wi-section::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);
+  background-size:54px 54px;mask-image:radial-gradient(70% 55% at 50% 0%,#000,transparent 75%);
+}
+.wi-wrap{width:100%;max-width:var(--wi-maxw);margin:0 auto;padding:0 22px;position:relative}
+.wi-lbl{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:10.5px;letter-spacing:.19em;text-transform:uppercase}
+
+.wi-head{max-width:720px;margin:0 auto 52px;text-align:center;position:relative}
+.wi-pill{display:inline-flex;align-items:center;gap:9px;padding:8px 15px;border-radius:999px;
+  border:1px solid rgba(107,165,255,.3);background:rgba(46,124,255,.1);color:var(--blue-2)}
+.wi-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--blue-2);box-shadow:0 0 0 0 rgba(107,165,255,.5);animation:wi-beat 2.4s infinite}
+@keyframes wi-beat{0%{box-shadow:0 0 0 0 rgba(107,165,255,.45)}70%{box-shadow:0 0 0 8px rgba(107,165,255,0)}100%{box-shadow:0 0 0 0 rgba(107,165,255,0)}}
+.wi-head h2{font-size:clamp(31px,4.3vw,50px);margin:20px 0 16px}
+.wi-head h2 em{font-style:normal;background:linear-gradient(100deg,var(--blue-2),#A9CBFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wi-head p{color:var(--dim);font-size:16px;max-width:56ch;margin:0 auto}
+
+.wi-list{position:relative;border-top:1px solid var(--edge)}
+.wi-row{border-bottom:1px solid var(--edge);position:relative;opacity:0;transform:translateY(22px);
+  transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+.wi-row.wi-in{opacity:1;transform:none}
+.wi-row::before{content:"";position:absolute;left:0;top:0;width:2px;height:0;
+  background:linear-gradient(180deg,var(--accent,var(--blue)),transparent);transition:height .45s cubic-bezier(.22,1,.36,1)}
+.wi-row.wi-open::before{height:100%}
+.wi-row::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent,var(--blue)) 11%,transparent),transparent 55%);transition:opacity .3s ease}
+.wi-row:hover::after,.wi-row.wi-open::after{opacity:1}
+
+.wi-bar{width:100%;display:grid;grid-template-columns:52px 40px 1fr 40px;gap:18px;align-items:center;
+  padding:22px 14px 22px 16px;text-align:left;position:relative;z-index:2;background:none;border:0;color:inherit;cursor:pointer;font-family:inherit}
+.wi-n{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;letter-spacing:-.02em;color:#fff;position:relative;
+  background:linear-gradient(145deg,var(--accent,var(--blue)),color-mix(in srgb,var(--accent,var(--blue)) 55%,#04122A));
+  box-shadow:0 8px 20px -10px var(--accent,var(--blue));transition:transform .42s cubic-bezier(.34,1.56,.64,1),box-shadow .42s ease}
+.wi-row.wi-open .wi-n{transform:scale(1.08) rotate(-4deg);box-shadow:0 12px 30px -8px var(--accent,var(--blue))}
+.wi-ic{width:26px;height:26px;color:var(--dim);flex:none;transition:color .3s ease,transform .45s cubic-bezier(.34,1.56,.64,1)}
+.wi-ic svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.wi-row.wi-open .wi-ic{color:var(--accent,var(--blue-2));transform:scale(1.12)}
+.wi-ttl{min-width:0}
+.wi-ttl h3{font-size:clamp(17px,2vw,21px);letter-spacing:-.03em;transition:color .25s}
+.wi-row.wi-open .wi-ttl h3{color:#fff}
+.wi-ttl .wi-kicker{display:block;margin-top:5px;color:var(--faint);font-size:12px}
+.wi-tg{width:38px;height:38px;border-radius:11px;border:1px solid var(--edge-2);display:grid;place-items:center;position:relative;justify-self:end;flex:none;
+  transition:border-color .3s ease,background .3s ease,transform .45s cubic-bezier(.34,1.56,.64,1)}
+.wi-row:hover .wi-tg{border-color:var(--accent,var(--blue))}
+.wi-row.wi-open .wi-tg{background:var(--accent,var(--blue));border-color:var(--accent,var(--blue));transform:rotate(135deg);color:#fff}
+.wi-tg i,.wi-tg u{position:absolute;background:currentColor;border-radius:2px;transition:opacity .3s}
+.wi-tg i{width:13px;height:2px}
+.wi-tg u{width:2px;height:13px}
+
+.wi-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .48s cubic-bezier(.22,1,.36,1)}
+.wi-row.wi-open .wi-panel{grid-template-rows:1fr}
+.wi-panel-in{overflow:hidden}
+.wi-panel-body{padding:0 18px 26px 88px;max-width:76ch;opacity:0;transform:translateY(-6px);transition:opacity .38s ease .08s,transform .38s ease .08s}
+.wi-row.wi-open .wi-panel-body{opacity:1;transform:none}
+.wi-panel-body p{color:var(--dim);font-size:14.6px}
+.wi-panel-body p+p{margin-top:11px}
+.wi-panel-body b{color:#fff;font-weight:600}
+.wi-stat{display:inline-flex;align-items:baseline;gap:7px;margin-top:14px;padding:9px 14px;border-radius:11px;background:var(--raise);border:1px solid var(--edge)}
+.wi-stat b{font-family:'Archivo';font-weight:900;font-size:19px;letter-spacing:-.04em;color:var(--accent,var(--blue-2))}
+.wi-stat span{font-size:12.5px;color:var(--dim)}
+.wi-mini{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.wi-mini span{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;padding:6px 11px;border-radius:7px;border:1px solid var(--edge-2);color:var(--dim)}
+
+.wi-foot{margin-top:44px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:24px 26px;border:1px solid var(--edge);border-radius:18px;
+  background:linear-gradient(120deg,var(--panel),transparent 70%);opacity:0;transform:translateY(22px);
+  transition:opacity .7s cubic-bezier(.22,1,.36,1) .1s,transform .7s cubic-bezier(.22,1,.36,1) .1s}
+.wi-foot.wi-in{opacity:1;transform:none}
+.wi-foot p{font-size:15px}
+.wi-foot p b{font-family:'Archivo';font-weight:900;letter-spacing:-.02em}
+.wi-foot p span{display:block;color:var(--dim);font-size:13.2px;margin-top:3px}
+.wi-btn{margin-left:auto;display:inline-flex;align-items:center;gap:9px;font-family:'Archivo';font-weight:800;font-size:15px;letter-spacing:-.015em;
+  padding:14px 24px;border-radius:12px;background:var(--blue);color:#fff;box-shadow:0 10px 26px -12px var(--blue);transition:transform .16s,background .16s}
+.wi-btn:hover{background:#1A63E0;transform:translateY(-2px)}
+
+@media (max-width:760px){
+  .wi-section{padding:60px 0 66px}
+  .wi-head{margin-bottom:36px}
+  .wi-bar{grid-template-columns:40px 1fr 34px;gap:13px;padding:19px 6px 19px 12px}
+  .wi-ic{display:none}
+  .wi-n{width:38px;height:38px;border-radius:12px;font-size:12px}
+  .wi-tg{width:34px;height:34px}
+  .wi-panel-body{padding:0 10px 24px 65px}
+  .wi-foot{flex-direction:column;align-items:flex-start}
+  .wi-btn{margin-left:0;width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  .wi-section *{transition-duration:.01ms!important;animation:none!important}
+  .wi-row,.wi-foot{opacity:1;transform:none}
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "Test" ADD COLUMN IF NOT EXISTS "partBExtractBooklets" JSONB;

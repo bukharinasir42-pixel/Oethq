@@ -1,0 +1,116 @@
+/* OET Writing test — premium split (case notes | letter editor) + 45-min timer. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+.oet-writing { --navy:#0D2A5E; --navy-2:#12377C; --ink:#0B1B36; --blue:#1E8FE1; --blue-2:#0B63B0;
+  --sky:#EAF3FC; --paper:#fff; --wash:#F3F7FC; --line:#DCE6F2; --muted:#5A6B85; --mute:#8496AE;
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); background:var(--wash); min-height:100vh; -webkit-font-smoothing:antialiased; }
+.oet-writing *{box-sizing:border-box}
+.oet-writing img{max-width:100%;display:block}
+
+/* buttons */
+.oet-writing .w-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-weight:700;font-size:14.5px;padding:12px 22px;border-radius:11px;border:none;cursor:pointer;transition:transform .12s,box-shadow .12s,filter .12s}
+.oet-writing .w-btn-primary{background:linear-gradient(135deg,#1E8FE1,#0B63B0 60%,#0A4C8C);color:#fff;box-shadow:0 8px 20px -6px rgba(11,99,176,.6)}
+.oet-writing .w-btn-primary:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.oet-writing .w-btn-primary:disabled{opacity:.6;cursor:default;transform:none}
+.oet-writing .w-btn-quiet{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.oet-writing .w-btn-quiet:hover{border-color:var(--blue);color:var(--blue-2)}
+.oet-writing .w-eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--blue-2)}
+
+/* cover */
+.oet-writing .w-cover-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:44px 22px;
+  background:radial-gradient(1100px 480px at 82% -8%, rgba(30,143,225,.14), transparent 60%), var(--wash)}
+.oet-writing .w-cover{max-width:640px;width:100%;background:#fff;border:1px solid var(--line);border-radius:22px;padding:40px 40px 34px;box-shadow:0 18px 50px rgba(13,42,94,.14);text-align:center}
+.oet-writing .w-cover-logo{display:inline-flex;background:#fff;border-radius:14px;padding:10px 16px;box-shadow:0 8px 24px rgba(13,42,94,.12);margin-bottom:22px}
+.oet-writing .w-cover-logo img{height:40px}
+.oet-writing .w-cover .w-eyebrow{display:block;margin-bottom:10px}
+.oet-writing .w-cover h1{font-family:'Source Serif 4',serif;font-size:30px;font-weight:700;line-height:1.18;color:var(--ink);margin:0 0 12px}
+.oet-writing .w-cover-sub{font-size:15px;line-height:1.6;color:var(--muted);margin:0 0 22px}
+.oet-writing .w-cover-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:22px}
+.oet-writing .w-chip{background:var(--sky);border:1px solid #DDEBFA;border-radius:12px;padding:10px 16px;text-align:center}
+.oet-writing .w-chip b{display:block;font-size:15px;font-weight:800;color:var(--navy)}
+.oet-writing .w-chip span{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin-top:2px}
+.oet-writing .w-cover-note{font-size:12.5px;line-height:1.6;color:var(--mute);max-width:460px;margin:0 auto 22px}
+.oet-writing .w-cover-start{width:100%;padding:15px}
+
+/* top bar */
+.oet-writing .w-topbar{height:66px;background:linear-gradient(100deg,var(--navy),var(--navy-2) 60%,#14418f);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:40;box-shadow:0 2px 18px rgba(11,27,54,.24)}
+.oet-writing .w-brand{display:flex;align-items:center;gap:12px}
+.oet-writing .w-logo-chip{background:#fff;border-radius:9px;padding:5px 11px;display:flex;align-items:center}
+.oet-writing .w-logo-chip img{height:26px}
+.oet-writing .w-titles{display:flex;flex-direction:column;line-height:1.15}
+.oet-writing .w-titles .k{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#9FC6EF;font-weight:700}
+.oet-writing .w-titles .t{font-size:16px;font-weight:700}
+.oet-writing .w-tb-right{display:flex;align-items:center;gap:14px}
+.oet-writing .w-wordpill{font-size:12.5px;color:#CFE2F7;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:6px 13px}
+.oet-writing .w-wordpill b{color:#fff}
+.oet-writing .w-timer{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:7px 14px;border-radius:11px}
+.oet-writing .w-timer svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round}
+.oet-writing .w-timer .tv{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.oet-writing .w-timer.warn{background:rgba(255,196,0,.16);border-color:rgba(255,196,0,.42)}
+.oet-writing .w-timer.warn .tv,.oet-writing .w-timer.warn svg{color:#FFD873;stroke:#FFD873}
+.oet-writing .w-timer.danger{background:rgba(255,90,90,.18);border-color:rgba(255,120,120,.5);animation:wpulse 1s infinite}
+.oet-writing .w-timer.danger .tv,.oet-writing .w-timer.danger svg{color:#FFC0C0;stroke:#FFC0C0}
+@keyframes wpulse{50%{opacity:.62}}
+.oet-writing .w-submit{padding:10px 20px}
+
+/* body split */
+.oet-writing .w-body{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 66px)}
+.oet-writing .w-pane{overflow-y:auto;max-height:calc(100vh - 66px)}
+.oet-writing .w-pane-notes{border-right:1px solid var(--line);background:#fff}
+.oet-writing .w-pane-write{background:var(--wash)}
+.oet-writing .w-notes{padding:32px 40px 60px;max-width:640px;margin:0 auto}
+.oet-writing .w-notes h2{font-family:'Source Serif 4',serif;font-size:26px;font-weight:700;line-height:1.2;color:var(--ink);margin:8px 0 16px}
+.oet-writing .w-scenario{font-size:15px;line-height:1.65;color:#233451;background:var(--sky);border-left:3px solid var(--blue);border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:20px}
+.oet-writing .w-scenario p{margin:0 0 8px}.oet-writing .w-scenario p:last-child{margin:0}
+.oet-writing .w-notes-body{font-family:'Source Serif 4',serif;font-size:16px;line-height:1.72;color:#233451}
+.oet-writing .w-notes-body p{margin:0 0 13px}
+.oet-writing .w-notes-body h3,.oet-writing .w-notes-body h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-2);margin:20px 0 8px}
+.oet-writing .w-notes-body ul,.oet-writing .w-notes-body ol{margin:0 0 13px;padding-left:20px}
+.oet-writing .w-notes-body li{margin-bottom:5px}
+.oet-writing .w-notes-body table{width:100%;border-collapse:collapse;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;margin:6px 0 14px}
+.oet-writing .w-notes-body td,.oet-writing .w-notes-body th{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.oet-writing .w-notes-body th{background:var(--sky);font-weight:700;color:var(--navy)}
+
+.oet-writing .w-write{padding:26px 34px 40px;max-width:720px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+.oet-writing .w-write-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.oet-writing .w-write-head p{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+.oet-writing .w-wordcount{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--blue-2);background:var(--sky);border-radius:8px;padding:5px 11px;white-space:nowrap}
+.oet-writing .w-editor{flex:1;min-height:440px;width:100%;resize:none;border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:20px 22px;font-family:'Source Serif 4',Georgia,serif;font-size:16.5px;line-height:1.75;color:#16273f;outline:none;transition:border-color .15s,box-shadow .15s}
+.oet-writing .w-editor:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(30,143,225,.12)}
+
+/* modal */
+.oet-writing .w-overlay{position:fixed;inset:0;background:rgba(11,27,54,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60;padding:22px}
+.oet-writing .w-modal{background:#fff;border-radius:18px;max-width:460px;width:100%;padding:32px 32px 28px;box-shadow:0 24px 60px rgba(11,27,54,.4);text-align:center}
+.oet-writing .w-modal-logo{display:flex;justify-content:center;margin-bottom:16px}.oet-writing .w-modal-logo img{height:36px}
+.oet-writing .w-modal h3{font-size:21px;font-weight:800;color:var(--navy)}
+.oet-writing .w-modal p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:9px}
+.oet-writing .w-modal-info{background:var(--sky);border-radius:11px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--navy);margin-top:16px}
+.oet-writing .w-modal-actions{display:flex;gap:12px;margin-top:22px}
+.oet-writing .w-modal-actions .w-btn{flex:1}
+
+/* result */
+.oet-writing .w-done-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:44px 22px;
+  background:radial-gradient(1000px 460px at 84% -6%, rgba(30,143,225,.13), transparent 58%), var(--wash)}
+.oet-writing .w-done{max-width:520px;width:100%;background:#fff;border:1px solid var(--line);border-radius:22px;padding:40px 38px;box-shadow:0 18px 50px rgba(13,42,94,.14);text-align:center}
+.oet-writing .w-done-ico{width:64px;height:64px;border-radius:18px;margin:0 auto 20px;background:linear-gradient(135deg,#1EA971,#12885B);display:flex;align-items:center;justify-content:center}
+.oet-writing .w-done-ico svg{width:32px;height:32px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.oet-writing .w-done h1{font-family:'Source Serif 4',serif;font-size:26px;font-weight:700;color:var(--ink);margin:0 0 10px}
+.oet-writing .w-done p{font-size:14.5px;color:var(--muted);line-height:1.6;margin:0 0 24px}
+.oet-writing .w-done-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px}
+.oet-writing .w-done-grid div{background:var(--sky);border-radius:13px;padding:14px 8px}
+.oet-writing .w-done-grid b{display:block;font-size:18px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+.oet-writing .w-done-grid span{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin-top:4px}
+.oet-writing .w-done-actions .w-btn{width:100%;padding:14px}
+
+@media (max-width:900px){
+  .oet-writing .w-body{grid-template-columns:1fr}
+  .oet-writing .w-pane{max-height:none;overflow:visible}
+  .oet-writing .w-pane-notes{border-right:none;border-bottom:2px solid var(--line)}
+  .oet-writing .w-editor{min-height:340px}
+}
+@media (max-width:640px){
+  .oet-writing .w-topbar{height:auto;flex-wrap:wrap;gap:8px;padding:10px 14px}
+  .oet-writing .w-notes{padding:22px 18px 40px}.oet-writing .w-write{padding:20px 16px 32px}
+  .oet-writing .w-cover{padding:28px 20px}
+}
+@media (prefers-reduced-motion:reduce){.oet-writing *{animation:none!important}}

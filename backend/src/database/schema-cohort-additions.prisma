@@ -1,0 +1,148 @@
+// ============================================================
+// COHORT LAYER — append these models to backend/src/database/schema.prisma
+// Then run: npm run prisma:migrate -- --name add_cohort_layer
+// Non-destructive: only adds tables. DailyTask remains the source
+// of programme-day content (lecture, core skills, assigned tests).
+// Also add to model User:
+//   cohortSchedule   CohortSchedule?
+//   cohortSessions   CohortSessionRecord[]
+//   cohortDays       CohortDayProgress[]
+//   cohortWarnings   CohortWarning[]
+//   cohortReports    CohortWeeklyReport[]
+// ============================================================
+
+enum CohortSessionSlot {
+  LECTURE      // Class 1 — Daily Lecture  (DailyTask.lecture*)
+  CORE_SKILLS  // Class 2 — Core Skills Session (DailyTask.article*)
+}
+
+enum CohortAttendance {
+  UPCOMING
+  ATTENDED
+  LATE
+  MISSED
+  EXCUSED
+}
+
+enum CohortDayStatus {
+  UPCOMING
+  ACTIVE
+  PARTIAL
+  COMPLETED
+  COMPLETED_LATE
+  MISSED
+}
+
+model CohortSchedule {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  country       String
+  timezone      String   // IANA, e.g. Asia/Karachi — validated server-side
+  class1Time    String   // "HH:mm" local time for Daily Lecture
+  class2Time    String   // "HH:mm" local time for Core Skills Session
+  startDate     DateTime // local date of programme Day 1 (stored midnight UTC of that date)
+  totalDays     Int      @default(40)
+  restWeekday   Int      @default(0) // 0=Sunday
+  lockedAt      DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+  changes       CohortScheduleChange[]
+}
+
+model CohortScheduleChange {
+  id          String   @id @default(uuid())
+  scheduleId  String
+  field       String   // class1Time | class2Time | timezone
+  oldValue    String
+  newValue    String
+  changedAt   DateTime @default(now())
+
+  schedule    CohortSchedule @relation(fields: [scheduleId], references: [id])
+  @@index([scheduleId])
+}
+
+model CohortSessionRecord {
+  id                 String            @id @default(uuid())
+  userId             String
+  dayNumber          Int               // FK-by-value to DailyTask.dayNumber
+  slot               CohortSessionSlot
+  scheduledAt        DateTime          // canonical UTC instant of session start
+  attendance         CohortAttendance  @default(UPCOMING)
+  firstJoinedAt      DateTime?
+  lastActivityAt     DateTime?
+  activeWatchSec     Int               @default(0) // during the live window
+  recordingWatchSec  Int               @default(0) // catch-up viewing
+  lastPositionSec    Int               @default(0)
+  furthestPositionSec Int              @default(0)
+  completedAt        DateTime?         // content completion (separate from attendance)
+  reminderSentAt     DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  user               User              @relation(fields: [userId], references: [id])
+  @@unique([userId, dayNumber, slot])
+  @@index([userId, scheduledAt])
+  @@index([scheduledAt]) // reminder job scan
+}
+
+model CohortDayProgress {
+  id             String          @id @default(uuid())
+  userId         String
+  dayNumber      Int
+  status         CohortDayStatus @default(UPCOMING)
+  completionPct  Int             @default(0)
+  completedAt    DateTime?
+  completedLate  Boolean         @default(false)
+  updatedAt      DateTime        @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id])
+  @@unique([userId, dayNumber])
+  @@index([userId, status])
+}
+
+model CohortNotificationLog {
+  id                String    @id @default(uuid())
+  userId            String
+  type              String    // session_reminder | missed_session | pending_work | weekly_report | warning
+  refKey            String    @unique // idempotency: e.g. "reminder:<sessionRecordId>"
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  status            String    @default("pending") // pending | sent | failed
+  providerMessageId String?
+  error             String?
+  retryCount        Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  @@index([userId, type])
+  @@index([status, scheduledFor])
+}
+
+model CohortWarning {
+  id             String    @id @default(uuid())
+  userId         String
+  type           String    // reminder | warning | strong_warning
+  reason         String
+  relatedDates   String    // e.g. "2026-07-17,2026-07-18,2026-07-19"
+  issuedAt       DateTime  @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+  status         String    @default("open") // open | acknowledged | resolved
+
+  user           User      @relation(fields: [userId], references: [id])
+  @@index([userId, status])
+}
+
+model CohortWeeklyReport {
+  id           String   @id @default(uuid())
+  userId       String
+  periodStart  DateTime // Monday 00:00 in student's timezone, stored UTC
+  periodEnd    DateTime
+  data         Json     // frozen snapshot — never recalculated
+  emailedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+  @@unique([userId, periodStart])
+}

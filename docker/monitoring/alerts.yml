@@ -1,0 +1,29 @@
+groups:
+  - name: oet-lms-launch
+    rules:
+      - alert: OetBackendDown
+        expr: up{job="oet-lms-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: OET LMS backend is down
+          description: Prometheus cannot scrape the backend metrics endpoint for at least 2 minutes.
+
+      - alert: OetPurchaseFailuresHigh
+        expr: oet_lms_purchases_failed > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Purchase failures are elevated
+          description: Failed purchases are above the expected staging threshold for more than 10 minutes.
+
+      - alert: OetNoCompletedPurchases
+        expr: oet_lms_purchases_completed == 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: No completed purchases observed
+          description: The payments lifecycle has not produced a completed purchase in the last 30 minutes of monitoring.

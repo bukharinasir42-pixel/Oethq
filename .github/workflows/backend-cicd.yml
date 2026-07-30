@@ -1,0 +1,184 @@
+# Backend: lint/test on PRs; on push to main -> migrate Neon, build/push Docker to ECR, deploy ECS (Fargate Spot + S3).
+#
+# Prerequisites (one-time AWS): run infra/aws-cheapest/setup.ps1 (without -DeployEcs is enough for IAM/ECR/S3/cluster).
+#
+# GitHub repository secrets (Settings -> Secrets and variables -> Actions):
+#   AWS_ACCESS_KEY_ID          IAM user: attach infra/aws-cheapest/iam-github-deploy-policy.json (PassRole for oetlms-ecs-*).
+#   AWS_SECRET_ACCESS_KEY
+#   NEON_DATABASE_URL          Neon pooled connection string for ECS runtime (sslmode=require recommended)
+#   DATABASE_URL               Alias for NEON_DATABASE_URL if you already use that name in GitHub Secrets
+#   NEON_DATABASE_URL_DIRECT   Optional Neon direct (non-pooler) URL for migrations; if omitted, CI strips "-pooler" from NEON_DATABASE_URL
+#   JWT_ACCESS_SECRET
+#   JWT_REFRESH_SECRET
+#   OTP_SECRET
+# Optional secrets (SMTP): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
+#
+# Optional repository variables: NAME_PREFIX (must match infra/aws-cheapest/setup.ps1, default oetlms).
+# Change AWS_REGION in the env block below if your resources are in another region.
+
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-cicd.yml"
+      - "infra/aws-cheapest/scripts/**"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-cicd.yml"
+
+env:
+  AWS_REGION: us-east-1
+  # Prisma 7 pulls @prisma/streams-local (engines: node >=22); match CI to avoid EBADENGINE warnings.
+  NODE_VERSION: "22"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  deploy:
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Resolve Neon database URL from secrets
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          DATABASE_URL_SECRET: ${{ secrets.DATABASE_URL }}
+          NEON_DATABASE_URL_DIRECT: ${{ secrets.NEON_DATABASE_URL_DIRECT }}
+          DATABASE_URL_DIRECT_SECRET: ${{ secrets.DATABASE_URL_DIRECT }}
+        run: |
+          set -euo pipefail
+          if [ -n "${NEON_DATABASE_URL}" ]; then
+            resolved="${NEON_DATABASE_URL}"
+          elif [ -n "${DATABASE_URL_SECRET}" ]; then
+            resolved="${DATABASE_URL_SECRET}"
+            echo "Using DATABASE_URL secret (alias). NEON_DATABASE_URL is preferred for clarity."
+          else
+            echo "::error::Set NEON_DATABASE_URL or DATABASE_URL under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "NEON_DATABASE_URL=${resolved}" >> "$GITHUB_ENV"
+          if [ -n "${NEON_DATABASE_URL_DIRECT}" ]; then
+            echo "DIRECT_URL=${NEON_DATABASE_URL_DIRECT}" >> "$GITHUB_ENV"
+          elif [ -n "${DATABASE_URL_DIRECT_SECRET}" ]; then
+            echo "DIRECT_URL=${DATABASE_URL_DIRECT_SECRET}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Check required repository secrets
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          OTP_SECRET: ${{ secrets.OTP_SECRET }}
+        run: |
+          set -euo pipefail
+          fail=0
+          for name in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY JWT_ACCESS_SECRET JWT_REFRESH_SECRET OTP_SECRET; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Repository secret '$name' is not set or is empty. Add it under Settings → Secrets and variables → Actions (see comments at the top of this workflow file)."
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+      - name: Run Prisma migrations on Neon
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.NEON_DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+        run: |
+          npm ci
+          # prisma.config.ts uses DIRECT_URL (or a non-pooler URL derived from DATABASE_URL) — required for advisory locks on Neon.
+          npx prisma migrate deploy --schema ./src/database/schema.prisma
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Resolve AWS account and ECR registry
+        id: aws
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT}" >> "$GITHUB_OUTPUT"
+          echo "registry=${ACCOUNT}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.aws.outputs.registry }}/oetlms-backend:${{ github.sha }}
+            ${{ steps.aws.outputs.registry }}/oetlms-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to ECS (register task + update/create service)
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCOUNT_ID: ${{ steps.aws.outputs.account_id }}
+          IMAGE_URI: ${{ steps.aws.outputs.registry }}/oetlms-backend:${{ github.sha }}
+          NAME_PREFIX: ${{ vars.NAME_PREFIX }}
+          NEON_DATABASE_URL: ${{ env.NEON_DATABASE_URL }}
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          OTP_SECRET: ${{ secrets.OTP_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          TASK_ENV_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TASK_ENV_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: bash infra/aws-cheapest/scripts/deploy-backend.sh

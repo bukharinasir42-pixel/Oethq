@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "type": "READING",
+  "title": "READING TEST TITLE",
+  "description": "optional short description",
+  "instructions": "optional exam-wide instructions",
+  "timing": {
+    "totalMinutes": 60,
+    "partAMinutes": 15,
+    "partBCMinutes": 45
+  },
+  "partA": {
+    "instructions": "optional Part A instructions",
+    "topic": "Part A topic (e.g. Thalassaemia)",
+    "texts": [
+      {
+        "letter": "A",
+        "title": "TEXT A — title",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "<p>Paragraph 1 of the extract. Inline <b>HTML</b> is allowed.</p>"
+          },
+          {
+            "type": "p",
+            "html": "<p>Paragraph 2 …</p>"
+          },
+          {
+            "type": "table",
+            "head": [
+              "Column 1",
+              "Column 2"
+            ],
+            "rows": [
+              [
+                "row1 cell1",
+                "row1 cell2"
+              ],
+              [
+                "row2 cell1",
+                "row2 cell2"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "letter": "B",
+        "title": "TEXT B — title",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "<p>Paragraph 1 of the extract. Inline <b>HTML</b> is allowed.</p>"
+          },
+          {
+            "type": "p",
+            "html": "<p>Paragraph 2 …</p>"
+          },
+          {
+            "type": "table",
+            "head": [
+              "Column 1",
+              "Column 2"
+            ],
+            "rows": [
+              [
+                "row1 cell1",
+                "row1 cell2"
+              ],
+              [
+                "row2 cell1",
+                "row2 cell2"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "letter": "C",
+        "title": "TEXT C — title",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "<p>Paragraph 1 of the extract. Inline <b>HTML</b> is allowed.</p>"
+          },
+          {
+            "type": "p",
+            "html": "<p>Paragraph 2 …</p>"
+          },
+          {
+            "type": "table",
+            "head": [
+              "Column 1",
+              "Column 2"
+            ],
+            "rows": [
+              [
+                "row1 cell1",
+                "row1 cell2"
+              ],
+              [
+                "row2 cell1",
+                "row2 cell2"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "letter": "D",
+        "title": "TEXT D — title",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "<p>Paragraph 1 of the extract. Inline <b>HTML</b> is allowed.</p>"
+          },
+          {
+            "type": "p",
+            "html": "<p>Paragraph 2 …</p>"
+          },
+          {
+            "type": "table",
+            "head": [
+              "Column 1",
+              "Column 2"
+            ],
+            "rows": [
+              [
+                "row1 cell1",
+                "row1 cell2"
+              ],
+              [
+                "row2 cell1",
+                "row2 cell2"
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "n": 1,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q1 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 2,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q2 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 3,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q3 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 4,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q4 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 5,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q5 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 6,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q6 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 7,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q7 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 8,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q8 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 9,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q9 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 10,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q10 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 11,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q11 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 12,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q12 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 13,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q13 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 14,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q14 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 15,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q15 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 16,
+        "type": "letter_match",
+        "prompt": "PROMPT for Q16 — \"In which text can you find…?\"",
+        "answer": "A"
+      },
+      {
+        "n": 17,
+        "type": "fill_blank",
+        "prompt": "PROMPT for Q17 (use [blank] where the input goes, or omit it for a trailing input)",
+        "answer": {
+          "display": "canonical answer shown on key",
+          "mode": "or",
+          "terms": [
+            "accepted answer",
+            "alt spelling"
+          ],
+          "caseSensitive": false
+        }
+      },
+      {
+        "n": 18,
+        "type": "fill_blank",
+        "prompt": "PROMPT for Q18 (use [blank] where the input goes, or omit it for a trailing input)",
+        "answer": {
+          "display": "canonical answer shown on key",
+          "mode": "or",
+          "terms": [
+            "accepted answer",
+            "alt spelling"
+          ],
+          "caseSensitive": false
+        }
+      },
+      {
+        "n": 19,
+        "type": "fill_blank",
+        "prompt": "PROMPT for Q19 (use [blank] where the input goes, or omit it for a trailing input)",
+        "answer": {
+          "display": "canonical answer shown on key",
+          "mode": "or",
+          "terms": [
+            "accepted answer",
+            "alt spelling"
+          ],
+          "caseSensitive": false
+        }
+      },
+      {
+        "n": 20,
+        "type": "fill_blank",
+        "prompt": "PROMPT for Q20 (use [blank] where the input goes, or omit it for a trailing input)",
+        "answer": {
+          "display": "canonical answer shown on key",
+          "mode": "or",
+          "terms": [
+            "accepted answer",
+            "alt spelling"
+          ],
+          "caseSensitive": false
+        }
+      }
+    ]
+  },
+  "partB": {
+    "instructions": "optional Part B instructions",
+    "items": [
+      {
+        "n": 21,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q21",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 22,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q22",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 23,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q23",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 24,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q24",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 25,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q25",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      },
+      {
+        "n": 26,
+        "kind": "Memo / Policy / Email …",
+        "docTitle": "short document title",
+        "docHtml": "<p>Extract body — HTML allowed.</p>",
+        "prompt": "PROMPT for Q26",
+        "options": {
+          "A": "option A text",
+          "B": "option B text",
+          "C": "option C text"
+        },
+        "answer": "A"
+      }
+    ]
+  },
+  "partC": {
+    "instructions": "optional Part C instructions",
+    "texts": [
+      {
+        "title": "PART C TEXT title (questions 27–34)",
+        "wordCount": 750,
+        "paras": [
+          "First paragraph …",
+          "Second paragraph …",
+          "…"
+        ],
+        "questions": [
+          {
+            "n": 27,
+            "type": "mcq",
+            "prompt": "PROMPT for Q27",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 28,
+            "type": "mcq",
+            "prompt": "PROMPT for Q28",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 29,
+            "type": "mcq",
+            "prompt": "PROMPT for Q29",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 30,
+            "type": "mcq",
+            "prompt": "PROMPT for Q30",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 31,
+            "type": "mcq",
+            "prompt": "PROMPT for Q31",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 32,
+            "type": "mcq",
+            "prompt": "PROMPT for Q32",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 33,
+            "type": "mcq",
+            "prompt": "PROMPT for Q33",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 34,
+            "type": "mcq",
+            "prompt": "PROMPT for Q34",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          }
+        ]
+      },
+      {
+        "title": "PART C TEXT title (questions 35–42)",
+        "wordCount": 750,
+        "paras": [
+          "First paragraph …",
+          "Second paragraph …",
+          "…"
+        ],
+        "questions": [
+          {
+            "n": 35,
+            "type": "mcq",
+            "prompt": "PROMPT for Q35",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 36,
+            "type": "mcq",
+            "prompt": "PROMPT for Q36",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 37,
+            "type": "mcq",
+            "prompt": "PROMPT for Q37",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 38,
+            "type": "mcq",
+            "prompt": "PROMPT for Q38",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 39,
+            "type": "mcq",
+            "prompt": "PROMPT for Q39",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 40,
+            "type": "mcq",
+            "prompt": "PROMPT for Q40",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 41,
+            "type": "mcq",
+            "prompt": "PROMPT for Q41",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 42,
+            "type": "mcq",
+            "prompt": "PROMPT for Q42",
+            "options": {
+              "A": "option A text",
+              "B": "option B text",
+              "C": "option C text",
+              "D": "option D text"
+            },
+            "answer": "A"
+          }
+        ]
+      }
+    ]
+  }
+}

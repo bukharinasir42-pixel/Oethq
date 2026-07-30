@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"console.log\\('ts version:', require\\('typescript'\\).version\\)\")",
+      "PowerShell($b = \"F:\\\\Website code\\\\cohorot\\\\OET-LMS-Next-js-main\\\\backend\"; $f = \"F:\\\\Website code\\\\cohorot\\\\OET-LMS-Next-js-main\\\\frontend\"; foreach \\($p in @\\($b,$f\\)\\) { $nm = Join-Path $p \"node_modules\"; if \\(Test-Path $nm\\) { $item = Get-Item $nm; $count = \\(Get-ChildItem $nm -Force | Measure-Object\\).Count; Write-Output \"$nm : EXISTS \\(link=$\\($item.LinkType\\)\\) entries=$count\" } else { Write-Output \"$nm : MISSING\" } })",
+      "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const j=JSON.parse\\(s\\);console.log\\('accessGranted='+j.accessGranted\\);console.log\\('FTOKEN='+j.accessToken\\)}\\)\")",
+      "Bash(taskkill //PID 23700 //F)",
+      "Bash(npm run *)",
+      "Bash(echo \"started pid $!\")",
+      "Bash(curl -s -o /dev/null -w \"course-tests: %{http_code}\\\\n\" \"http://localhost:4000/course-tests?skill=READING\")",
+      "Bash(curl -s -o /dev/null -w \"course-lectures: %{http_code}\\\\n\" \"http://localhost:4000/course-lectures\")",
+      "Bash(xargs wc -l)",
+      "Read(//c/Users/a/Downloads/**)",
+      "Bash(python -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(awk 'NR==14' \"OET_Listening_Test_5_LMS_paste.html\")"
+    ]
+  }
+}

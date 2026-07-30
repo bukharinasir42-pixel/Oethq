@@ -1,0 +1,15 @@
+/* Hand-authored overrides for the injected Complete Course design (.ccp).
+   Kept separate from the generated complete-course.css so regenerating that
+   file never clobbers these. Loaded after it, so these win. */
+
+/* On phones the plan cards become a horizontal swipe row (one card tall instead
+   of a long vertical stack), so the user swipes sideways rather than scrolling. */
+@media (max-width:720px){
+  .ccp .plans{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;
+    align-items:flex-start;gap:16px;padding:6px 2px 16px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .ccp .plans::-webkit-scrollbar{height:0;display:none}
+  .ccp .plans>.plan{flex:0 0 84%;scroll-snap-align:center}
+}

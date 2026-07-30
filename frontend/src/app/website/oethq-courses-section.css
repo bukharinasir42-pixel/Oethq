@@ -1,0 +1,143 @@
+/* =====================================================================
+   Courses card section — client "courses.html" design, ported to a
+   scoped React section. Every selector is nested under `.crs-section`
+   and classes are prefixed `crs-*` so nothing leaks into the shared
+   OethqNav / OethqFooter. Colours are the client's own brand palette.
+   ===================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+.crs-section{
+  --ink:#071630; --blue:#1F6BFF; --blue-deep:#0B4ED6; --blue-soft:#5B9BFF; --gold:#F5A524;
+  --paper:#fff; --mist:#F3F7FD; --line:#DFE7F3; --muted:#5B6E8C; --muted-dark:#9DB2D4; --ok:#12B76A;
+  --shadow-sm:0 1px 2px rgba(7,22,48,.06),0 6px 18px rgba(7,22,48,.06);
+  --shadow-lg:0 30px 70px -24px rgba(7,22,48,.4);
+  --r:20px; --crs-maxw:1200px;
+  position:relative;background:var(--paper);color:var(--ink);
+  font-family:'Inter',-apple-system,sans-serif;font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;padding:76px 0 86px;
+}
+.crs-section *{box-sizing:border-box}
+.crs-section h2,.crs-section h3,.crs-section h4{font-family:'Archivo',sans-serif;font-weight:900;letter-spacing:-.035em;line-height:1.03;margin:0;text-wrap:balance}
+.crs-section p{margin:0}
+.crs-section a{color:inherit;text-decoration:none}
+
+.crs-wrap{width:100%;max-width:var(--crs-maxw);margin:0 auto;padding:0 22px}
+.crs-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);
+  display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;border:1px solid rgba(31,107,255,.25);background:rgba(31,107,255,.07)}
+.crs-eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--blue);animation:crs-beat 2.4s infinite}
+.crs-lede{color:var(--muted);font-size:16.5px;max-width:60ch}
+.crs-blue{color:var(--blue)}
+
+.crs-head{max-width:720px;margin:0 auto 44px;text-align:center}
+.crs-head h2{font-size:clamp(32px,4.4vw,52px);margin:16px 0 14px}
+.crs-head .crs-lede{margin:0 auto}
+
+/* ---- buttons ---- */
+.crs-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:'Archivo';font-weight:800;font-size:15px;letter-spacing:-.01em;
+  padding:13px 24px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:transform .16s ease,background .16s ease;white-space:nowrap}
+.crs-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease}
+.crs-btn:hover svg{transform:translateX(3px)}
+.crs-btn--primary{background:var(--blue);color:#fff;box-shadow:0 8px 22px -8px rgba(31,107,255,.7)}
+.crs-btn--primary:hover{background:var(--blue-deep)}
+.crs-btn--light{background:#fff;color:var(--ink)}
+.crs-btn--sm{padding:11px 18px;font-size:14px;border-radius:10px}
+.crs-btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed;pointer-events:none}
+
+/* ---- grid + cards ---- */
+.crs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
+.crs-course{position:relative;display:flex;flex-direction:column;border-radius:var(--r);padding:32px 30px 30px;overflow:hidden;
+  transition:transform .22s ease,box-shadow .22s ease;animation:crs-rise .7s cubic-bezier(.22,1,.36,1) both}
+.crs-course:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.crs-course--flag{grid-column:1/-1;color:#fff;
+  background:linear-gradient(160deg,#0A1E44 0%,#0E2E63 52%,#154394 100%);background-size:190% 190%;
+  animation:crs-rise .7s cubic-bezier(.22,1,.36,1) both, crs-flag-pan 14s ease-in-out infinite}
+.crs-course--flag::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(245,165,36,.7),transparent);animation:crs-flag-line 6s ease-in-out infinite}
+.crs-course--solo{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+/* staggered entrance */
+.crs-course--flag{animation-delay:0s}
+.crs-grid .crs-course--solo:nth-of-type(2){animation-delay:.06s}
+.crs-grid .crs-course--solo:nth-of-type(3){animation-delay:.12s}
+.crs-grid .crs-course--solo:nth-of-type(4){animation-delay:.18s}
+.crs-grid .crs-course--solo:nth-of-type(5){animation-delay:.24s}
+
+.crs-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;align-self:flex-start}
+.crs-course--flag .crs-tag{background:rgba(245,165,36,.16);color:var(--gold);border:1px solid rgba(245,165,36,.32)}
+.crs-course--solo .crs-tag{background:rgba(31,107,255,.08);color:var(--blue);border:1px solid rgba(31,107,255,.22)}
+.crs-course--soon .crs-tag{background:rgba(91,110,140,.1);color:var(--muted);border:1px solid var(--line)}
+.crs-course h3{font-size:clamp(27px,3vw,38px);margin:18px 0 12px}
+/* explicit colours beat the homepage's global heading/bold styles */
+.crs-section .crs-course--flag h3,
+.crs-section .crs-course--flag .crs-price b,
+.crs-section .crs-course--flag .crs-fact b{color:#fff}
+.crs-section .crs-course--solo h3,
+.crs-section .crs-course--solo .crs-price b,
+.crs-section .crs-course--solo .crs-fact b{color:var(--ink)}
+.crs-section .crs-course--soon h3{color:var(--muted)}
+.crs-section .crs-course--soon .crs-fact b{color:var(--muted)}
+.crs-desc{font-size:14.8px;max-width:44ch}
+.crs-course--flag .crs-desc{color:#B9CCEC}
+.crs-course--solo .crs-desc{color:var(--muted)}
+
+.crs-skills{display:flex;gap:7px;flex-wrap:wrap;margin:20px 0 0}
+.crs-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:6px 11px;border-radius:7px}
+.crs-course--flag .crs-chip{background:rgba(255,255,255,.1);color:#DCE8FB;border:1px solid rgba(255,255,255,.14)}
+.crs-course--solo .crs-chip{background:var(--mist);color:#33456A;border:1px solid var(--line)}
+
+.crs-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border-radius:13px;overflow:hidden;margin:24px 0 0}
+.crs-course--flag .crs-facts{background:rgba(255,255,255,.16)}
+.crs-course--solo .crs-facts{background:var(--line);border:1px solid var(--line)}
+.crs-fact{padding:13px 14px}
+.crs-course--flag .crs-fact{background:rgba(255,255,255,.07)}
+.crs-course--solo .crs-fact{background:var(--mist)}
+.crs-fact b{display:block;font-family:'Archivo';font-weight:900;font-size:20px;letter-spacing:-.035em;line-height:1.1}
+.crs-fact span{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;margin-top:4px;line-height:1.4}
+.crs-course--flag .crs-fact span{color:var(--muted-dark)}
+.crs-course--solo .crs-fact span{color:var(--muted)}
+
+.crs-foot{margin-top:auto;padding-top:26px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.crs-price{display:flex;flex-direction:column}
+.crs-price small{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.crs-course--flag .crs-price small{color:var(--muted-dark)}
+.crs-course--solo .crs-price small{color:var(--muted)}
+.crs-price b{font-family:'Archivo';font-weight:900;font-size:32px;letter-spacing:-.045em;line-height:1}
+.crs-price em{font-style:normal;font-size:13px;font-weight:500;font-family:'Inter'}
+.crs-course--flag .crs-price em{color:var(--muted-dark)}
+.crs-course--solo .crs-price em{color:var(--muted)}
+.crs-free{font-size:12.5px;margin-top:6px;font-weight:600;color:var(--gold)}
+.crs-soon-price{font-family:'Archivo';font-weight:900;font-size:22px;letter-spacing:-.03em;color:var(--muted)}
+/* whole card clickable */
+.crs-stretch::after{content:"";position:absolute;inset:0;z-index:2}
+.crs-foot .crs-btn{position:relative;z-index:3}
+
+.crs-helper{margin-top:34px;background:var(--mist);border:1px solid var(--line);border-radius:16px;padding:22px 26px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.crs-helper p{font-size:14.5px;color:#25344F}
+.crs-helper b{font-family:'Archivo';font-weight:900;letter-spacing:-.02em}
+.crs-helper .crs-btn{margin-left:auto;background:transparent;color:var(--ink);border-color:var(--line)}
+.crs-helper .crs-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ---- flagship animations ---- */
+@keyframes crs-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes crs-flag-pan{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes crs-flag-line{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes crs-beat{0%{box-shadow:0 0 0 0 rgba(31,107,255,.45)}70%{box-shadow:0 0 0 7px rgba(31,107,255,0)}100%{box-shadow:0 0 0 0 rgba(31,107,255,0)}}
+
+@media (max-width:980px){
+  .crs-grid{grid-template-columns:1fr}
+  .crs-course--flag{grid-column:auto}
+}
+@media (max-width:640px){
+  .crs-section{padding:52px 0 60px}
+  .crs-course{padding:26px 22px 24px}
+  .crs-foot{flex-direction:column;align-items:stretch}
+  .crs-foot .crs-btn{width:100%}
+  /* Cards become a horizontal swipe row on phones — one card tall instead of a long stack. */
+  .crs-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x mandatory;align-items:flex-start;gap:14px;padding:4px 2px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .crs-grid::-webkit-scrollbar{height:0;display:none}
+  .crs-grid>.crs-course{flex:0 0 86%;scroll-snap-align:center;animation:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .crs-section *{animation:none!important;transition:none!important}
+  .crs-course{opacity:1;transform:none}
+}

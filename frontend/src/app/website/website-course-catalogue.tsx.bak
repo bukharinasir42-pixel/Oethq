@@ -1,0 +1,146 @@
+"use client";
+
+/**
+ * WebsiteCourseCatalogue — new homepage section shown BELOW the existing (and
+ * untouched) Complete Course pricing table. Presents the broader OET HQ product
+ * ecosystem from the live /products catalogue. Active cards link to their landing
+ * page; locked cards are presentation-only (Coming Soon, no price, no checkout).
+ */
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, BookOpen, Headphones, Layers, Lock, Mic, PenLine } from "lucide-react";
+import { productsApi, type CatalogueProduct } from "@/lib/products-api";
+
+function skillIcon(p: CatalogueProduct) {
+  const cls = "h-6 w-6";
+  if (p.slug === "reading-listening") return <Layers className={cls} aria-hidden />;
+  if (p.includedSkills.includes("WRITING")) return <PenLine className={cls} aria-hidden />;
+  if (p.includedSkills.includes("SPEAKING")) return <Mic className={cls} aria-hidden />;
+  if (p.includedSkills.length === 1 && p.includedSkills[0] === "READING") return <BookOpen className={cls} aria-hidden />;
+  if (p.includedSkills.length === 1 && p.includedSkills[0] === "LISTENING") return <Headphones className={cls} aria-hidden />;
+  return <Layers className={cls} aria-hidden />;
+}
+
+function CourseCard({ p }: { p: CatalogueProduct }) {
+  const locked = p.status === "COMING_SOON" || !p.landingRoute;
+  return (
+    <div
+      className={`group relative flex flex-col rounded-2xl border bg-white p-6 transition ${
+        locked
+          ? "border-[#e7ecf5] opacity-95"
+          : "border-[#e4eaf6] shadow-[0_1px_3px_rgba(13,42,90,.06)] hover:-translate-y-1 hover:border-[#c9dcfb] hover:shadow-[0_18px_38px_-18px_rgba(13,42,90,.28)]"
+      }`}
+    >
+      {p.featured && !locked && (
+        <span className="absolute right-5 top-5 rounded-full bg-[#eff4ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#2563EB]">
+          Popular
+        </span>
+      )}
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+          locked ? "bg-[#f1f3f7] text-[#7f90a6]" : "bg-[#eef4ff] text-[#2563EB]"
+        }`}
+      >
+        {skillIcon(p)}
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <h3 style={{ fontFamily: "var(--font-premium), Georgia, serif" }} className="text-[21px] font-semibold leading-tight tracking-[-0.01em] text-[#0B1B3F]">{p.name}</h3>
+        {locked && (
+          <span className="rounded-full border border-[#f4e2a6] bg-[#fdf3d6] px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-[#8a6d1f]">
+            Coming soon
+          </span>
+        )}
+      </div>
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-[#43536b]">{p.shortDescription}</p>
+
+      {p.includedSkills.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {p.includedSkills.map((s) => (
+            <span key={s} className="rounded-md bg-[#f5f8ff] px-2 py-1 text-[11px] font-semibold capitalize text-[#22335C]">
+              {s.toLowerCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center justify-between border-t border-[#eef2f9] pt-4">
+        <span className={`text-sm font-bold ${locked ? "text-[#7f90a6]" : "text-[#0B1B3F]"}`}>
+          {p.priceLabel}
+        </span>
+        {locked ? (
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-xl bg-[#f1f3f7] px-4 py-2 text-[13px] font-semibold text-[#8795a8]"
+          >
+            <Lock className="h-3.5 w-3.5" aria-hidden /> Coming Soon
+          </button>
+        ) : (
+          <Link
+            href={p.landingRoute as string}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-b from-[#3d8bf3] to-[#1f66d0] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_8px_20px_-8px_rgba(47,127,240,.55)] transition hover:brightness-105"
+          >
+            Explore Course <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function WebsiteCourseCatalogue() {
+  const [products, setProducts] = useState<CatalogueProduct[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    productsApi
+      .list()
+      .then((r) => { if (active) { setProducts(r.products); setLoaded(true); } })
+      .catch(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, []);
+
+  const complete = products.find((p) => p.category === "COMPLETE");
+  const cards = products.filter((p) => p.category !== "COMPLETE");
+  if (loaded && cards.length === 0) return null;
+
+  return (
+    <section className="oethq-rest" aria-label="Course catalogue">
+      <div className="mx-auto max-w-[1140px] px-5 py-16 sm:py-20">
+        <div className="mx-auto max-w-[680px] text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2563EB]">More ways to prepare</p>
+          <h2 style={{ fontFamily: "var(--font-premium), Georgia, serif" }} className="mt-3 text-[32px] font-semibold leading-[1.1] tracking-[-0.015em] text-[#0B1B3F] sm:text-[42px]">
+            Choose the Course Built for Your OET Goal
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#43536b]">
+            Go all-in with a Complete Course above, or focus exactly where you lose marks with a standalone
+            Reading, Listening, or combined Reading &amp; Listening course. Same OET HQ method — pick your path.
+          </p>
+        </div>
+
+        {complete && (
+          <Link
+            href="#pricing"
+            className="mt-8 flex flex-col items-start justify-between gap-3 rounded-2xl border border-[#1e5aa8]/25 bg-gradient-to-r from-[#0A3060] to-[#1465C8] px-6 py-5 text-white sm:flex-row sm:items-center"
+          >
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#bfe0ff]">Most complete · all four skills</p>
+              <p style={{ fontFamily: "var(--font-premium), Georgia, serif" }} className="mt-1 text-[22px] font-semibold tracking-[-0.01em]">{complete.name}</p>
+              <p className="mt-0.5 text-sm text-white/80">{complete.shortDescription}</p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-[13px] font-semibold">
+              See the packages <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </span>
+          </Link>
+        )}
+
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((p) => <CourseCard key={p.slug} p={p} />)}
+        </div>
+      </div>
+    </section>
+  );
+}

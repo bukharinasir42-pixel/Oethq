@@ -1,0 +1,660 @@
+{
+  "schemaVersion": 1,
+  "type": "READING",
+  "title": "OET HQ Reading — Full Test No. 1",
+  "description": "Full paper — Parts A, B and C — 42 questions. Part A is expeditious (skim and scan) reading of four short texts on one clinical topic; Parts B and C are careful reading.",
+  "instructions": "Part A is completed first on its own 15-minute timer; when the time runs out or you finish Part A, the paper moves on and you cannot return. Parts B and C share a single 45-minute timer, and you may move freely between Part B and the two Part C texts in any order. Part A answers are typed or selected and are marked flexibly on meaning; Parts B and C are multiple choice. Each timer submits automatically at zero.",
+  "timing": {
+    "totalMinutes": 60,
+    "partAMinutes": 15,
+    "partBCMinutes": 45
+  },
+  "partA": {
+    "instructions": "Answers must come only from Texts A–D. For questions 1–6, choose the text (A, B, C or D) in which the information can be found. For questions 7–20, answer the question or complete the sentence with a word or short phrase from the texts.",
+    "topic": "Thalassaemia",
+    "texts": [
+      {
+        "letter": "A",
+        "title": "Definition, Genetics and Epidemiology",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "The thalassaemia syndromes are a group of inherited disorders in which the production of haemoglobin, the oxygen-carrying protein of red blood cells, is disrupted. They are caused by deletions or mutations in the DNA that codes for the haemoglobin chains, and are traditionally divided into two types according to which chain is affected: α-thalassaemia (α-globin chains) and β-thalassaemia (β-globin chains). The α-globin chains are made from the HBA1 and HBA2 genes on chromosome 16, while the β-globin chains are made from the HBB gene on chromosome 11."
+          },
+          {
+            "type": "p",
+            "html": "Reduced globin production means that less functional haemoglobin is formed, and the resulting imbalance leaves an excess of the unaffected chain. Both the underproduction of haemoglobin and these excess chains lead to anaemia. In α-thalassaemia the anaemia arises mainly from the premature destruction of red cells (haemolysis), whereas in β-thalassaemia it results predominantly from red cells that fail to form properly. The clinical severity of the condition, which ranges from mild to fatal, reflects the degree of imbalance between the α- and β-globin chains."
+          },
+          {
+            "type": "p",
+            "html": "Historically, thalassaemia was most common in a belt stretching from the Mediterranean and Africa to Southeast Asia. Carrier frequencies rose in these regions because the trait, like sickle cell trait, offers some protection against malaria: it slows parasite growth and speeds the clearance of infected red cells, reducing childhood deaths from the disease. Large-scale population movement in recent decades has spread the condition more widely, and increasing numbers of affected individuals are now found in North America and Europe."
+          }
+        ]
+      },
+      {
+        "letter": "B",
+        "title": "Diagnosis and Screening",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "Diagnosis of thalassaemia relies on a combination of a complete blood count (CBC) and haemoglobin analysis. On the blood count, the red cells of an affected person are typically small (microcytic) and pale (hypochromic): the mean corpuscular volume (MCV) is usually below 80 fL and the mean corpuscular haemoglobin (MCH) below 27 pg. The red cell distribution width (RDW), a measure of the variation in red cell size, is normal or only mildly raised — a feature that helps distinguish thalassaemia from iron-deficiency anaemia, in which the RDW is usually high. The red cell count itself is often raised."
+          },
+          {
+            "type": "p",
+            "html": "Because these indices cannot by themselves separate the different causes of small red cells, haemoglobin typing by high-performance liquid chromatography (HPLC) or capillary zone electrophoresis is used to measure the proportions of the different haemoglobins. A raised level of haemoglobin A2 (above 3.5% of total haemoglobin) is characteristic of β-thalassaemia trait. Genetic testing is usually needed to confirm a diagnosis of α-thalassaemia."
+          },
+          {
+            "type": "p",
+            "html": "Several screening programmes can be offered, including neonatal, carrier, premarital and antenatal screening. Screening is central to prevention, yet provision remains inadequate worldwide, particularly in the regions where the condition is most common."
+          }
+        ]
+      },
+      {
+        "letter": "C",
+        "title": "Agents Used to Treat Transfusional Iron Overload",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "<strong>Agents used to treat transfusional iron overload</strong>"
+          },
+          {
+            "type": "table",
+            "head": [
+              "Agent",
+              "Route and administration",
+              "Usual dose",
+              "Adverse effects and monitoring"
+            ],
+            "rows": [
+              [
+                "Deferoxamine",
+                "Slow subcutaneous infusion over 8–12 hours, 5–7 nights per week",
+                "20–40 mg/kg/day",
+                "Ototoxicity and retinal changes; growth retardation in young children; local skin reactions at the infusion site"
+              ],
+              [
+                "Deferasirox (dispersible tablet)",
+                "Oral, once daily",
+                "20 mg/kg/day",
+                "Raised serum creatinine and renal impairment; gastrointestinal upset. Monitor renal and hepatic function"
+              ],
+              [
+                "Deferasirox (film-coated tablet)",
+                "Oral, once daily",
+                "14 mg/kg/day",
+                "As above"
+              ],
+              [
+                "Deferiprone",
+                "Oral, in three divided doses",
+                "75 mg/kg/day (maximum 99 mg/kg/day)",
+                "Agranulocytosis and neutropenia — measure the absolute neutrophil count (ANC) weekly; arthralgia; raised ALT (monitor monthly)"
+              ]
+            ]
+          },
+          {
+            "type": "p",
+            "html": "<em>Deferiprone tablets are approved for patients aged 8 years and over; the oral solution may be used from 3 years of age. Deferoxamine may also be given intravenously when iron overload is severe or when there is cardiac involvement.</em>"
+          }
+        ]
+      },
+      {
+        "letter": "D",
+        "title": "Transfusion, Disease-Modifying Therapy and Iron Overload",
+        "blocks": [
+          {
+            "type": "p",
+            "html": "Transfusion is a key treatment for the chronic anaemia of severe thalassaemia. Patients are broadly categorised as having transfusion-dependent thalassaemia (TDT) or non-transfusion-dependent thalassaemia (NTDT). The decision to start a patient on a long-term, regular transfusion programme depends on several factors, including how severe the anaemia is at first presentation, poor growth, and clinical signs of ineffective erythropoiesis such as skeletal deformities."
+          },
+          {
+            "type": "p",
+            "html": "Beyond transfusion, disease-modifying drugs that target the ineffective red cell production and premature red cell destruction of thalassaemia are available. Two such options are luspatercept, which improves the maturation of red cell precursors, and mitapivat, which acts on red cell metabolism. Haematopoietic stem cell transplantation and gene therapy are both approved as potentially curative treatments."
+          },
+          {
+            "type": "p",
+            "html": "A major concern in long-term management is iron overload. This may arise from repeated transfusions in TDT, or from increased absorption of iron from the gut in NTDT. Over time, iron accumulates in tissues such as the heart and the liver. Unless the excess iron is removed — a process known as chelation — the affected organs are exposed to oxidative stress and are at risk of damage."
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "n": 1,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about why thalassaemia became common in certain populations?",
+        "answer": "A"
+      },
+      {
+        "n": 2,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about treatments that may cure thalassaemia?",
+        "answer": "D"
+      },
+      {
+        "n": 3,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about the unwanted effects of medicines used to remove iron?",
+        "answer": "C"
+      },
+      {
+        "n": 4,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about the blood-test findings that point to a carrier of the condition?",
+        "answer": "B"
+      },
+      {
+        "n": 5,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about how harmful amounts of iron build up in the body?",
+        "answer": "D"
+      },
+      {
+        "n": 6,
+        "type": "letter_match",
+        "prompt": "In which text can you find information about why the condition leads to a shortage of haemoglobin?",
+        "answer": "A"
+      },
+      {
+        "n": 7,
+        "type": "fill_blank",
+        "prompt": "At the usual starting dose, how much deferiprone should a patient receive per kilogram each day?",
+        "answer": {
+          "display": "75 mg/kg/day",
+          "mode": "or",
+          "terms": [
+            "75"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 8,
+        "type": "fill_blank",
+        "prompt": "Which chelating drug is given as an overnight infusion under the skin?",
+        "answer": {
+          "display": "deferoxamine",
+          "mode": "or",
+          "terms": [
+            "deferoxamine",
+            "desferrioxamine",
+            "desferoxamine"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 9,
+        "type": "fill_blank",
+        "prompt": "Above what level of haemoglobin A2 is β-thalassaemia trait suspected?",
+        "answer": {
+          "display": "3.5% (above 3.5%)",
+          "mode": "or",
+          "terms": [
+            "3.5"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 10,
+        "type": "fill_blank",
+        "prompt": "How often should the neutrophil count be measured in a patient taking deferiprone?",
+        "answer": {
+          "display": "weekly",
+          "mode": "or",
+          "terms": [
+            "week"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 11,
+        "type": "fill_blank",
+        "prompt": "In which two organs does excess iron particularly accumulate?",
+        "answer": {
+          "display": "heart and liver",
+          "mode": "and",
+          "terms": [
+            "heart",
+            "liver"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 12,
+        "type": "fill_blank",
+        "prompt": "What is the youngest age at which the oral solution of deferiprone may be given?",
+        "answer": {
+          "display": "3 years",
+          "mode": "or",
+          "terms": [
+            "3 year",
+            "three year"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 13,
+        "type": "fill_blank",
+        "prompt": "Apart from HPLC, which technique can be used for haemoglobin typing?",
+        "answer": {
+          "display": "capillary zone electrophoresis",
+          "mode": "or",
+          "terms": [
+            "capillary"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 14,
+        "type": "fill_blank",
+        "prompt": "In α-thalassaemia, the anaemia is mainly the result of the ______ of red blood cells.",
+        "answer": {
+          "display": "premature destruction (haemolysis)",
+          "mode": "or",
+          "terms": [
+            "premature",
+            "haemolysis",
+            "hemolysis"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 15,
+        "type": "fill_blank",
+        "prompt": "A normal or only mildly raised red cell distribution width helps to distinguish thalassaemia from ______.",
+        "answer": {
+          "display": "iron-deficiency anaemia",
+          "mode": "or",
+          "terms": [
+            "iron deficiency"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 16,
+        "type": "fill_blank",
+        "prompt": "Two drugs that modify the course of the disease are luspatercept and ______.",
+        "answer": {
+          "display": "mitapivat",
+          "mode": "or",
+          "terms": [
+            "mitapivat"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 17,
+        "type": "fill_blank",
+        "prompt": "Patients who require regular transfusions are described as having ______ thalassaemia.",
+        "answer": {
+          "display": "transfusion-dependent",
+          "mode": "or",
+          "terms": [
+            "transfusion dependent",
+            "tdt"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 18,
+        "type": "fill_blank",
+        "prompt": "The α-globin chains are produced from genes located on chromosome ______.",
+        "answer": {
+          "display": "16 (chromosome 16)",
+          "mode": "or",
+          "terms": [
+            "16"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 19,
+        "type": "fill_blank",
+        "prompt": "If excess iron is not removed, the organs in which it collects are exposed to ______.",
+        "answer": {
+          "display": "oxidative stress",
+          "mode": "or",
+          "terms": [
+            "oxidative"
+          ],
+          "caseSensitive": true
+        }
+      },
+      {
+        "n": 20,
+        "type": "fill_blank",
+        "prompt": "When taken by mouth, deferiprone is given in ______.",
+        "answer": {
+          "display": "three divided doses",
+          "mode": "or",
+          "terms": [
+            "divided"
+          ],
+          "caseSensitive": true
+        }
+      }
+    ]
+  },
+  "partB": {
+    "instructions": "For each of the following extracts, choose the answer (A, B or C) which you think fits best according to the text.",
+    "items": [
+      {
+        "n": 21,
+        "kind": "Memo",
+        "docTitle": "Medication Refrigerator Temperature Monitoring",
+        "docHtml": "To: All ward staff. Following a recent inspection, concerns were raised about inconsistent temperature monitoring of medication refrigerators across clinical areas. All refrigerators storing vaccines, insulin, and other temperature-sensitive medications must be maintained between 2°C and 8°C. Staff are reminded that temperatures must be recorded twice daily, at the beginning and end of each shift, using the standardised log sheets. If the temperature falls outside the acceptable range, the affected medications must be quarantined immediately and pharmacy contacted for advice – do not assume the medications are safe to use even if the temperature has subsequently returned to normal. The automatic monitoring system does not replace the requirement for manual checks, as it is designed to detect equipment failure rather than provide real-time verification.",
+        "prompt": "What is the main purpose of this memo?",
+        "options": {
+          "A": "To reinforce existing procedures that have not been followed properly.",
+          "B": "To introduce a new electronic temperature monitoring system.",
+          "C": "To warn staff that medications have been compromised by temperature changes."
+        },
+        "answer": "A"
+      },
+      {
+        "n": 22,
+        "kind": "Policy",
+        "docTitle": "Discharge Planning for Elderly Patients",
+        "docHtml": "Discharge planning should commence on the day of admission for all patients aged 75 and over to ensure timely and safe transitions of care. The multidisciplinary team must conduct a comprehensive assessment including functional status, cognitive capacity, social support, and home environment suitability. Patients should not be discharged before 10:00am unless clinically indicated and the patient has expressed a preference for early discharge, nor after 8:00pm except in exceptional circumstances documented by the responsible consultant. Where patients live alone and require new care packages, a minimum of 48 hours' notice must be provided to community services. Discharge should not proceed if the required support cannot be confirmed in writing by the receiving service.",
+        "prompt": "According to the policy, discharge before 10:00am is permitted when",
+        "options": {
+          "A": "community services have confirmed support arrangements in writing.",
+          "B": "the multidisciplinary team has completed all required assessments.",
+          "C": "the patient wants to leave early and there is a clinical reason for doing so."
+        },
+        "answer": "C"
+      },
+      {
+        "n": 23,
+        "kind": "Guidelines",
+        "docTitle": "Management of Suspected C. difficile Infection",
+        "docHtml": "Patients presenting with three or more episodes of loose stool in a 24-hour period should be isolated as a precaution while awaiting stool sample results. Single-room isolation with dedicated toilet facilities is preferred; where this is not available, cohorting with other confirmed C. difficile patients may be considered. Hand hygiene with soap and water is essential, as alcohol-based hand rubs do not reliably eliminate C. difficile spores. Staff should wear gloves and aprons for all patient contact, disposing of these before leaving the patient's immediate environment. Unnecessary antibiotic therapy should be discontinued where clinically appropriate, as broad-spectrum antibiotics are a key risk factor for C. difficile infection.",
+        "prompt": "The guidelines suggest that alcohol hand rubs",
+        "options": {
+          "A": "should be used in addition to soap and water for maximum protection.",
+          "B": "are not effective enough against the bacteria causing this infection.",
+          "C": "can be used when soap and water facilities are not readily available."
+        },
+        "answer": "B"
+      },
+      {
+        "n": 24,
+        "kind": "Training Resource",
+        "docTitle": "Communicating Difficult Diagnoses",
+        "docHtml": "Before delivering difficult news, clinicians should establish what the patient already knows and what they wish to know – some patients prefer full information while others may not want detailed prognostic discussions. A private, quiet environment should be arranged, with adequate time allocated to allow for questions and emotional processing. Information should be delivered in manageable portions, avoiding medical jargon, and checking understanding frequently. Clinicians should acknowledge emotional responses without attempting to minimise them, and should avoid giving false reassurance. Written information and details of support services should be provided, and a follow-up appointment offered within an appropriate timeframe to address further questions.",
+        "prompt": "According to the training resource, clinicians should",
+        "options": {
+          "A": "determine how much information the patient wants before proceeding.",
+          "B": "provide complete information regardless of patient preference.",
+          "C": "reassure patients that outcomes are often better than expected."
+        },
+        "answer": "A"
+      },
+      {
+        "n": 25,
+        "kind": "Protocol",
+        "docTitle": "Oxygen Therapy in COPD Patients",
+        "docHtml": "Patients with known or suspected chronic obstructive pulmonary disease (COPD) are at risk of carbon dioxide retention when given high concentrations of supplemental oxygen. Target oxygen saturation for these patients should be 88-92% rather than the standard 94-98% used for other acutely unwell patients. Initial oxygen therapy should be delivered via a 24% or 28% Venturi mask, which provides controlled oxygen concentration independent of the patient's breathing pattern. Arterial blood gas analysis should be performed within 30-60 minutes of commencing oxygen therapy to assess for hypercapnia. If oxygen saturations cannot be maintained within the target range using low-flow oxygen, the patient may require non-invasive ventilation or escalation to critical care.",
+        "prompt": "The protocol indicates that high-concentration oxygen in COPD patients",
+        "options": {
+          "A": "is recommended for rapid improvement of oxygen levels.",
+          "B": "should only be administered in critical care settings.",
+          "C": "may cause harmful accumulation of carbon dioxide."
+        },
+        "answer": "C"
+      },
+      {
+        "n": 26,
+        "kind": "Notice",
+        "docTitle": "Supervision of Nursing Students on Clinical Placement",
+        "docHtml": "Nursing students on clinical placement must work under the direct supervision of a registered nurse at all times. While students may undertake clinical skills for which they have been assessed as competent in their university programme, the supervising nurse retains accountability for patient care. Students must not administer medications independently, even if they have received medication administration training, until they have been specifically signed off for this placement area. The practice assessor should be consulted before students participate in any procedure they have not previously performed in the clinical setting. Any concerns about student conduct or competence should be documented and reported to the university link lecturer within 24 hours.",
+        "prompt": "The notice makes clear that nursing students",
+        "options": {
+          "A": "can give medications if trained at university, without additional authorisation.",
+          "B": "require placement-specific approval before administering any medications.",
+          "C": "should only perform procedures they have done before in a clinical setting."
+        },
+        "answer": "B"
+      }
+    ]
+  },
+  "partC": {
+    "instructions": "Read the following texts. For each question, choose the answer (A, B, C or D) which you think fits best according to the text.",
+    "texts": [
+      {
+        "title": "Treating brain health as economic infrastructure",
+        "wordCount": 783,
+        "paras": [
+          "Neurological and mental-health conditions affect far more than the people diagnosed with them. They place pressure on healthcare systems, interrupt education and employment, and reduce participation in family and community life. These consequences have acquired new significance as economies become more dependent on cognitive work. The capacity to learn, adapt, solve problems and cooperate is increasingly treated as a productive asset, yet economic models rarely account for how illness, environmental exposure or unequal access to education and healthcare can weaken it. A new international commission argues that brain health should therefore be considered part of a society’s infrastructure.",
+          "The proposal uses the term “brain capital” to combine two domains: protection from neurological and psychiatric illness, and the cognitive and emotional skills that allow people and organisations to function. Its authors describe brains as infrastructure because they are foundational, can deteriorate without maintenance and become more valuable when strengthened. The comparison is deliberately provocative. Roads and power networks can be counted and inspected relatively easily; cognitive resilience, creativity or interpersonal trust cannot. Turning the metaphor into policy requires agreement about what should be measured and convincing evidence that these measures relate to social and economic resilience.",
+          "Existing analytical tools do not yet provide that evidence reliably. Health statistics may record disease burden without showing how it influences productivity, while economic indicators can undervalue unpaid care, social participation and cognitive wellbeing. The commission also warns that studies often confuse association with causation. A region with better education and stronger economic performance may also report better cognitive outcomes, but this does not reveal which factor produced the others. Unless causal pathways are clarified, an apparently precise model could encourage governments to invest in indicators that are easy to measure rather than interventions that genuinely improve brain health.",
+          "The first task is therefore conceptual rather than numerical. Researchers from medicine, neuroscience, psychology, economics, education, environmental science and public policy will attempt to identify which capacities matter and how they interact across the life course. The commission promises participation from the global south so that resilience and productivity are not defined only through models developed in wealthier countries. This matters because the meaning and value of cognitive skills may depend on social conditions, labour markets and cultural expectations. A universal framework will need enough consistency for comparison without treating different populations as interchangeable.",
+          "A proposed Brain Capital Index would then combine health indicators, assessments of cognitive skills, environmental risks and the systems that either support or restrict human development. In principle, a single index could help governments compare needs, allocate resources and evaluate progress. In practice, its reliability will be limited by uneven data. Countries differ in how they diagnose mental and neurological conditions, measure educational outcomes and record environmental exposure. Missing information can make an index appear comparable while concealing large differences in data quality. Transparent methods and explicit uncertainty will therefore be as important as the final score.",
+          "Measurement is intended to lead to action. The commission plans policy tools for governments, multilateral organisations and investors, together with pilot programmes demonstrating how the framework might be used. Yet producing reports and dashboards is easier than proving that they change decisions or improve outcomes. Implementation will require priorities, accountable milestones and evaluation of unintended effects. A metric designed to attract investment could, for example, favour interventions with easily demonstrated economic returns while overlooking groups whose needs are substantial but difficult to quantify. Evidence of policy uptake should not be mistaken automatically for evidence of health benefit.",
+          "The commission’s governance arrangements attempt to address some of these concerns. Scientific work will be separated from funding control, relationships must be disclosed and methods will undergo external and peer review. Advisory groups representing lived experience, civil society, research and business will provide context without formal authority over scientific conclusions. This structure recognises a tension at the centre of the project: broad participation is necessary for legitimacy and implementation, but a large coalition can also bring competing interests and pressure for rapid, visible results. Independence will depend on how these safeguards operate, not merely on their presence in an organisational chart.",
+          "Treating brain health as infrastructure could correct a genuine policy blind spot. It encourages finance, education, labour and environmental authorities to recognise that neurological and mental health are not concerns for health ministries alone. But the concept will earn credibility only if it produces measures that are causally defensible, internationally fair and useful in practice. Brain capital is currently an organising idea rather than a validated economic asset. The commission’s most important contribution may therefore be not a headline index, but a disciplined account of what can be measured, what remains uncertain and which investments improve both health and resilience."
+        ],
+        "questions": [
+          {
+            "n": 27,
+            "type": "mcq",
+            "prompt": "The comparison with infrastructure chiefly emphasises brain health's",
+            "options": {
+              "A": "management by economic rather than health ministries",
+              "B": "foundational role and capacity to deteriorate or improve",
+              "C": "direct measurability alongside roads and power networks",
+              "D": "economic effects rather than personal or social consequences"
+            },
+            "answer": "B"
+          },
+          {
+            "n": 28,
+            "type": "mcq",
+            "prompt": "In paragraph four, what does the sentence “This matters” refer to?",
+            "options": {
+              "A": "the study of capacities across the life course",
+              "B": "the project's multidisciplinary design",
+              "C": "global-south participation in defining resilience and productivity",
+              "D": "the direct comparability of different populations"
+            },
+            "answer": "C"
+          },
+          {
+            "n": 29,
+            "type": "mcq",
+            "prompt": "In the final paragraph, the phrase “policy blind spot” refers to",
+            "options": {
+              "A": "non-health sectors' overlooked influence on brain health",
+              "B": "the lack of comparable data on economic costs",
+              "C": "uncertainty over whether to measure health or skills",
+              "D": "a preference for neurological technology over prevention"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 30,
+            "type": "mcq",
+            "prompt": "The writer warns that an apparently precise brain-capital model may",
+            "options": {
+              "A": "prevent comparison of health and productivity data",
+              "B": "overlook interventions with demonstrable economic value",
+              "C": "replace the need for causal research",
+              "D": "reward measurable proxies over effective interventions"
+            },
+            "answer": "D"
+          },
+          {
+            "n": 31,
+            "type": "mcq",
+            "prompt": "Transparent methods and explicit uncertainty are necessary because",
+            "options": {
+              "A": "similar scores may rest on data of unequal quality",
+              "B": "countries should choose indicators that match their priorities",
+              "C": "environmental data cannot be combined with health measures",
+              "D": "stronger data systems should supply estimates for weaker ones"
+            },
+            "answer": "A"
+          },
+          {
+            "n": 32,
+            "type": "mcq",
+            "prompt": "The example of easily demonstrated economic returns shows how a metric may",
+            "options": {
+              "A": "discourage investment in programmes with delayed effects",
+              "B": "sideline serious needs that are difficult to quantify",
+              "C": "make fair allocation incompatible with economic criteria",
+              "D": "treat policy uptake as more useful than health benefit"
+            },
+            "answer": "B"
+          },
+          {
+            "n": 33,
+            "type": "mcq",
+            "prompt": "The writer's reservation is that governance safeguards",
+            "options": {
+              "A": "may give advisory groups control over scientific conclusions",
+              "B": "cannot be assessed through multidisciplinary peer review",
+              "C": "may deter business participation when funding is disclosed",
+              "D": "protect independence only if they withstand pressure in practice"
+            },
+            "answer": "D"
+          },
+          {
+            "n": 34,
+            "type": "mcq",
+            "prompt": "Which statement best represents the writer's conclusion about brain capital?",
+            "options": {
+              "A": "Its chief value lies in international ranking.",
+              "B": "It should await complete resolution of uncertainty.",
+              "C": "It is promising but needs fair causal measures and evidence of benefit.",
+              "D": "Its success depends chiefly on recognition by finance ministries."
+            },
+            "answer": "C"
+          }
+        ]
+      },
+      {
+        "title": "Testing the shingles-vaccine dementia link",
+        "wordCount": 736,
+        "paras": [
+          "Observational studies often compare people who receive a treatment with those who do not, but these groups may differ before treatment begins. People who seek vaccination can have better healthcare access, stronger preventive habits or greater social support, all of which may also influence dementia risk. Subtle cognitive decline may further reduce a person’s likelihood of seeking preventive care years before diagnosis. Statistical adjustment can account only for factors that have been measured accurately. This “healthy vaccinee” problem makes an association between shingles vaccination and fewer dementia diagnoses difficult to interpret as cause and effect.",
+          "Recent studies attempted to improve the comparison by exploiting age-based eligibility rules for a live-attenuated shingles vaccine. In Wales, England, Australia and Ontario, people born shortly before a policy cutoff were eligible, whereas those born shortly afterwards were not. Individuals separated by only days or weeks should be broadly similar in health and behaviour, yet their probability of vaccination differed sharply. This creates a natural experiment: treatment is not allocated randomly by researchers, but an external rule produces groups that resemble those in a trial more closely than ordinary vaccinated and unvaccinated populations.",
+          "Across these settings, eligibility and vaccination were associated with fewer subsequent dementia diagnoses and dementia-related outcomes. The Welsh analysis estimated that vaccination reduced the probability of a new dementia diagnosis by about one fifth over seven years, although its confidence interval was wide. Similar findings at different birth-date thresholds, together with checks showing no comparable effects at irrelevant cutoffs, make simple chance or obvious measured confounding less persuasive explanations. They do not, however, eliminate every unmeasured difference or convert a natural experiment into a randomised clinical trial.",
+          "If the relationship is causal, the public-health implications would be substantial. Vaccination is scalable and requires less continuing adherence than most proposed dementia-prevention strategies. Yet the strongest natural-experimental evidence concerns the older live-attenuated vaccine. The recombinant vaccine now used more widely has also been associated with lower dementia risk, but comparisons between vaccine types remain vulnerable to residual confounding. It is therefore unsafe to assume that both vaccines have the same effect, that any benefit is produced by preventing shingles alone, or that current evidence justifies vaccination specifically for dementia prevention.",
+          "A definitive trial would need to mirror the evidence it is testing. The proposed design would recruit a general older population, with an age threshold of at least 70 years, and would usually exclude people previously vaccinated against shingles. It would test the live-attenuated vaccine against an appropriate control and measure cognition or new all-cause dementia rather than one narrowly defined subtype. Follow-up should last at least four years, and the sample must be large enough to detect a reduction of around 10 per cent, because a modest individual effect could still matter greatly at population level.",
+          "The trial could also examine groups that may benefit differently, including women, people with mild cognitive impairment and those with cardiovascular risk factors or biomarkers associated with Alzheimer’s disease. Such enrichment might increase statistical efficiency, but it creates a trade-off: a highly selected sample can make results less applicable to the general population. Investigators would also need to decide whether the vaccine prevents dementia, merely delays its onset or affects broader outcomes such as functional decline. These distinctions shape cost-effectiveness, communication with patients and the value of booster vaccination.",
+          "Randomisation would resolve only part of the uncertainty. Mechanistic research must determine whether any effect results mainly from preventing reactivation of varicella-zoster virus or from a broader immune response that might also occur with other vaccines. Researchers must compare live and recombinant vaccines, identify the most responsive subgroups and establish the best age for vaccination. Observational studies still have a role, provided their designs and limitations are distinguished carefully, because large trials will take years and may not capture every mechanism or long-term policy question.",
+          "The natural experiments have produced unusually persuasive evidence for an observational dementia intervention, but persuasiveness is not proof. The author of the studies argues that public and philanthropic funders should act quickly because the live-attenuated vaccine is becoming less available and commercial incentives for a large trial are weak. Urgency must not be confused with clinical endorsement. Independent expert bodies, not individual investigators, should decide whether vaccination is recommended for benefits beyond preventing shingles. Until randomised evidence is available, the correct conclusion is that the dementia signal deserves rigorous testing, not that a preventive treatment has already been established."
+        ],
+        "questions": [
+          {
+            "n": 35,
+            "type": "mcq",
+            "prompt": "The “healthy vaccinee” problem arises because",
+            "options": {
+              "A": "vaccinated people receive more accurate dementia diagnoses.",
+              "B": "early decline can be measured only after diagnosis.",
+              "C": "pre-existing differences may influence both vaccination and dementia.",
+              "D": "adjustment cannot include any preventive behaviour."
+            },
+            "answer": "C"
+          },
+          {
+            "n": 36,
+            "type": "mcq",
+            "prompt": "In paragraph two, “This” in “This creates a natural experiment” refers to",
+            "options": {
+              "A": "use of a live-attenuated vaccine.",
+              "B": "similar people facing sharply different eligibility.",
+              "C": "vaccination occurring outside researcher control.",
+              "D": "comparisons across four healthcare systems."
+            },
+            "answer": "B"
+          },
+          {
+            "n": 37,
+            "type": "mcq",
+            "prompt": "Checks at irrelevant policy cutoffs were used to",
+            "options": {
+              "A": "estimate the vaccine’s duration of protection.",
+              "B": "eliminate all unmeasured differences between groups.",
+              "C": "test whether the pattern was specific to eligibility.",
+              "D": "confirm that every setting used identical rules."
+            },
+            "answer": "C"
+          },
+          {
+            "n": 38,
+            "type": "mcq",
+            "prompt": "In paragraph four, “residual confounding” means",
+            "options": {
+              "A": "uncertainty from differences not fully accounted for.",
+              "B": "error caused by comparing two vaccine formulations.",
+              "C": "imprecision created by a wide confidence interval.",
+              "D": "bias from measuring all-cause dementia."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 39,
+            "type": "mcq",
+            "prompt": "The proposed trial would measure all-cause dementia mainly to",
+            "options": {
+              "A": "shorten the required follow-up.",
+              "B": "increase recruitment from higher-risk groups.",
+              "C": "compare the two vaccine formulations.",
+              "D": "match the breadth of the existing evidence."
+            },
+            "answer": "D"
+          },
+          {
+            "n": 40,
+            "type": "mcq",
+            "prompt": "The discussion of enriched recruitment highlights a tension between",
+            "options": {
+              "A": "statistical efficiency and generalisability.",
+              "B": "randomisation and causal inference.",
+              "C": "prevention and delayed onset.",
+              "D": "biomarkers and functional decline."
+            },
+            "answer": "A"
+          },
+          {
+            "n": 41,
+            "type": "mcq",
+            "prompt": "Randomisation would leave some questions unresolved because",
+            "options": {
+              "A": "participants may seek vaccination elsewhere.",
+              "B": "efficacy would not identify mechanism or optimal use.",
+              "C": "dementia cannot be measured experimentally.",
+              "D": "observational findings would become irrelevant."
+            },
+            "answer": "B"
+          },
+          {
+            "n": 42,
+            "type": "mcq",
+            "prompt": "The writer’s final position is that",
+            "options": {
+              "A": "urgency justifies provisional clinical endorsement.",
+              "B": "commercial weakness makes a definitive trial unrealistic.",
+              "C": "persuasive evidence supports testing, not established treatment.",
+              "D": "investigators should decide recommendations before expert review."
+            },
+            "answer": "C"
+          }
+        ]
+      }
+    ]
+  }
+}

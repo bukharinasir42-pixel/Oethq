@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: oet-postgres
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-oet_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oet_password}
+      POSTGRES_DB: ${POSTGRES_DB:-oet_lms}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: oet-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file:
+      - ../backend/.env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-oet_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-strong-minio-password}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+
+volumes:
+  postgres-data:
+  minio-data:

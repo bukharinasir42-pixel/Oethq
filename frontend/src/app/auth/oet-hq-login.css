@@ -1,0 +1,479 @@
+/* From oet-hq-login.html — scoped under .oet-hq-login */
+
+.oet-hq-login{
+  --navy-900:#071229;
+  --navy-800:#0b1d3f;
+  --blue-700:#1f66d0;
+  --blue-500:#2f7ff0;
+  --blue-400:#5b9bf5;
+  --sky-100:#eef6ff;
+  --sky-200:#ddecfd;
+  --sky-300:#cde2fb;
+  --ink:#0d1b2e;
+  --ink-soft:#43536b;
+  --ink-faint:#7f90a6;
+  --paper:#f7fafd;
+  --line:#dfe7f2;
+  --radius:14px;
+  --shadow-card:0 24px 60px -20px rgba(13,42,90,.18), 0 4px 14px -6px rgba(13,42,90,.08);
+  color-scheme:light;
+  font-family:var(--font-oethq-login-sans, 'Inter', system-ui, sans-serif);
+  background:var(--paper);
+  color:var(--ink);
+  display:flex;
+  min-height:100vh;
+  min-height:100dvh;
+  margin:0;
+  padding:0;
+  width:100%;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.oet-hq-login,.oet-hq-login *{box-sizing:border-box}
+/* Beat global `a { text-primary }` so auth links match reference */
+.oet-hq-login a{color:inherit;text-decoration:none}
+.oet-hq-login a:hover{color:inherit}
+
+/* ============ LEFT · BRAND ============ */
+.oet-hq-login .brand{
+  position:relative;
+  flex:0 0 48%;
+  background:
+    radial-gradient(1000px 640px at 14% 6%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(900px 700px at 88% 96%, rgba(47,127,240,.20), transparent 60%),
+    linear-gradient(160deg, var(--sky-100) 0%, var(--sky-200) 48%, var(--sky-300) 100%);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:52px 60px 44px;
+  overflow:hidden;
+}
+.oet-hq-login .brand::before{
+  content:"";
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(31,102,208,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31,102,208,.06) 1px, transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse at 34% 42%, black 25%, transparent 78%);
+  pointer-events:none;
+}
+/* drifting ambient orbs (parallax targets) */
+.oet-hq-login .orb{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;will-change:transform}
+.oet-hq-login .orb-1{width:340px;height:340px;background:rgba(47,127,240,.16);top:-80px;right:-60px}
+.oet-hq-login .orb-2{width:280px;height:280px;background:rgba(125,211,252,.22);bottom:6%;left:-90px}
+
+.oet-hq-login .logo{position:relative;z-index:2;display:inline-flex;width:fit-content}
+.oet-hq-login .logo img{
+  height:58px;width:auto;display:block;
+  filter:drop-shadow(0 10px 24px rgba(31,102,208,.22));
+  transition:transform .3s ease;
+}
+.oet-hq-login .logo:hover img{transform:translateY(-2px)}
+
+.oet-hq-login .brand-center{position:relative;z-index:2;max-width:560px}
+.oet-hq-login .eyebrow{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--blue-700);
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:24px;
+}
+.oet-hq-login .eyebrow::before{content:"";width:28px;height:1px;background:var(--blue-700);opacity:.55}
+.oet-hq-login h1{
+  font-family:var(--font-oethq-login-display,'Sora',sans-serif);
+  font-weight:600;
+  font-size:clamp(36px, 3.6vw, 54px);
+  line-height:1.1;
+  letter-spacing:-.024em;
+  color:var(--navy-900);
+}
+.oet-hq-login h1 em{
+  font-style:normal;
+  background:linear-gradient(92deg,var(--blue-700),#2f9ff0);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.oet-hq-login .brand-sub{
+  margin-top:18px;
+  font-size:15.5px;line-height:1.65;
+  color:var(--ink-soft);
+  max-width:46ch;
+}
+
+/* -------- signature: flight path -------- */
+.oet-hq-login .flight{margin-top:46px;position:relative}
+.oet-hq-login .flight svg{width:100%;height:110px;overflow:visible;display:block}
+.oet-hq-login .fp-track{
+  fill:none;stroke:rgba(31,102,208,.28);stroke-width:1.6;
+  stroke-dasharray:2 7;stroke-linecap:round;
+}
+.oet-hq-login .fp-progress{
+  fill:none;stroke:var(--blue-500);stroke-width:2.2;stroke-linecap:round;
+  stroke-dasharray:620;stroke-dashoffset:620;
+  animation:fpDraw 3.6s cubic-bezier(.45,0,.2,1) .6s forwards;
+  filter:drop-shadow(0 2px 4px rgba(31,102,208,.3));
+}
+@keyframes fpDraw{to{stroke-dashoffset:0}}
+.oet-hq-login .fp-node{fill:#fff;stroke:var(--blue-500);stroke-width:2;opacity:0;animation:nodeIn .4s ease forwards}
+.oet-hq-login .fp-node.n1{animation-delay:1.0s}
+.oet-hq-login .fp-node.n2{animation-delay:1.8s}
+.oet-hq-login .fp-node.n3{animation-delay:2.6s}
+.oet-hq-login .fp-node.n4{animation-delay:3.5s}
+@keyframes nodeIn{from{opacity:0;r:0}to{opacity:1}}
+.oet-hq-login .fp-label{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  fill:#4d6a95;
+  opacity:0;animation:labelIn .5s ease forwards;
+}
+.oet-hq-login .fp-label.l1{animation-delay:1.15s}
+.oet-hq-login .fp-label.l2{animation-delay:1.95s}
+.oet-hq-login .fp-label.l3{animation-delay:2.75s}
+.oet-hq-login .fp-label.l4{animation-delay:3.65s}
+@keyframes labelIn{to{opacity:1}}
+.oet-hq-login .fp-plane{opacity:0}
+.oet-hq-login .fp-plane.go{opacity:1}
+.oet-hq-login .fp-plane path{fill:var(--blue-700)}
+
+/* -------- proof -------- */
+.oet-hq-login .proof{
+  position:relative;z-index:2;
+  border-top:1px solid rgba(31,102,208,.16);
+  padding-top:24px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:28px;
+}
+.oet-hq-login .proof-quote{max-width:410px;min-height:88px;position:relative;flex:1}
+.oet-hq-login .proof-item{
+  position:absolute;inset:0;
+  display:flex;gap:14px;align-items:flex-start;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .6s ease, transform .6s ease;
+  pointer-events:none;
+}
+.oet-hq-login .proof-item.active{opacity:1;transform:none}
+.oet-hq-login .avatar{
+  flex-shrink:0;width:40px;height:40px;border-radius:12px;
+  display:grid;place-items:center;
+  font-family:var(--font-oethq-login-display,'Sora',sans-serif);font-weight:600;font-size:14px;color:#fff;
+  background:linear-gradient(135deg,var(--blue-500),var(--blue-700));
+  box-shadow:0 6px 14px -4px rgba(31,102,208,.45);
+}
+.oet-hq-login .proof-item p{font-size:14px;line-height:1.55;color:var(--ink-soft)}
+.oet-hq-login .proof-item small{
+  display:block;margin-top:7px;
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:#5a7aa6;
+}
+.oet-hq-login .proof-stats{display:flex;gap:30px;flex-shrink:0}
+.oet-hq-login .stat{text-align:right}
+.oet-hq-login .stat b{
+  display:block;font-family:var(--font-oethq-login-display,'Sora',sans-serif);font-weight:600;
+  font-size:24px;letter-spacing:-.02em;color:var(--navy-800);
+}
+.oet-hq-login .stat span{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:#5a7aa6;
+}
+
+/* destinations ticker */
+.oet-hq-login .ticker{
+  position:relative;z-index:2;
+  margin-top:20px;
+  overflow:hidden;
+  mask-image:linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+}
+.oet-hq-login .ticker-track{
+  display:flex;gap:34px;width:max-content;
+  animation:scroll 34s linear infinite;
+}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.oet-hq-login .ticker span{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:#6c86ab;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:9px;
+}
+.oet-hq-login .ticker i{width:4px;height:4px;border-radius:50%;background:var(--blue-400);flex-shrink:0}
+
+/* ============ RIGHT · FORM ============ */
+.oet-hq-login .panel{
+  flex:1;
+  display:flex;flex-direction:column;
+  padding:30px 48px 26px;
+  position:relative;
+}
+.oet-hq-login .panel::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(700px 500px at 80% 20%, rgba(47,127,240,.05), transparent 60%);
+}
+.oet-hq-login .panel-top{
+  display:flex;justify-content:flex-end;align-items:center;gap:26px;
+  font-size:13.5px;position:relative;z-index:1;
+}
+.oet-hq-login .panel-top a{color:var(--ink-soft);text-decoration:none;font-weight:500;transition:color .18s}
+.oet-hq-login .panel-top a:hover{color:var(--blue-500)}
+.oet-hq-login .panel-main{flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.oet-hq-login .panel-main > *{width:100%;max-width:440px}
+/* Keep forgot/activate shadcn cards visually in family with login card */
+.oet-hq-login .panel-main .border-border{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  border-radius:22px !important;
+  box-shadow:var(--shadow-card) !important;
+  color:var(--ink);
+}
+
+.oet-hq-login .card{
+  width:100%;max-width:440px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:22px;
+  box-shadow:var(--shadow-card);
+  padding:40px 38px 34px;
+  animation:cardIn .7s cubic-bezier(.22,1,.36,1) .15s both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+.oet-hq-login .kicker{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--blue-500);margin-bottom:12px;
+}
+.oet-hq-login .card h2{
+  font-family:var(--font-oethq-login-display,'Sora',sans-serif);font-weight:600;
+  font-size:28px;letter-spacing:-.02em;color:var(--ink);
+}
+.oet-hq-login .card .lede{margin-top:9px;font-size:14.5px;color:var(--ink-faint);line-height:1.6}
+
+.oet-hq-login form{margin-top:30px}
+.oet-hq-login .field{position:relative;margin-bottom:18px}
+.oet-hq-login .field input{
+  width:100%;
+  font:inherit;font-size:15px;font-weight:500;
+  color:var(--ink);
+  -webkit-text-fill-color:var(--ink);
+  caret-color:var(--ink);
+  padding:24px 44px 10px 16px;
+  border:1.5px solid var(--line);
+  border-radius:var(--radius);
+  background:#fff !important;
+  background-color:#fff !important;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+  color-scheme:light;
+}
+.oet-hq-login .field input::placeholder{color:transparent;-webkit-text-fill-color:transparent}
+.oet-hq-login .field label{
+  position:absolute;left:17px;top:18px;
+  font-size:15px;color:var(--ink-faint);
+  pointer-events:none;
+  transition:all .18s cubic-bezier(.4,0,.2,1);
+}
+.oet-hq-login .field input:focus + label, .oet-hq-login .field input:not(:placeholder-shown) + label{
+  top:8px;font-size:11px;font-weight:600;
+  letter-spacing:.04em;color:var(--blue-500);
+}
+.oet-hq-login .field input:focus{
+  border-color:var(--blue-500);
+  box-shadow:0 0 0 4px rgba(47,127,240,.12);
+  background:#fff !important;
+}
+.oet-hq-login .field.valid input{border-color:#34b37a}
+/* required dropdowns (profession + heard-from) */
+.oet-hq-login .field select{
+  width:100%;font:inherit;font-size:15px;font-weight:500;color:var(--ink);
+  padding:24px 40px 10px 16px;border:1.5px solid var(--line);border-radius:var(--radius);
+  background:#fff;outline:none;transition:border-color .2s, box-shadow .2s;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;color-scheme:light;
+}
+.oet-hq-login .field select:focus{border-color:var(--blue-500);box-shadow:0 0 0 4px rgba(47,127,240,.12)}
+.oet-hq-login .field select:required:invalid{color:var(--ink-faint)}
+.oet-hq-login .field select option{color:var(--ink)}
+.oet-hq-login .field .sel-label{
+  position:absolute;left:17px;top:8px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--blue-500);pointer-events:none;
+}
+.oet-hq-login .field .sel-caret{position:absolute;right:15px;top:50%;transform:translateY(-45%);pointer-events:none;color:var(--ink-faint);width:16px;height:16px}
+.oet-hq-login .field .sel-caret svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+/* Kill Chrome/Edge autofill grey (and dark-scheme) wash so fields stay white like the reference */
+.oet-hq-login .field input:-webkit-autofill,
+.oet-hq-login .field input:-webkit-autofill:hover,
+.oet-hq-login .field input:-webkit-autofill:focus,
+.oet-hq-login .field input:-webkit-autofill:active{
+  -webkit-text-fill-color:var(--ink) !important;
+  caret-color:var(--ink);
+  border-color:var(--line);
+  transition:background-color 99999s ease-out 0s;
+  box-shadow:0 0 0 1000px #fff inset !important;
+  -webkit-box-shadow:0 0 0 1000px #fff inset !important;
+}
+.oet-hq-login .field.valid input:-webkit-autofill,
+.oet-hq-login .field.valid input:-webkit-autofill:hover,
+.oet-hq-login .field.valid input:-webkit-autofill:focus{
+  border-color:#34b37a;
+  box-shadow:0 0 0 1000px #fff inset !important;
+  -webkit-box-shadow:0 0 0 1000px #fff inset !important;
+}
+.oet-hq-login .field input:-webkit-autofill:focus{
+  border-color:var(--blue-500);
+  box-shadow:0 0 0 1000px #fff inset, 0 0 0 4px rgba(47,127,240,.12) !important;
+  -webkit-box-shadow:0 0 0 1000px #fff inset, 0 0 0 4px rgba(47,127,240,.12) !important;
+}
+.oet-hq-login .field.valid input:-webkit-autofill:focus{
+  border-color:#34b37a;
+}
+.oet-hq-login .field .check{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%) scale(0);
+  width:20px;height:20px;border-radius:50%;
+  background:#34b37a;display:grid;place-items:center;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.oet-hq-login .field.valid .check{transform:translateY(-50%) scale(1)}
+.oet-hq-login .check svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.oet-hq-login .toggle-pw{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:0;cursor:pointer;padding:7px;
+  color:var(--ink-faint);display:grid;place-items:center;border-radius:9px;
+  transition:color .15s, background .15s;
+}
+.oet-hq-login .toggle-pw:hover{color:var(--ink-soft);background:#f1f5fa}
+.oet-hq-login .hint{
+  display:none;
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10.5px;letter-spacing:.08em;
+  color:#b7791f;margin:-10px 0 14px 4px;
+}
+.oet-hq-login .hint.show{display:block}
+
+.oet-hq-login .strength{display:flex;gap:5px;margin:-8px 0 16px 2px}
+.oet-hq-login .strength i{flex:1;height:4px;border-radius:999px;background:#e6ecf5;transition:background .25s}
+.oet-hq-login .strength.s1 i:nth-child(1){background:#e05252}
+.oet-hq-login .strength.s2 i:nth-child(-n+2){background:#f0a13d}
+.oet-hq-login .strength.s3 i:nth-child(-n+3){background:#38b26f}
+.oet-hq-login .strength.s4 i{background:#16a065}
+.oet-hq-login .terms{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:var(--ink-soft);
+  margin-bottom:22px;cursor:pointer;user-select:none;line-height:1.5;
+}
+.oet-hq-login .terms input{
+  appearance:none;flex:none;width:17px;height:17px;border:1.5px solid var(--line);
+  border-radius:5px;cursor:pointer;display:grid;place-items:center;margin-top:1px;
+  transition:all .15s;background:#fff;
+}
+.oet-hq-login .terms input:checked{background:var(--blue-500);border-color:var(--blue-500)}
+.oet-hq-login .terms input:checked::after{
+  content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;
+  transform:rotate(-45deg) translateY(-1px);
+}
+.oet-hq-login .terms a{color:var(--blue-500);font-weight:500;text-decoration:none}
+.oet-hq-login .terms a:hover{text-decoration:underline;color:var(--blue-500)}
+
+.oet-hq-login .row-between{
+  display:flex;justify-content:space-between;align-items:center;
+  margin:-2px 0 22px;font-size:13.5px;
+}
+.oet-hq-login .remember{display:flex;align-items:center;gap:9px;color:var(--ink-soft);cursor:pointer;user-select:none}
+.oet-hq-login .remember input{
+  appearance:none;width:17px;height:17px;border:1.5px solid var(--line);
+  border-radius:5px;cursor:pointer;display:grid;place-items:center;
+  transition:all .15s;background:#fff;
+}
+.oet-hq-login .remember input:checked{background:var(--blue-500);border-color:var(--blue-500)}
+.oet-hq-login .remember input:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
+.oet-hq-login .forgot{color:var(--blue-500);text-decoration:none;font-weight:500}
+.oet-hq-login .forgot:hover{text-decoration:underline}
+
+.oet-hq-login .btn{
+  position:relative;
+  width:100%;
+  font-family:var(--font-oethq-login-display,'Sora',sans-serif);font-weight:600;font-size:15px;
+  color:#fff;
+  background:linear-gradient(180deg,#3d8bf3,var(--blue-500) 55%,var(--blue-700));
+  border:0;border-radius:var(--radius);
+  padding:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 12px 28px -8px rgba(47,127,240,.55), inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .18s, box-shadow .18s, filter .18s;
+  overflow:hidden;
+}
+.oet-hq-login .btn::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+  transform:translateX(-120%);
+  transition:transform .6s ease;
+}
+.oet-hq-login .btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.oet-hq-login .btn:hover::after{transform:translateX(120%)}
+.oet-hq-login .btn:active{transform:translateY(0)}
+.oet-hq-login .btn svg{transition:transform .18s}
+.oet-hq-login .btn:hover svg{transform:translateX(3px)}
+.oet-hq-login .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none}
+.oet-hq-login .btn:disabled::after{display:none}
+.oet-hq-login .btn.loading{pointer-events:none;filter:saturate(.8);opacity:1}
+.oet-hq-login .btn .spinner{
+  display:none;width:18px;height:18px;border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.oet-hq-login .btn.loading .spinner{display:block}
+.oet-hq-login .btn.loading .btn-label, .oet-hq-login .btn.loading svg.arrow{display:none}
+
+.oet-hq-login .btn:focus-visible, .oet-hq-login .field input:focus-visible, .oet-hq-login .panel-top a:focus-visible, .oet-hq-login .forgot:focus-visible, .oet-hq-login .toggle-pw:focus-visible{
+  outline:3px solid rgba(47,127,240,.4);outline-offset:2px;
+}
+
+.oet-hq-login .divider{
+  display:flex;align-items:center;gap:14px;
+  margin:24px 0 14px;
+  color:var(--ink-faint);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+}
+.oet-hq-login .divider::before, .oet-hq-login .divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.oet-hq-login .create{text-align:center;font-size:14px;color:var(--ink-soft)}
+.oet-hq-login .create a{color:var(--blue-500);font-weight:600;text-decoration:none}
+.oet-hq-login .create a:hover{text-decoration:underline}
+
+.oet-hq-login .trust{
+  display:flex;justify-content:center;gap:9px;flex-wrap:wrap;
+  margin-top:26px;
+}
+.oet-hq-login .trust span{
+  font-family:var(--font-oethq-login-mono,'IBM Plex Mono',monospace);
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-faint);
+  border:1px solid var(--line);border-radius:999px;
+  padding:6px 12px;background:#fff;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.oet-hq-login .trust i{width:5px;height:5px;border-radius:50%;background:var(--blue-400);flex-shrink:0}
+
+.oet-hq-login .panel-foot{
+  text-align:center;font-size:12.5px;color:var(--ink-faint);
+  padding-top:20px;position:relative;z-index:1;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1080px){
+  .oet-hq-login .proof-stats{display:none}
+}
+@media (max-width:960px){
+  .oet-hq-login{flex-direction:column}
+  .oet-hq-login .brand{flex:none;padding:32px 26px 26px}
+  .oet-hq-login .brand-center{margin:32px 0 26px}
+  .oet-hq-login h1{font-size:33px}
+  .oet-hq-login .flight{margin-top:30px}
+  .oet-hq-login .flight svg{height:92px}
+  .oet-hq-login .proof, .oet-hq-login .ticker{display:none}
+  .oet-hq-login .panel{padding:26px 18px 30px}
+  .oet-hq-login .card{padding:32px 24px 28px;background:#fff}
+}
+@media (prefers-reduced-motion:reduce){
+  .oet-hq-login *, .oet-hq-login *::before, .oet-hq-login *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .oet-hq-login .fp-progress{stroke-dashoffset:0}
+  .oet-hq-login .fp-node, .oet-hq-login .fp-label{opacity:1}
+  .oet-hq-login .ticker-track{animation:none}
+}

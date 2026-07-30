@@ -1,0 +1,2 @@
+ALTER TABLE "DailyTask" ADD COLUMN IF NOT EXISTS "lectureBunnyVideoId" TEXT;
+ALTER TABLE "DailyTask" ADD COLUMN IF NOT EXISTS "articleBunnyVideoId" TEXT;

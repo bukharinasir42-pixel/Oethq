@@ -1,0 +1,65 @@
+# Dependencies & package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+.npm/
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+.prettier-cache
+*.tsbuildinfo
+*.tgz
+
+# Builds & outputs
+dist/
+build/
+out/
+.next/
+.vercel/
+
+# Tests & coverage
+coverage/
+.nyc_output/
+
+# Environment files
+sendgrid.env
+.env.development.local
+.env.test.local
+.env.production.local
+
+
+# Prisma / databases
+backend/src/generated/
+*.db
+*.sqlite
+*.sqlite-journal
+
+# Docker / runtime
+docker-data/
+*.pid
+*.pid.lock
+
+# Logs
+logs/
+*.log
+
+# Editors & OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+.cursor/
+config.bat
+
+# Environment files — config comes from AWS App Runner (env + Secrets Manager). Never commit.
+.env
+.env.*
+!.env.example
