@@ -20,7 +20,7 @@ import { PortalUpgradeModal } from "@/components/portal/portal-upgrade-modal";
 import { WorkspaceAccessDeniedState, WorkspaceLoadingState } from "@/components/layout/workspace-states";
 import { usePortalPlanAccess } from "@/hooks/use-portal-plan-access";
 import { useSession } from "@/hooks/use-session";
-import { moduleUnlockedForTier, type ModuleKey } from "@/lib/portal-tier-access";
+import { moduleUnlockedForTier, moduleUnlockedForTrial, type ModuleKey } from "@/lib/portal-tier-access";
 import type { SkillKey } from "@/hooks/use-ownership";
 import type { LucideIcon } from "lucide-react";
 
@@ -99,7 +99,7 @@ function SkillPracticeInner() {
   const def = MODULES[moduleKey];
 
   const { profile, status, error, refresh, logout } = useSession();
-  const { subscription, ownsSkill, planTier, skillAccess, completeExperienceAccess, loading: loadingPlanAccess } = usePortalPlanAccess();
+  const { subscription, ownsSkill, planTier, trialDay, skillAccess, completeExperienceAccess, loading: loadingPlanAccess } = usePortalPlanAccess();
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const isCheatSheets = moduleKey === "cheat-sheets";
@@ -108,9 +108,12 @@ function SkillPracticeInner() {
   const skill: SkillKey = isCheatSheets
     ? (rawSkill === "LISTENING" ? "LISTENING" : "READING")
     : def?.skill ?? (rawSkill === "LISTENING" ? "LISTENING" : "READING");
-  // Free trial gets exactly the Part A drill + the spelling practice; the rest → upgrade.
+  // Free trial: the Day-1 sample only — Part A drill, spelling and the podcast.
+  // Uses the shared list rather than a local one, which previously omitted
+  // part-c-podcasts (so the advertised episode was unreachable) and had no notion
+  // of the trial day (so the rotating content stayed open for all 7 days).
   const isFreeTrial = planTier === "STARTER";
-  const trialAllowed = isFreeTrial && (moduleKey === "spellings" || moduleKey === "part-a-core");
+  const trialAllowed = isFreeTrial && moduleUnlockedForTrial(moduleKey as ModuleKey, trialDay);
   // Tier gate: owning the skill isn't enough — the student's course tier must
   // include this module (e.g. cheat sheets require Precision). Complete/trial bypass.
   const tierOk = completeExperienceAccess || moduleUnlockedForTier(skillAccess[skill], moduleKey as ModuleKey);

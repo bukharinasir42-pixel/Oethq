@@ -59,17 +59,32 @@ export function moduleMinTier(skill: string, module: ModuleKey): number | null {
  * explicit list the dashboard rendered every tile as open and the student hit a
  * 403 on click.
  */
-const TRIAL_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
-  "lectures",         // 1 cohort lecture
-  "tests",            // 1 Reading + 1 Listening mock (resolveTrialAccess picks exactly one each)
-  "spellings",        // 1 day of live spelling
-  "part-c-podcasts",  // 1 podcast episode
-  "part-a-core"       // 1 Reading Part A skill drill
+// Fixed single items: resolveTrialAccess pins one specific lecture and one
+// specific Reading/Listening test, so revisiting them costs nothing extra. Open
+// for the whole trial window.
+const TRIAL_FIXED_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
+  "lectures", // 1 cohort lecture
+  "tests"     // 1 Reading + 1 Listening mock
 ]);
-// Deliberately NOT in the trial: cheat-sheets, past-papers, part-bc-core
-// (Part B/C articles) and writing. Anything absent here stays locked.
 
-/** Does the free trial preview `module`? */
-export function moduleUnlockedForTrial(module: ModuleKey): boolean {
-  return TRIAL_MODULES.has(module);
+// Rotating daily content: a NEW item is served every calendar day, so leaving
+// these open for the full 7-day window would hand out seven of each instead of
+// the single sample the Tier 0 card sells. Day 1 only.
+const TRIAL_DAY_ONE_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
+  "spellings",       // 1 day of live spelling
+  "part-c-podcasts", // 1 podcast episode
+  "part-a-core"      // 1 Reading Part A skill drill
+]);
+
+// Deliberately in neither set: cheat-sheets, past-papers, part-bc-core (Part B/C
+// articles) and writing. Anything absent here stays locked for the whole trial.
+
+/**
+ * Does the free trial preview `module` on `trialDay`? Mirrors the server-side
+ * `dailyContentUnlocked` gate, so a tile never renders open onto a 403.
+ */
+export function moduleUnlockedForTrial(module: ModuleKey, trialDay: number | null): boolean {
+  if (TRIAL_FIXED_MODULES.has(module)) return true;
+  if (TRIAL_DAY_ONE_MODULES.has(module)) return trialDay === 1;
+  return false;
 }

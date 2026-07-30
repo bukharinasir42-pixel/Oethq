@@ -8,7 +8,7 @@ import { Router } from "express";
 import type { AppContainer } from "../container";
 import { asyncHandler, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
 import type { PodcastInput } from "../../modules/listening-podcasts/listening-podcasts.service";
-import { skillModuleUnlocked } from "../../modules/products/portal-tier-access";
+import { dailyContentUnlocked } from "../../modules/products/portal-tier-access";
 import { resolveTrialAccess } from "../../modules/subscriptions/trial-access";
 
 export function createListeningPodcastsRouter(c: AppContainer): Router {
@@ -18,15 +18,14 @@ export function createListeningPodcastsRouter(c: AppContainer): Router {
   const svc = c.listeningPodcastsService;
 
   // Listening Part C podcast of the day — Precision tier / Complete Course, plus
-  // the free trial, whose Tier 0 card on the Complete Course page advertises
-  // "1 podcast episode". A trial user holds no entitlements, so `skillAccess` is
-  // empty and the tier check alone would 403 every trial — which is exactly what
-  // it did when this gate was introduced.
+  // Day 1 of the free trial ("1 podcast episode" on the Tier 0 card). A trial
+  // user holds no entitlements, so the tier check alone would 403 every trial.
   const podcastGate = async (userId: string): Promise<boolean> => {
-    const { skillAccess } = await c.productsService.getOwnership(userId);
-    if (skillModuleUnlocked(skillAccess, "LISTENING", "part-c-podcasts")) return true;
-    const trial = await resolveTrialAccess(c.prisma, userId);
-    return trial.isTrial;
+    const [{ skillAccess }, trial] = await Promise.all([
+      c.productsService.getOwnership(userId),
+      resolveTrialAccess(c.prisma, userId)
+    ]);
+    return dailyContentUnlocked(skillAccess, "part-c-podcasts", trial);
   };
 
   // ---- Candidate ----

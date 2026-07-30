@@ -30,7 +30,7 @@ export default function PortalHomePage() {
   const selectTier = searchParams.get("selectTier");
   const pendingAssignKey = selectTier || selectPlanId;
   const { token, profile, status, error, refresh, logout } = useSession();
-  const { completeExperienceAccess, isFreeTrial, ownsSkill, ownedSkills, skillAccess, passPredictor, accessDaysLeft, loaded: planLoaded } = usePortalPlanAccess();
+  const { completeExperienceAccess, isFreeTrial, trialDay, ownsSkill, ownedSkills, skillAccess, passPredictor, accessDaysLeft, loaded: planLoaded } = usePortalPlanAccess();
   const [dashboard, setDashboard] = useState<DashboardDto | null>(null);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [completedTestIds, setCompletedTestIds] = useState<Set<string>>(() => new Set());
@@ -144,6 +144,7 @@ export default function PortalHomePage() {
           skillAccess={skillAccess}
           fullAccess={completeExperienceAccess}
           isFreeTrial={isFreeTrial}
+          trialDay={trialDay}
           passPredictor={passPredictor}
           accessDaysLeft={accessDaysLeft}
         />

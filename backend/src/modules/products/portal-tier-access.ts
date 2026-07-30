@@ -58,6 +58,30 @@ export function skillModuleUnlocked(
   return moduleUnlockedForTier(skillAccess[skill], module);
 }
 
+/** The skill that owns each rotating daily-content module. */
+export const MODULE_SKILL: Record<string, string> = {
+  "part-a-core": "READING",
+  "part-bc-core": "READING",
+  spellings: "LISTENING",
+  "part-c-podcasts": "LISTENING"
+};
+
+/**
+ * Gate for the rotating daily content (spelling, Part A drill, Part B/C article,
+ * podcast): the owner's tier unlocks it, OR the caller is on Day 1 of the free
+ * trial. Day 2 onward the trial is locked out — the Tier 0 card sells one sample
+ * of each, not one per day for the plan's whole 7-day window.
+ */
+export function dailyContentUnlocked(
+  skillAccess: Record<string, SkillAccessLite>,
+  module: ModuleKey,
+  trial: { isTrial: boolean; trialDay: number | null }
+): boolean {
+  const skill = MODULE_SKILL[module];
+  if (skill && skillModuleUnlocked(skillAccess, skill, module)) return true;
+  return trial.isTrial && trial.trialDay === 1;
+}
+
 /** Does ANY owned skill unlock `module`? (for cross-skill content like cheat sheets) */
 export function anySkillUnlocks(
   skillAccess: Record<string, SkillAccessLite>,

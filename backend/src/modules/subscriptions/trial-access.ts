@@ -13,23 +13,49 @@ import type { PrismaService } from "../../common/prisma.service";
 
 export type TrialAccess = {
   isTrial: boolean;
+  /**
+   * 1-based day of the trial, by CALENDAR date — 1 on the start date, 2 the next
+   * date, and so on. Null when the user is not on a trial. Calendar-based (not
+   * elapsed hours) so someone who signs up at 23:50 still gets a full Day 1.
+   *
+   * The rotating daily content (spelling, Part A drill, podcast) is a Day-1-only
+   * sample: the Tier 0 card sells "1 day of live spelling" and "1 podcast
+   * episode", singular. Without this the trial ran for the plan's full 7 days and
+   * handed out seven of each.
+   */
+  trialDay: number | null;
   lectureId: string | null;
   readingTestId: string | null;
   listeningTestId: string | null;
 };
 
 const NOT_NULL_JSON = { NOT: { contentJson: { equals: Prisma.DbNull } } };
+const DAY_MS = 86_400_000;
+
+/** Whole calendar days from `start` to `now`, in UTC. Same date → 0. */
+function calendarDaysBetween(start: Date, now: Date): number {
+  const midnight = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.floor((midnight(now) - midnight(start)) / DAY_MS);
+}
+
+const NO_TRIAL: TrialAccess = {
+  isTrial: false, trialDay: null, lectureId: null, readingTestId: null, listeningTestId: null
+};
 
 export async function resolveTrialAccess(prisma: PrismaService, userId: string): Promise<TrialAccess> {
   const now = new Date();
   const subs = await prisma.subscription.findMany({
     where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] } },
-    select: { endDate: true, plan: { select: { tier: true } } }
+    select: { startDate: true, endDate: true, plan: { select: { tier: true } } }
   });
   const active = subs.filter((s) => !s.endDate || s.endDate > now);
   const hasPaid = active.some((s) => s.plan.tier !== PlanTier.STARTER);
-  const isTrial = !hasPaid && active.some((s) => s.plan.tier === PlanTier.STARTER);
-  if (!isTrial) return { isTrial: false, lectureId: null, readingTestId: null, listeningTestId: null };
+  const starter = active.find((s) => s.plan.tier === PlanTier.STARTER);
+  const isTrial = !hasPaid && Boolean(starter);
+  if (!isTrial) return NO_TRIAL;
+  // No startDate (not yet OTP-activated) → treat as Day 1 rather than locking the
+  // sample content the trial is meant to showcase.
+  const trialDay = starter?.startDate ? calendarDaysBetween(starter.startDate, now) + 1 : 1;
 
   const day1 = await prisma.dailyTask.findFirst({
     where: { dayNumber: 1 },
@@ -41,7 +67,7 @@ export async function resolveTrialAccess(prisma: PrismaService, userId: string):
     pickPlayableTest(prisma, TestType.READING, day1?.assignedReadingTestId ?? null),
     pickPlayableTest(prisma, TestType.LISTENING, day1?.assignedListeningTestId ?? null)
   ]);
-  return { isTrial: true, lectureId: lecture?.id ?? null, readingTestId: readingId, listeningTestId: listeningId };
+  return { isTrial: true, trialDay, lectureId: lecture?.id ?? null, readingTestId: readingId, listeningTestId: listeningId };
 }
 
 /**

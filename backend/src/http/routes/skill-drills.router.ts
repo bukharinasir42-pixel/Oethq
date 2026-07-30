@@ -5,8 +5,10 @@
  */
 import { Router } from "express";
 import type { AppContainer } from "../container";
-import { asyncHandler, requireAdmin, requireAuth } from "../middleware";
+import { asyncHandler, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
 import { isDrillModule } from "../../modules/skill-drills/skill-drills.service";
+import { dailyContentUnlocked, type ModuleKey } from "../../modules/products/portal-tier-access";
+import { resolveTrialAccess } from "../../modules/subscriptions/trial-access";
 
 export function createSkillDrillsRouter(c: AppContainer): Router {
   const r = Router();
@@ -15,9 +17,23 @@ export function createSkillDrillsRouter(c: AppContainer): Router {
   const svc = c.skillDrillsService;
 
   // ---- Candidate: drill of the day ----
+  // Gated per module, since each drill belongs to a different skill and tier
+  // (Part A core → Reading, any tier; Part B/C, spellings and podcasts →
+  // Precision). Day 1 of the free trial also passes: the Tier 0 card includes one
+  // Reading Part A skill drill. This route was previously open to any signed-in
+  // user regardless of what they had bought.
   r.get("/skill-drills/of-day", auth, asyncHandler(async (req, res) => {
     const module = String(req.query.module ?? "");
     if (!isDrillModule(module)) { res.status(400).json({ message: "Unknown drill module" }); return; }
+    const u = (req as AuthedRequest).user;
+    const [{ skillAccess }, trial] = await Promise.all([
+      c.productsService.getOwnership(u.id),
+      resolveTrialAccess(c.prisma, u.id)
+    ]);
+    if (!dailyContentUnlocked(skillAccess, module as ModuleKey, trial)) {
+      res.status(403).json({ message: "This drill is not included in your current plan." });
+      return;
+    }
     const drill = await svc.drillOfDay(module);
     res.json({ drill: drill ?? null });
   }));

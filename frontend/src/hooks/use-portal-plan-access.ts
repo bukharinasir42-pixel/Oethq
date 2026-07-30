@@ -11,6 +11,8 @@ import type { PlanDto } from "@/lib/types";
 type SubscriptionStatusDto = {
   status: string;
   plan?: PlanDto | null;
+  /** ISO start date — used to derive which day of the free trial the user is on. */
+  startDate?: string | null;
   expiresInDays?: number;
   requiresPlanActivation?: boolean;
   activationUrl?: string | null;
@@ -122,6 +124,18 @@ export function usePortalPlanAccess() {
   // cohort + study plan but only a named subset of modules, so callers must not
   // treat it as full access — see moduleUnlockedForTrial.
   const isFreeTrial = Boolean(subscriptionAccessGranted) && planTier === "STARTER";
+  // 1-based trial day by CALENDAR date, matching the server's resolveTrialAccess.
+  // The rotating daily modules (spelling, podcast, Part A drill) are Day-1 only,
+  // so the tiles must know the day or they render open onto a 403 on day 2.
+  const trialDay: number | null = (() => {
+    if (!isFreeTrial) return null;
+    const raw = subscription?.startDate;
+    if (!raw) return 1; // not yet activated → still Day 1
+    const start = new Date(raw);
+    if (Number.isNaN(start.getTime())) return 1;
+    const midnight = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    return Math.floor((midnight(new Date(nowMs)) - midnight(start)) / DAY_MS) + 1;
+  })();
   // Owns the paid Complete Course specifically (not just a free-trial preview).
   const hasCompleteCourse =
     (Boolean(subscriptionAccessGranted) && planTier !== null && planTier !== "STARTER") ||
@@ -157,6 +171,7 @@ export function usePortalPlanAccess() {
     completeExperienceAccess,
     hasCompleteCourse,
     isFreeTrial,
+    trialDay,
     loading,
     loaded
   };
