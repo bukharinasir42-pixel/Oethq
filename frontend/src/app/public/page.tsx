@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { PublicShell } from "@/components/layout/public-shell";
-import { PlanCard } from "@/components/plan-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { pricingPlans } from "@/lib/site-data";
 
 export default function PublicPage() {
   return (
@@ -37,33 +35,25 @@ export default function PublicPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {pricingPlans.slice(0, 2).map((plan) => (
-                <div key={plan.id} className="surface-panel-subtle px-4 py-3">
-                  <p className="text-sm font-semibold text-foreground">{plan.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p>
-                </div>
-              ))}
-            </div>
+            {/*
+              Plans and prices are NOT restated here. This page used to render a
+              hard-coded copy of a retired line-up, so it kept selling plans and
+              prices that no longer existed. The Complete Course page is the one
+              place plans are published; link to it instead of duplicating it.
+            */}
             <div className="flex flex-wrap gap-3">
               <Button asChild>
                 <Link href="/auth/register">Create account</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/#plans">
-                  Review all plans
+                  See plans and pricing
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
           </CardContent>
         </Card>
-
-        <div className="grid gap-4 xl:grid-cols-2">
-          {pricingPlans.slice(2, 4).map((plan) => (
-            <PlanCard key={plan.id} plan={plan} />
-          ))}
-        </div>
       </div>
     </PublicShell>
   );

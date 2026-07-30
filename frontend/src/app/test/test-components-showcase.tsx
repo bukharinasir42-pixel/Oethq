@@ -119,8 +119,8 @@ export function TestComponentsShowcase() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="foundation">Foundation</SelectItem>
-                    <SelectItem value="accelerator">Accelerator</SelectItem>
-                    <SelectItem value="mastery">Mastery</SelectItem>
+                    <SelectItem value="precision-engine">Precision Engine</SelectItem>
+                    <SelectItem value="elite-clearance">Elite Clearance</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -253,7 +253,7 @@ export function TestComponentsShowcase() {
             <TableBody>
               <TableRow>
                 <TableCell className="font-medium">Ayesha Khan</TableCell>
-                <TableCell>Mastery</TableCell>
+                <TableCell>Elite Clearance</TableCell>
                 <TableCell>Active</TableCell>
                 <TableCell className="text-right">86</TableCell>
               </TableRow>

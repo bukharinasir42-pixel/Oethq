@@ -11,12 +11,12 @@ const wrap = (title: string, bodyHtml: string) => `<!DOCTYPE html>
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E4EAF2">
   <tr><td style="background-color:#0F4C9A;padding:26px 34px">
-    <div style="color:#fff;font-size:19px;font-weight:bold">ET HQ · OET Accelerator</div>
+    <div style="color:#fff;font-size:19px;font-weight:bold">OET HQ</div>
     <div style="color:#BFD6F2;font-size:11px;letter-spacing:1px;margin-top:4px">${title}</div>
   </td></tr>
   <tr><td style="padding:30px 34px">${bodyHtml}</td></tr>
   <tr><td style="padding:16px 34px;border-top:1px solid #E4EAF2;font-size:11px;color:#8595AB">
-    ET HQ · oethq.com · Manage your class times any time in your portal.
+    OET HQ · oethq.com · Manage your class times any time in your portal.
   </td></tr>
 </table></td></tr></table></body></html>`;
 
@@ -80,7 +80,7 @@ export function buildWarningEmail(p: {
         Don't let ${p.missedCount} days become thirty.
       </div>
       ${cta(p.portalUrl, "Catch up now →")}
-      <div style="font-size:13px;color:#5A6B82;margin-top:18px">— Dr Nasir Bukhari &amp; the ET HQ Team</div>`)
+      <div style="font-size:13px;color:#5A6B82;margin-top:18px">— Dr Nasir Bukhari &amp; the OET HQ Team</div>`)
   };
 }
 

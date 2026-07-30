@@ -30,14 +30,27 @@ function priceToNumber(value: unknown): number {
 const TIER_ORDER: Record<string, number> = {
   FOUNDATION: 0,
   ACCELERATOR: 1,
-  MASTERY: 2
+  MASTERY: 2,
+  CUSTOM: 3
+};
+
+/**
+ * `Plan.tier` is an internal enum whose names date from a retired line-up
+ * (FOUNDATION / ACCELERATOR / MASTERY). Never show those words: the live plans
+ * are Foundation Sprint, Precision Engine, Elite Clearance and Total Clearance,
+ * and each plan's own `name` carries that. The badge shows the tier's position
+ * only, matching the "Tier 1 … Tier 4" numbering on the Complete Course page.
+ */
+const TIER_BADGE: Record<string, string> = {
+  STARTER: "Tier 0 · Free trial",
+  FOUNDATION: "Tier 1",
+  ACCELERATOR: "Tier 2",
+  MASTERY: "Tier 3",
+  CUSTOM: "Tier 4"
 };
 
 function tierLabel(tier: string) {
-  return tier
-    .split("_")
-    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
-    .join(" ");
+  return TIER_BADGE[tier] ?? tier;
 }
 
 function tierCardClass(tier: string) {
@@ -81,7 +94,11 @@ export default function AdminPricingPage() {
   const loadPlans = useCallback(async () => {
     if (!token) return;
     const rows = await apiFetch<PlanDto[]>("/plans/admin", { token });
-    const manageable = rows.filter((p) => p.tier !== "STARTER" && p.tier !== "CUSTOM");
+    // All four paid plans are manageable, Total Clearance (CUSTOM) included — it
+    // is the top seller on the pricing page and was previously hidden here, so it
+    // could not be renamed or repriced from the panel at all. Only the free trial
+    // (STARTER, price 0) stays out: this form requires a price above zero.
+    const manageable = rows.filter((p) => p.tier !== "STARTER");
     const sorted = [...manageable].sort((a, b) => (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99));
     setPlans(sorted);
     const next: Record<string, Draft> = {};
@@ -172,8 +189,8 @@ export default function AdminPricingPage() {
               Compare plans
             </CardTitle>
             <CardDescription>
-              Changes apply to public <code className="rounded bg-muted px-1">GET /plans</code> and the site after refresh. Currency is a three-letter code (e.g. USD). Starter and Custom
-              tiers are not listed here.
+              Changes apply to public <code className="rounded bg-muted px-1">GET /plans</code> and the site after refresh. Currency is a three-letter code (e.g. USD). The free
+              trial is not listed here.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -204,7 +221,7 @@ export default function AdminPricingPage() {
                       id={`name-${plan.id}`}
                       value={d.name}
                       onChange={(e) => setDrafts((prev) => ({ ...prev, [plan.id]: { ...d, name: e.target.value } }))}
-                      placeholder="e.g. OET Accelerator"
+                      placeholder="e.g. Precision Engine"
                     />
                   </div>
                   <div className="space-y-2">

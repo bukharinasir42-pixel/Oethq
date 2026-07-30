@@ -1,24 +1,5 @@
 import type { BlogType } from "./types";
 
-export type PlanTier = "starter" | "foundation" | "accelerator" | "mastery" | "custom";
-
-export type PricingPlan = {
-  id: PlanTier;
-  purchasePlanId?: string;
-  name: string;
-  price: string;
-  description: string;
-  duration: string;
-  tests?: {
-    reading: number;
-    listening: number;
-  };
-  pastPapers?: number;
-  features: string[];
-  cta: string;
-  badge?: string;
-};
-
 export type BlogTeaser = {
   title: string;
   excerpt: string;
@@ -28,85 +9,6 @@ export type BlogTeaser = {
   /** When set, badge uses category colors (Reading / Speaking / …). */
   blogType?: BlogType;
 };
-
-export const pricingPlans: PricingPlan[] = [
-  {
-    id: "starter",
-    name: "Starter (Free Trial)",
-    price: "Free",
-    duration: "5 days · timer starts after OTP verification",
-    description: "One-time free trial; Day 1 Daily Lecture only. No tests or past papers.",
-    features: [
-      "Access: Day 1 Daily Lecture only",
-      "No Reading/Listening tests",
-      "No past papers",
-      "Shown only to logged-in users without an active subscription"
-    ],
-    cta: "Start Free Trial"
-  },
-  {
-    id: "foundation",
-    name: "Foundation",
-    price: "$99",
-    duration: "60 days · timer starts after OTP verification",
-    description: "Starter plan with full lecture/article library and base test counts.",
-    tests: { reading: 9, listening: 9 },
-    pastPapers: 2,
-    features: [
-      "All 40 days of Daily Lectures and Articles",
-      "9 Reading tests · 9 Listening tests",
-      "2 past papers",
-      "Timed conditions enforced for all tests"
-    ],
-    cta: "Choose Foundation"
-  },
-  {
-    id: "accelerator",
-    name: "Accelerator",
-    price: "$299",
-    duration: "60 days · timer starts after OTP verification",
-    description: "Expanded test bank with additional past papers.",
-    tests: { reading: 13, listening: 13 },
-    pastPapers: 4,
-    features: [
-      "All 40 days of Daily Lectures and Articles",
-      "13 Reading tests · 13 Listening tests",
-      "4 past papers",
-      "Timed conditions enforced for all tests"
-    ],
-    cta: "Choose Accelerator",
-    badge: "Most popular"
-  },
-  {
-    id: "mastery",
-    name: "Mastery",
-    price: "$399",
-    duration: "60 days · timer starts after OTP verification",
-    description: "Full inventory for candidates targeting A-grade performance.",
-    tests: { reading: 15, listening: 15 },
-    pastPapers: 10,
-    features: [
-      "All 40 days of Daily Lectures and Articles",
-      "15 Reading tests · 15 Listening tests",
-      "10 past papers",
-      "Timed conditions enforced for all tests"
-    ],
-    cta: "Choose Mastery"
-  },
-  {
-    id: "custom",
-    name: "Custom",
-    price: "Admin-defined",
-    duration: "Dynamic",
-    description: "Flexible plan configured by admin (price, description, features).",
-    features: [
-      "Created by admin with no uniqueness limits",
-      "Follows same OTP-based activation",
-      "Reading/Listening test counts defined per plan"
-    ],
-    cta: "Request Custom Plan"
-  }
-];
 
 export const featureBullets = [
   "One-time purchases — no auto-renewal; renew manually after expiry",

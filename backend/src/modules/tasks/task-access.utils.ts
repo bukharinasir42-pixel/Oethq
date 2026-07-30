@@ -1,13 +1,7 @@
 import { PlanTier } from "@prisma/client";
 
-/** Foundation, Accelerator & Mastery: lectures/articles on curriculum days 1–40. */
+/** Every paid plan: lectures/articles on curriculum days 1–40. */
 export const PAID_CONTENT_DAY_LIMIT = 40;
-export const FOUNDATION_READING_DAY_LIMIT = 9;
-export const FOUNDATION_LISTENING_DAY_LIMIT = 9;
-export const ACCELERATOR_READING_DAY_LIMIT = 13;
-export const ACCELERATOR_LISTENING_DAY_LIMIT = 13;
-export const MASTERY_READING_DAY_LIMIT = 15;
-export const MASTERY_LISTENING_DAY_LIMIT = 15;
 
 type TaskAccessInput = {
   planTier: PlanTier;
@@ -20,40 +14,28 @@ type TaskAccessInput = {
   hasPastPaper: boolean;
 };
 
+/**
+ * The plan's own limits, straight from the Plan row.
+ *
+ * This used to hard-code 9/9, 13/13 and 15/15 for FOUNDATION, ACCELERATOR and
+ * MASTERY, overriding whatever the database said. Those numbers came from a
+ * retired line-up; the live plans (Foundation Sprint 6/6, Precision Engine
+ * 10/10, Elite Clearance 15/15, Total Clearance 20/20) meant the first two
+ * silently handed out more tests than they sold, and edits made in the admin
+ * panel had no effect. The Plan row is now the single source of truth.
+ */
 function resolveAssignmentLimits(input: TaskAccessInput) {
-  switch (input.planTier) {
-    case PlanTier.FOUNDATION:
-      return {
-        readingLimit: FOUNDATION_READING_DAY_LIMIT,
-        listeningLimit: FOUNDATION_LISTENING_DAY_LIMIT
-      };
-    case PlanTier.ACCELERATOR:
-      return {
-        readingLimit: ACCELERATOR_READING_DAY_LIMIT,
-        listeningLimit: ACCELERATOR_LISTENING_DAY_LIMIT
-      };
-    case PlanTier.MASTERY:
-      return {
-        readingLimit: MASTERY_READING_DAY_LIMIT,
-        listeningLimit: MASTERY_LISTENING_DAY_LIMIT
-      };
-    default:
-      return {
-        readingLimit: input.readingLimit,
-        listeningLimit: input.listeningLimit
-      };
-  }
+  return {
+    readingLimit: input.readingLimit,
+    listeningLimit: input.listeningLimit
+  };
 }
 
 function isBeyondPaidContentDay(planTier: PlanTier, dayIndex: number) {
-  if (
-    planTier === PlanTier.FOUNDATION ||
-    planTier === PlanTier.ACCELERATOR ||
-    planTier === PlanTier.MASTERY
-  ) {
-    return dayIndex > PAID_CONTENT_DAY_LIMIT;
-  }
-  return false;
+  // Every paid plan is limited to the 40 authored curriculum days; the free
+  // trial is capped separately by its own Day-1-only rules.
+  if (planTier === PlanTier.STARTER) return false;
+  return dayIndex > PAID_CONTENT_DAY_LIMIT;
 }
 
 export function buildTaskLocks(input: TaskAccessInput) {
