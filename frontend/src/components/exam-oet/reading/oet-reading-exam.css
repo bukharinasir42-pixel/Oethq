@@ -316,6 +316,13 @@
   /* `.screen` sits between #app and the split, so it has to carry the column
      too — otherwise the panes size to their content and push the footer off. */
   .oet-reading .screen.active{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+  /* The cover/briefing screen has no split and no internal scroller: it is one
+     tall block that used to scroll the page. Since #app is now a fixed-height,
+     overflow:hidden shell (so the exam panes can own the height), this screen
+     must scroll itself — otherwise the briefing is clipped and the student
+     cannot reach the "Begin the test" button at all. */
+  .oet-reading #screenIntro.active{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .oet-reading .cover-wrap{min-height:0;padding:20px 14px 28px}
   .oet-reading .topbar,
   .oet-reading .subbar,
   .oet-reading .footerbar{position:static;flex:0 0 auto}
