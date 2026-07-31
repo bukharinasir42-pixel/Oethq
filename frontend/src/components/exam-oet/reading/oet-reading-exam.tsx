@@ -856,6 +856,10 @@ export function OetReadingExam({
                       paneId={`paneCText${ti}`}
                       paneClassName="pane pane-text"
                     />
+                    {/* Required, not optional: on narrow screens .body-split is a
+                        three-row grid (text / handle / questions). Without this the
+                        question pane drops into the handle's row and is 14px tall. */}
+                    <PaneResizer onResize={resizeSplit} />
                     <div className="pane pane-q">
                       <div className="qwrap">
                         <div className="qhead">
