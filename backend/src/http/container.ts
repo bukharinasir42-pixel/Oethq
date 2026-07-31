@@ -80,7 +80,8 @@ export function createAppContainer(): AppContainer {
   const authService = new AuthService(prisma, jwtHelper, appConfig, emailService, auditService);
   const stripeService = new StripeService(appConfig);
   const subscriptionsService = new SubscriptionsService(prisma, authService, appConfig, auditService, stripeService);
-  const usersService = new UsersService(prisma, authService, subscriptionsService, appConfig, auditService);
+  const productsService = new ProductsService(prisma);
+  const usersService = new UsersService(prisma, authService, subscriptionsService, appConfig, auditService, productsService);
   const storageService = new StorageService(appConfig, prisma);
   const gradingService = new GradingService();
   const testsService = new TestsService(prisma, gradingService, storageService);
@@ -102,7 +103,6 @@ export function createAppContainer(): AppContainer {
 
   const cohortService = new CohortService(prisma, bunnyPlaybackService);
   const cohortJobsService = new CohortJobsService(prisma, emailService, cohortService);
-  const productsService = new ProductsService(prisma);
   const courseLecturesService = new CourseLecturesService(prisma, bunnyPlaybackService, productsService);
   const portalResourcesService = new PortalResourcesService(prisma, bunnyPlaybackService, productsService);
   const oetImportService = new OetImportService(prisma, productsService, gradingService, storageService);

@@ -36,13 +36,21 @@ import { useSession } from "@/hooks/use-session";
 import { apiFetch } from "@/lib/api";
 import { sendActivationEmail } from "@/lib/emailjs";
 import type { CreatedCustomUserDto, PlanDto, SubscribedUserDto } from "@/lib/types";
+import { productsApi, type CatalogueProduct } from "@/lib/products-api";
 
 const EMPTY_PLAN = "__select_plan__";
+
+const NO_PLAN = "__no_plan__";
 
 type CustomUserFormValues = {
   name: string;
   email: string;
+  /** "" / NO_PLAN = no Complete Course; the candidate gets individual packages only. */
   planId: string;
+  /** Slugs of the individual (standalone) packages to grant. */
+  productSlugs: string[];
+  /** Optional override for how long those packages last; blank = each product's own duration. */
+  productDays: string;
   temporaryPassword: string;
 };
 
@@ -62,6 +70,7 @@ function StatTile({ label, value }: { label: string; value: string | number }) {
 export default function SubscribedUsersPage() {
   const { token, profile, status, error, logout, refresh } = useSession();
   const [plans, setPlans] = useState<PlanDto[]>([]);
+  const [standaloneProducts, setStandaloneProducts] = useState<CatalogueProduct[]>([]);
   const [subscribedUsers, setSubscribedUsers] = useState<SubscribedUserDto[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -73,18 +82,22 @@ export default function SubscribedUsersPage() {
       name: "",
       email: "",
       planId: "",
+      productSlugs: [],
+      productDays: "",
       temporaryPassword: ""
     }
   });
 
   const loadData = useCallback(async () => {
     if (!token) return;
-    const [planResponse, subscribedResponse] = await Promise.all([
+    const [planResponse, subscribedResponse, catalogue] = await Promise.all([
       apiFetch<PlanDto[]>("/plans", { token }),
-      apiFetch<SubscribedUserDto[]>("/users/subscribed", { token })
+      apiFetch<SubscribedUserDto[]>("/users/subscribed", { token }),
+      productsApi.list()
     ]);
     setPlans(planResponse);
     setSubscribedUsers(subscribedResponse);
+    setStandaloneProducts(catalogue.products.filter((p) => p.category === "STANDALONE" && p.isPurchasable !== false));
   }, [token]);
 
   useEffect(() => {
@@ -115,6 +128,8 @@ export default function SubscribedUsersPage() {
       name: "",
       email: "",
       planId: "",
+      productSlugs: [],
+      productDays: "",
       temporaryPassword: ""
     });
     setCreateModalOpen(true);
@@ -142,6 +157,11 @@ export default function SubscribedUsersPage() {
   }
 
   const createCustomUser = async (values: CustomUserFormValues) => {
+    const hasPlan = Boolean(values.planId) && values.planId !== NO_PLAN;
+    if (!hasPlan && values.productSlugs.length === 0) {
+      toast.error("Select a Complete Course plan, one or more individual packages, or both.");
+      return;
+    }
     setSubmitting(true);
     try {
       const response = await apiFetch<CreatedCustomUserDto>("/users/custom", {
@@ -150,7 +170,10 @@ export default function SubscribedUsersPage() {
         body: {
           name: values.name,
           email: values.email,
-          planId: values.planId,
+          // Either may be omitted, but not both — the API rejects an empty grant.
+          planId: values.planId && values.planId !== NO_PLAN ? values.planId : undefined,
+          productSlugs: values.productSlugs.length ? values.productSlugs : undefined,
+          productDays: values.productDays.trim() ? Number(values.productDays) : undefined,
           temporaryPassword: values.temporaryPassword || undefined
         }
       });
@@ -172,10 +195,17 @@ export default function SubscribedUsersPage() {
         name: "",
         email: "",
         planId: "",
+        productSlugs: [],
+        productDays: "",
         temporaryPassword: ""
       });
       await loadData();
-      toast.success("Custom user created and activation email sent");
+      const pkgCount = response.grantedPackages?.length ?? 0;
+      toast.success(
+        response.activationEmail
+          ? `Candidate created${pkgCount ? ` with ${pkgCount} package${pkgCount === 1 ? "" : "s"}` : ""} — activation email sent`
+          : `Candidate created with ${pkgCount} package${pkgCount === 1 ? "" : "s"} — access is live, no activation needed`
+      );
     } catch (caughtError: unknown) {
       toast.error(caughtError instanceof Error ? caughtError.message : "Failed to create custom user");
     } finally {
@@ -383,10 +413,9 @@ export default function SubscribedUsersPage() {
               <FormField
                 control={form.control}
                 name="planId"
-                rules={{ required: "A plan must be selected." }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan</FormLabel>
+                    <FormLabel>Complete Course plan <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
                     <Select
                       value={field.value || EMPTY_PLAN}
                       onValueChange={(value) => field.onChange(value === EMPTY_PLAN ? "" : value)}
@@ -397,7 +426,7 @@ export default function SubscribedUsersPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={EMPTY_PLAN}>Select plan</SelectItem>
+                        <SelectItem value={EMPTY_PLAN}>No Complete Course plan</SelectItem>
                         {plans.map((plan) => (
                           <SelectItem key={plan.id} value={plan.id}>
                             {plan.name}
@@ -406,6 +435,74 @@ export default function SubscribedUsersPage() {
                       </SelectContent>
                     </Select>
                     <FormDescription>Plans define tier, duration, and quota limits.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Individual (standalone) packages — a candidate can get these
+                  instead of, or alongside, a Complete Course plan. */}
+              <FormField
+                control={form.control}
+                name="productSlugs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Individual packages <span className="font-normal text-muted-foreground">(optional)</span>
+                    </FormLabel>
+                    <div className="grid max-h-56 gap-1.5 overflow-y-auto rounded-xl border border-border/70 p-2.5 sm:grid-cols-2">
+                      {standaloneProducts.length === 0 ? (
+                        <p className="px-1 py-2 text-xs text-muted-foreground">No individual packages available.</p>
+                      ) : (
+                        standaloneProducts.map((p) => {
+                          const checked = field.value.includes(p.slug);
+                          return (
+                            <label
+                              key={p.slug}
+                              className="flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-muted/40"
+                            >
+                              <input
+                                type="checkbox"
+                                className="mt-0.5"
+                                checked={checked}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.checked
+                                      ? [...field.value, p.slug]
+                                      : field.value.filter((s: string) => s !== p.slug)
+                                  )
+                                }
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate text-xs font-medium text-foreground">{p.name}</span>
+                                <span className="block text-[10px] text-muted-foreground">
+                                  {p.slug}
+                                  {p.durationDays ? ` · ${p.durationDays} days` : ""}
+                                </span>
+                              </span>
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                    <FormDescription>
+                      Granted immediately — no activation OTP needed. Leave the plan empty to create a
+                      single-skill-only candidate.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="productDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Package access days <span className="font-normal text-muted-foreground">(optional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input inputMode="numeric" placeholder="Leave blank for each package's own duration" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -394,8 +394,11 @@ export type CreatedCustomUserDto = {
   };
   activationUrl: string;
   temporaryPassword?: string | null;
-  otp?: string;
-  activationEmail?: ActivationEmailPayloadDto;
+  otp?: string | null;
+  /** Individual packages granted at creation. Live immediately — no activation. */
+  grantedPackages?: { slug: string; name: string; endDate: string | null }[];
+  /** Null when no Complete Course plan was attached (packages-only candidate). */
+  activationEmail?: ActivationEmailPayloadDto | null;
 };
 
 export type AdminPurchaseDto = {

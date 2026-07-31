@@ -95,6 +95,11 @@
 .oet-reading .tab.active .n{background:var(--blue);color:#fff}
 .oet-reading .tab.done .n{background:var(--good);color:#fff}
 
+/* Part A text tabs + pane resizer — narrow screens only. Both are display:none
+   on desktop, so the split stays a plain two-column grid there. */
+.oet-reading .pa-textbar{display:none}
+.oet-reading .pane-resizer{display:none}
+
 /* layout panes */
 .oet-reading .body-split{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:calc(100vh - 70px - 52px - 64px)}
 .oet-reading .pane{overflow-y:auto;max-height:calc(100vh - 70px - 52px - 64px)}
@@ -317,10 +322,35 @@
 
   .oet-reading .body-split{
     grid-template-columns:1fr;
-    /* Passage / questions. Tunable in one place. */
-    grid-template-rows:var(--pane-split,46%) 1fr;
+    /* Passage / drag handle / questions. --pane-split is set inline while the
+       student drags; 46% is the resting default. */
+    grid-template-rows:var(--pane-split,46%) 14px 1fr;
     flex:1 1 auto;min-height:0;height:auto;
   }
+
+  /* Part A: one text at a time, chosen from the A/B/C/D strip. */
+  .oet-reading .pa-textbar{
+    display:flex;gap:6px;padding:7px 12px;background:var(--paper);
+    border-bottom:1px solid var(--line);overflow-x:auto;flex:0 0 auto;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  }
+  .oet-reading .pa-textbar::-webkit-scrollbar{display:none}
+  .oet-reading .pa-texttab{
+    flex:1 0 auto;min-width:74px;padding:7px 12px;border-radius:9px;
+    border:1px solid var(--line);background:var(--wash);
+    font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;
+  }
+  .oet-reading .pa-texttab.active{background:var(--sky);border-color:var(--sky-2);color:var(--navy)}
+
+  /* Drag handle. 14px tall but with a larger touch target via the grip. */
+  .oet-reading .pane-resizer{
+    display:flex;align-items:center;justify-content:center;
+    background:var(--wash);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    cursor:row-resize;touch-action:none;
+  }
+  .oet-reading .pane-resizer .grip{width:44px;height:4px;border-radius:99px;background:var(--line-strong)}
+  .oet-reading .pane-resizer.dragging{background:var(--sky)}
+  .oet-reading .pane-resizer.dragging .grip{background:var(--blue)}
   /* min-height:0 is what actually lets a grid/flex child scroll instead of
      stretching to fit its content. */
   .oet-reading .pane{min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}

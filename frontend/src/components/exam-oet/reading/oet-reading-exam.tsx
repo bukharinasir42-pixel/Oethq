@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   OetReadingImport,
   OetReadingPartA,
@@ -93,8 +93,16 @@ function buildBlocksHtml(blocks: OetTextBlock[]): string {
     .join("");
 }
 
-function buildPartAHtml(partA: OetReadingPartA): string {
-  const texts = partA.texts
+/**
+ * Part A passage HTML.
+ *
+ * `onlyIndex` renders a single text instead of all four — used on phones and
+ * tablets, where the four texts are behind A/B/C/D tabs so the student is not
+ * scrolling past three irrelevant texts to reach the one they need.
+ */
+function buildPartAHtml(partA: OetReadingPartA, onlyIndex: number | null = null): string {
+  const source = onlyIndex == null ? partA.texts : partA.texts.slice(onlyIndex, onlyIndex + 1);
+  const texts = source
     .map(
       (t) =>
         `<div class="abcd-block"><div class="abcd-head"><div class="lt">${t.letter}</div><div class="abcd-htext"><div class="lb">Text ${t.letter}</div>${
@@ -102,9 +110,13 @@ function buildPartAHtml(partA: OetReadingPartA): string {
         }</div></div>${buildBlocksHtml(t.blocks)}</div>`
     )
     .join("");
+  const sub =
+    onlyIndex == null
+      ? `<div class="wc">Four texts · find the relevant information for each question</div>`
+      : "";
   return `<div class="passage multi"><div class="eyebrow">Part A · Texts A–D</div><h1>${
     partA.topic || "Part A"
-  }</h1><div class="wc">Four texts · find the relevant information for each question</div>${texts}</div>`;
+  }</h1>${sub}${texts}</div>`;
 }
 
 function buildPartCHtml(t: OetReadingPartCText, index: number): string {
@@ -237,6 +249,54 @@ type Stage = "intro" | "partA" | "bc";
 
 /* ------------------------------------------------------------------ component */
 
+/**
+ * True on phones and tablets (the stacked two-pane layout). Desktop keeps the
+ * side-by-side view, so the tabs and the drag handle stay out of its way.
+ * Starts false and resolves on mount — the exam only renders client-side.
+ */
+function useIsNarrow(maxWidth = 960): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width:${maxWidth}px)`);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [maxWidth]);
+  return narrow;
+}
+
+/** Drag handle between the stacked panes. Pointer events cover mouse and touch. */
+function PaneResizer({ onResize }: { onResize: (clientY: number, container: HTMLElement) => void }) {
+  return (
+    <div
+      className="pane-resizer"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Drag to resize the text and question panes"
+      onPointerDown={(e) => {
+        const handle = e.currentTarget;
+        const container = handle.parentElement;
+        if (!container) return;
+        handle.setPointerCapture(e.pointerId);
+        handle.classList.add("dragging");
+        const move = (ev: PointerEvent) => onResize(ev.clientY, container);
+        const up = () => {
+          handle.classList.remove("dragging");
+          handle.removeEventListener("pointermove", move);
+          handle.removeEventListener("pointerup", up);
+          handle.removeEventListener("pointercancel", up);
+        };
+        handle.addEventListener("pointermove", move);
+        handle.addEventListener("pointerup", up);
+        handle.addEventListener("pointercancel", up);
+      }}
+    >
+      <span className="grip" aria-hidden />
+    </div>
+  );
+}
+
 export function OetReadingExam({
   content,
   initialAnswers,
@@ -254,6 +314,18 @@ export function OetReadingExam({
 
   const [stage, setStage] = useState<Stage>("intro");
   const [bcTab, setBcTab] = useState<number>(0); // 0 Part B, 1 Part C text 1, 2 Part C text 2
+  // Narrow screens only: which Part A text (A–D) is on show, and how the two
+  // stacked panes divide the height. Percent of the split container.
+  const isNarrow = useIsNarrow();
+  const [paTab, setPaTab] = useState<number>(0);
+  const [splitPct, setSplitPct] = useState<number>(46);
+  const resizeSplit = useCallback((clientY: number, container: HTMLElement) => {
+    const box = container.getBoundingClientRect();
+    if (box.height <= 0) return;
+    const pct = ((clientY - box.top) / box.height) * 100;
+    // Keep both panes usable — neither can be squeezed below a fifth.
+    setSplitPct(Math.min(80, Math.max(20, pct)));
+  }, []);
   const [aTimeLeft, setATimeLeft] = useState<number>(A_TIME);
   const [bcTimeLeft, setBcTimeLeft] = useState<number>(BC_TIME);
   const [modal, setModal] = useState<ModalState | null>(null);
@@ -314,7 +386,10 @@ export function OetReadingExam({
   }, [partAQuestions]);
 
   /* ---- passage HTML (static) ---- */
-  const partAHtml = useMemo(() => buildPartAHtml(content.partA), [content]);
+  const partAHtml = useMemo(
+    () => buildPartAHtml(content.partA, isNarrow ? paTab : null),
+    [content, isNarrow, paTab]
+  );
   const partCHtml = useMemo(
     () => partCTexts.map((t, i) => buildPartCHtml(t, i)),
     [partCTexts]
@@ -602,8 +677,28 @@ export function OetReadingExam({
                 narrow screen it wrapped the sub-bar onto a third line. */}
             <div className="subbar-note">Answers must come only from Texts A&ndash;D</div>
           </div>
-          <div className="body-split">
+          {/* Narrow screens: A/B/C/D tabs pick which text is showing, and the
+              handle below the text pane lets the student resize the two panes.
+              Both are hidden on desktop, which keeps the side-by-side view. */}
+          {isNarrow ? (
+            <div className="pa-textbar" role="tablist" aria-label="Part A texts">
+              {content.partA.texts.map((t, i) => (
+                <button
+                  key={t.letter}
+                  type="button"
+                  role="tab"
+                  aria-selected={paTab === i}
+                  className={`pa-texttab${paTab === i ? " active" : ""}`}
+                  onClick={() => setPaTab(i)}
+                >
+                  Text {t.letter}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="body-split" style={isNarrow ? ({ "--pane-split": `${splitPct}%` } as React.CSSProperties) : undefined}>
             <HighlightablePassage html={partAHtml} paneId="paneAText" paneClassName="pane pane-text" />
+            <PaneResizer onResize={resizeSplit} />
             <div className="pane pane-q" id="paneAQ">
               <div className="qwrap">
                 <div className="qhead">
@@ -755,7 +850,7 @@ export function OetReadingExam({
                 const T = partCTexts[ti];
                 if (!T) return null;
                 return (
-                  <div className="body-split">
+                  <div className="body-split" style={isNarrow ? ({ "--pane-split": `${splitPct}%` } as React.CSSProperties) : undefined}>
                     <HighlightablePassage
                       html={partCHtml[ti]}
                       paneId={`paneCText${ti}`}
