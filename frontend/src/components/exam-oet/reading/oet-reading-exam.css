@@ -337,15 +337,15 @@
 
   /* Part A: one text at a time, chosen from the A/B/C/D strip. */
   .oet-reading .pa-textbar{
-    display:flex;gap:6px;padding:7px 12px;background:var(--paper);
+    display:flex;gap:5px;padding:5px 10px;background:var(--paper);
     border-bottom:1px solid var(--line);overflow-x:auto;flex:0 0 auto;
     scrollbar-width:none;-webkit-overflow-scrolling:touch;
   }
   .oet-reading .pa-textbar::-webkit-scrollbar{display:none}
   .oet-reading .pa-texttab{
-    flex:1 0 auto;min-width:74px;padding:7px 12px;border-radius:9px;
+    flex:1 0 auto;min-width:0;padding:5px 10px;border-radius:8px;
     border:1px solid var(--line);background:var(--wash);
-    font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;
+    font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;
   }
   .oet-reading .pa-texttab.active{background:var(--sky);border-color:var(--sky-2);color:var(--navy)}
 
@@ -410,9 +410,27 @@
      pushed content out of a viewport that is already short. */
   .oet-reading .passage{padding:16px 16px 26px}.oet-reading .passage h1{font-size:20px;margin-bottom:8px}
   .oet-reading .qwrap{padding:14px 14px 26px}.oet-reading .pb-wrap{padding:16px 14px 26px}
-  .oet-reading .qwrap .qhead{margin-bottom:14px}
-  .oet-reading .qwrap .qhead .t{font-size:18px}
-  .oet-reading .qwrap .qhead .d{font-size:12px}
+  .oet-reading .qwrap .qhead{margin-bottom:10px}
+  .oet-reading .qwrap .qhead .t{font-size:17px}
+  .oet-reading .qwrap .qhead .d{font-size:11.5px;line-height:1.4}
+
+  /* ---- question density on phones ----------------------------------------
+     Desktop sizing left roughly one and a half questions visible inside the
+     question pane. Everything below is tightened so several fit at once, while
+     keeping every tap target at 40px or more. */
+  .oet-reading .qgroup-label{font-size:10.5px;margin:12px 0 8px;gap:8px}
+  .oet-reading .qcard{padding:11px 12px;margin-bottom:8px;border-radius:11px;box-shadow:none}
+  .oet-reading .qcard .qnum{gap:8px;margin-bottom:2px}
+  .oet-reading .qcard .qnum .b{min-width:23px;height:23px;font-size:12px;border-radius:7px;padding:0 4px}
+  .oet-reading .qcard .qtext{font-size:14px;line-height:1.4;padding-top:1px}
+  /* 16px stops iOS zooming the whole page when the field is focused. */
+  .oet-reading .ans-input{margin-top:8px;padding:8px 11px;font-size:16px;border-radius:9px}
+  .oet-reading .letters{gap:7px;margin-top:9px}
+  .oet-reading .letter-btn{width:40px;height:40px;font-size:15px;border-radius:9px}
+  /* Part B/C multiple choice */
+  .oet-reading .opt{padding:8px 10px;gap:9px;border-radius:9px}
+  .oet-reading .opt .mk{width:21px;height:21px;font-size:11px;border-radius:6px}
+  .oet-reading .opt .ol{font-size:13.5px;line-height:1.4}
   .oet-reading .cover-head, .oet-reading .cover-body{padding-left:22px;padding-right:22px}
   .oet-reading .cover-head h1{font-size:24px}
   .oet-reading .footerbar{padding:0 14px}
