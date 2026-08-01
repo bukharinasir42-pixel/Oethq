@@ -42,7 +42,7 @@ export function CompleteCourseGate({
           onClick={() => setPlansOpen(true)}
           className="mt-7 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-[var(--shadow-card)] transition hover:opacity-90"
         >
-          View Complete Course plans
+          View Complete Material plans
         </button>
       </div>
       <PlansUpgradeModal open={plansOpen} onOpenChange={setPlansOpen} />

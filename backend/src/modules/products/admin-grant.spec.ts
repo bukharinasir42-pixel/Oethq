@@ -59,7 +59,7 @@ describe("adminGrantProduct — tier supersede", () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
-  it("leaves the Complete Course and non-tier products alone", async () => {
+  it("leaves the Complete Material and non-tier products alone", async () => {
     // tierRank 0 = not a tier ladder entry (Complete, add-on packs, legacy).
     const { svc, updateMany } = setup([
       { id: "e-complete", product: { tierRank: 0, includedSkills: ["READING"] } },

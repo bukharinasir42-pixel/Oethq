@@ -230,8 +230,8 @@ export default function TasksPage() {
         onLogout={logout}
       >
         <CompleteCourseGate
-          title="The daily study plan is part of the Complete Course"
-          description="Your standalone course is self-paced with its own lectures, tests and past papers. Upgrade to a Complete Course for the guided day-by-day study plan."
+          title="The daily study plan is part of the Complete Material"
+          description="Your standalone course is self-paced with its own lectures, tests and past papers. Upgrade to the Complete Material for the guided day-by-day study plan."
         />
       </PortalShell>
     );

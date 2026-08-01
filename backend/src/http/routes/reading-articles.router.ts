@@ -20,7 +20,7 @@ export function createReadingArticlesRouter(c: AppContainer): Router {
     const u = (req as AuthedRequest).user;
     const { skillAccess } = await c.productsService.getOwnership(u.id);
     if (!skillModuleUnlocked(skillAccess, "READING", "part-bc-core")) {
-      res.status(403).json({ message: "Reading Part B/C articles are included with the Precision tier or the Complete Course." });
+      res.status(403).json({ message: "Reading Part B/C articles are included with the Precision tier or the Complete Material." });
       return;
     }
     const article = await svc.articleOfDay();

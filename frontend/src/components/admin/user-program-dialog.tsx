@@ -69,7 +69,7 @@ export function UserProgramDialog({ userId, userName }: { userId: string; userNa
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Manage program — {userName}</DialogTitle>
-          <DialogDescription>Grant or revoke course access. Each grant lasts the course&apos;s own duration (a full course, not a 7-day trial) unless you set a custom length below. The Complete Course is managed via their subscription/plan.</DialogDescription>
+          <DialogDescription>Grant or revoke course access. Each grant lasts the course&apos;s own duration (a full course, not a 7-day trial) unless you set a custom length below. The Complete Material is managed via their subscription/plan.</DialogDescription>
         </DialogHeader>
 
         {ownership && (

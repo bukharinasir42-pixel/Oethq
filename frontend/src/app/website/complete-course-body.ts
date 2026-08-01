@@ -5,9 +5,9 @@
 export const CC_HERO = `<section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow eyebrow-pill">OET Complete Course</span>
+      <span class="eyebrow eyebrow-pill">OET Complete Material</span>
       <h1>One course.<br>Five ways to <span class="blue">finish it.</span></h1>
-      <p class="lede">Every plan below is the same OET Complete Course — scheduled cohort lectures across all four skills, written and scored by OET examiners and applied linguistics professors. What changes is how much practice material you get, how long you keep it, and how closely we correct your work.</p>
+      <p class="lede">Every plan below is the same OET Complete Material — scheduled cohort lectures across all four skills, written and scored by OET examiners and applied linguistics professors. What changes is how much practice material you get, how long you keep it, and how closely we correct your work.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#plans">Start free &mdash; no card</a>
         <a class="btn btn-ghost" href="#compare">Compare side by side</a>
@@ -230,7 +230,7 @@ export const CC_COMPARE = `<section class="section section-mist" id="compare">
             <tr>
               <th class="feat-col" scope="col">
                 <span class="col-tag">What you get</span>
-                <span class="col-title">OET Complete Course</span>
+                <span class="col-title">OET Complete Material</span>
               </th>
               <th scope="col" class="free-col" data-col="0">
                 <span class="col-tag">Tier 0</span>
@@ -458,7 +458,7 @@ export const CC_PROOF = `<section class="section">
     <div class="card-soft">
       <span class="eyebrow">Our own production</span>
       <h3 style="margin-top:12px">Written by the people who score the exam.</h3>
-      <p>No scraped PDFs, no forwarded WhatsApp material, no recycled papers circulating for years. Every reading passage, listening file, cheat sheet and drill in the OET Complete Course is built in-house.</p>
+      <p>No scraped PDFs, no forwarded WhatsApp material, no recycled papers circulating for years. Every reading passage, listening file, cheat sheet and drill in the OET Complete Material is built in-house.</p>
       <ul class="mini-list">
         <li><span class="tick">✓</span> Authored by OET examiners</li>
         <li><span class="tick">✓</span> Reviewed by applied linguistics professors</li>

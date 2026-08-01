@@ -10,7 +10,7 @@ import { dailyContentUnlocked } from "../../modules/products/portal-tier-access"
 import { resolveTrialAccess } from "../../modules/subscriptions/trial-access";
 
 const SPELLING_LOCKED =
-  "Daily spelling is included with the Listening Precision tier or the Complete Course.";
+  "Daily spelling is included with the Listening Precision tier or the Complete Material.";
 
 export function createSpellingRouter(c: AppContainer): Router {
   const r = Router();

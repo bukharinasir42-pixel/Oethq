@@ -50,7 +50,7 @@ export function OethqFooter() {
 
             <div className="ft-col">
               <h4>Courses</h4>
-              <Link href="/courses">Complete Courses</Link>
+              <Link href="/courses">Complete Material</Link>
               <Link href="/courses/reading-listening">Reading &amp; Listening</Link>
               <Link href="/courses/reading">Reading</Link>
               <Link href="/courses/listening">Listening</Link>

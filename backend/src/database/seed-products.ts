@@ -105,12 +105,12 @@ function tierProducts(opts: {
 const PRODUCTS: SeedProduct[] = [
   {
     slug: "complete",
-    name: "OET Complete Courses",
+    name: "OET Complete Material",
     category: ProductCategory.COMPLETE,
     status: ProductStatus.ACTIVE,
     displayOrder: 0,
     shortDescription: "Full OET preparation — all four skills, past papers, corrections and analytics.",
-    landingRoute: "/courses", // existing Complete Course experience (Foundation / Precision / Elite)
+    landingRoute: "/courses", // existing Complete Material experience (Foundation / Precision / Elite)
     price: null, // priced by the existing Plan tiers, not as a standalone product
     durationDays: null,
     includedSkills: ["READING", "LISTENING", "WRITING", "SPEAKING"],

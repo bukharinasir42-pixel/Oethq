@@ -177,7 +177,7 @@ export function PremiumPortalDashboard({ profileName, dashboard, tasks, complete
   const gradeLabel = (g?: string | null) => (g === "C_PLUS" ? "C+" : g || "E");
   const latestReading = dashboard?.retainedResults?.find((r) => r.test.type === "READING" && r.scaledScore != null);
   const latestListening = dashboard?.retainedResults?.find((r) => r.test.type === "LISTENING" && r.scaledScore != null);
-  const planName = dashboard?.subscription?.plan?.name ?? "OET Complete Course";
+  const planName = dashboard?.subscription?.plan?.name ?? "OET Complete Material";
   const dnow = new Date();
 
   // ---- today's daily-task tiles (real routes) ----

@@ -111,7 +111,7 @@ export function WritingCorrectionsLanding() {
             </article>
           ))}
         </div>
-        <p className="wcl-plan-note">Already on a Complete Course? Your plan includes corrections too — <b>Foundation 3</b>, <b>Precision 7</b>, <b>Elite 15</b>. These packs add on top.</p>
+        <p className="wcl-plan-note">Already on the Complete Material? Your plan includes corrections too — <b>Foundation 3</b>, <b>Precision 7</b>, <b>Elite 15</b>. These packs add on top.</p>
       </section>
 
       {/* CRITERIA / PROMISE */}

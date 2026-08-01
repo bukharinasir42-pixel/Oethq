@@ -157,7 +157,7 @@ export function WebsiteWhatsInside() {
         </div>
 
         <div className={"wi-foot" + (revealed.has("foot") ? " wi-in" : "")} data-reveal="foot">
-          <p><b>All nine are inside the OET Complete Course.</b>
+          <p><b>All nine are inside the OET Complete Material.</b>
             <span>Single-skill courses carry the ones that apply to that skill.</span></p>
           <Link className="wi-btn" href="/#courses">See the courses <span aria-hidden>→</span></Link>
         </div>

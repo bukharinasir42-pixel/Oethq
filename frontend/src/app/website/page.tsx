@@ -155,7 +155,7 @@ export default function WebsiteHomePage() {
 
                 <WebsiteWhatsInside />
 
-                {/* Homepage "clearance" slot now shows the Complete Course plan
+                {/* Homepage "clearance" slot now shows the Complete Material plan
                     cards + comparison table (the /courses landing), embedded. */}
                 <CompleteCourseLanding embedded anchorId="pricing" />
 

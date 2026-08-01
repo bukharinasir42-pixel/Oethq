@@ -32,7 +32,7 @@ export function createListeningPodcastsRouter(c: AppContainer): Router {
   r.get("/listening-podcasts/of-day", auth, asyncHandler(async (req, res) => {
     const u = (req as AuthedRequest).user;
     if (!(await podcastGate(u.id))) {
-      res.status(403).json({ message: "Daily listening podcasts are included with the Precision tier or the Complete Course." });
+      res.status(403).json({ message: "Daily listening podcasts are included with the Precision tier or the Complete Material." });
       return;
     }
     const podcast = await svc.podcastOfDay(u.id);
@@ -42,7 +42,7 @@ export function createListeningPodcastsRouter(c: AppContainer): Router {
   r.post("/listening-podcasts/mark-listened", auth, asyncHandler(async (req, res) => {
     const u = (req as AuthedRequest).user;
     if (!(await podcastGate(u.id))) {
-      res.status(403).json({ message: "Daily listening podcasts are included with the Precision tier or the Complete Course." });
+      res.status(403).json({ message: "Daily listening podcasts are included with the Precision tier or the Complete Material." });
       return;
     }
     res.json(await svc.markListened(u.id));

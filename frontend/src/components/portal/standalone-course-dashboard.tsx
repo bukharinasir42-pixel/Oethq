@@ -135,7 +135,7 @@ export function StandaloneCourseDashboard({
         })}
       </div>
 
-      {/* Complete Course upsell — unlocks cohort live classes + daily study plan + all skills. */}
+      {/* Complete Material upsell — unlocks cohort live classes + daily study plan + all skills. */}
       <div className="relative overflow-hidden rounded-[20px] border border-primary/20 bg-primary/5 p-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-start gap-3">
@@ -145,7 +145,7 @@ export function StandaloneCourseDashboard({
             <div>
               <p className="text-sm font-bold text-foreground">Want the full OET HQ experience?</p>
               <p className="mt-1 max-w-lg text-sm leading-6 text-muted-foreground">
-                Upgrade to a Complete Course for live cohort classes, a guided daily study plan and all four skills.
+                Upgrade to the Complete Material for live cohort classes, a guided daily study plan and all four skills.
               </p>
             </div>
           </div>

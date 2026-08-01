@@ -99,7 +99,7 @@ export function OethqContact() {
                         <select id="ct-topic" name="topic" defaultValue="Which course is right for me">
                           <option>Which course is right for me</option>
                           <option>Enrolment and payment</option>
-                          <option>Complete Course packages</option>
+                          <option>Complete Material packages</option>
                           <option>Reading or Listening material</option>
                           <option>Live cohort class timings</option>
                           <option>Something else</option>

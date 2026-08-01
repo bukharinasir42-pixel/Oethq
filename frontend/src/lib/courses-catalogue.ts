@@ -82,8 +82,8 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
     accessNote: "Full access for your course window from the day you enrol.",
     faqs: [
       {
-        q: "How is this different from the Complete Course?",
-        a: "The Complete Course covers all four skills plus writing corrections and analytics. This course focuses only on Reading and Listening — ideal if those are the skills holding you back and you don't need Writing and Speaking material."
+        q: "How is this different from the Complete Material?",
+        a: "The Complete Material covers all four skills plus writing corrections and analytics. This course focuses only on Reading and Listening — ideal if those are the skills holding you back and you don't need Writing and Speaking material."
       },
       {
         q: "Are the past papers the real OET HQ papers?",
@@ -91,7 +91,7 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
       },
       {
         q: "Can I upgrade later?",
-        a: "Yes. If you later want the full programme, you can move up to a Complete Course — your account keeps everything you already own."
+        a: "Yes. If you later want the full programme, you can move up to the Complete Material — your account keeps everything you already own."
       }
     ],
     crossSell: ["reading", "listening", "complete"]
@@ -144,7 +144,7 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
       },
       {
         q: "Can I upgrade to both skills later?",
-        a: "Yes — you can move up to the Reading & Listening Course or a Complete Course, and your account keeps what you already own."
+        a: "Yes — you can move up to the Reading & Listening Course or the Complete Material, and your account keeps what you already own."
       }
     ],
     crossSell: ["reading-listening", "listening", "complete"]
@@ -197,17 +197,17 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
       },
       {
         q: "Can I upgrade to both skills later?",
-        a: "Yes — you can move up to the Reading & Listening Course or a Complete Course, and your account keeps what you already own."
+        a: "Yes — you can move up to the Reading & Listening Course or the Complete Material, and your account keeps what you already own."
       }
     ],
     crossSell: ["reading-listening", "reading", "complete"]
   },
   writing: {
     slug: "writing",
-    metaTitle: "OET Writing Course — Choose Your Plan | OET HQ",
+    metaTitle: "OET Writing Material — Choose Your Plan | OET HQ",
     metaDescription:
-      "The OET Writing Course from OET HQ. Four plans from US$39. Letter corrections marked by a human against all six official OET Writing criteria, case-note tasks, drills and the Pass Predictor.",
-    ogTitle: "OET Writing Course — OET HQ",
+      "The OET Writing Material from OET HQ. Four plans from US$39. Letter corrections marked by a human against all six official OET Writing criteria, case-note tasks, drills and the Pass Predictor.",
+    ogTitle: "OET Writing Material — OET HQ",
     ogDescription:
       "Four plans from US$39. Human-marked letter corrections against the six official OET Writing criteria, case-note tasks, cheat sheets and the Pass Predictor.",
     eyebrow: "Single skill · Writing",

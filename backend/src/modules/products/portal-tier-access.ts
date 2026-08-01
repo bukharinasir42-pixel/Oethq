@@ -43,7 +43,7 @@ export type SkillAccessLite = { skill: string; tierRank: number };
 /** Does this owned-skill access unlock `module`? (null access = skill not owned.) */
 export function moduleUnlockedForTier(access: SkillAccessLite | null | undefined, module: ModuleKey): boolean {
   if (!access) return false;
-  if (access.tierRank >= 99) return true; // Complete Course
+  if (access.tierRank >= 99) return true; // Complete Material
   const min = MIN_TIER[access.skill]?.[module];
   if (min == null) return true;           // not tier-restricted for this skill
   return access.tierRank >= min;

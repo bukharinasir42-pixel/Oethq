@@ -199,7 +199,7 @@ export class ProductsService {
       owned.unshift({
         entitlementKey: "complete",
         productSlug: "complete",
-        productName: `OET Complete Course — ${sub.plan.name}`,
+        productName: `OET Complete Material — ${sub.plan.name}`,
         includedSkills: ["READING", "LISTENING", "WRITING", "SPEAKING"],
         source: "COMPLETE_SUBSCRIPTION",
         startDate: sub.startDate?.toISOString() ?? null,
@@ -430,7 +430,7 @@ export class ProductsService {
     const product = await this.prisma.product.findUnique({ where: { slug } });
     if (!product) throw Object.assign(new Error("Product not found"), { statusCode: 404 });
     if (product.category === "COMPLETE") {
-      throw Object.assign(new Error("The Complete Course is granted via a plan/subscription, not here."), { statusCode: 400 });
+      throw Object.assign(new Error("The Complete Material is granted via a plan/subscription, not here."), { statusCode: 400 });
     }
     const now = new Date();
     const days = daysOverride != null && daysOverride > 0 ? Math.round(daysOverride) : product.durationDays;

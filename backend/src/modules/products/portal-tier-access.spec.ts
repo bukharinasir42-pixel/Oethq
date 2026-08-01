@@ -16,7 +16,7 @@ describe("portal tier access", () => {
       expect(moduleUnlockedForTier({ skill: "LISTENING", tierRank: 4 }, "part-c-podcasts")).toBe(true);
     });
 
-    it("unlocks everything for the Complete Course and nothing for an unowned skill", () => {
+    it("unlocks everything for the Complete Material and nothing for an unowned skill", () => {
       expect(moduleUnlockedForTier({ skill: "LISTENING", tierRank: 99 }, "part-c-podcasts")).toBe(true);
       expect(moduleUnlockedForTier(null, "part-c-podcasts")).toBe(false);
     });

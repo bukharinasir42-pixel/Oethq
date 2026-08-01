@@ -104,7 +104,7 @@ export function PlansUpgradeModal({
           <DialogTitle>{title ?? "Choose your plan"}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          Upgrade to any single-skill course tier, or go all-in with a Complete Course. You only pay the difference
+          Upgrade to any single-skill course tier, or go all-in with the Complete Material. You only pay the difference
           from what you already own.
         </p>
 
@@ -122,7 +122,7 @@ export function PlansUpgradeModal({
         {completePlans.length > 0 && (
           <section className="mt-4">
             <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-              <GraduationCap className="h-3.5 w-3.5" aria-hidden /> OET Complete Course · all four skills
+              <GraduationCap className="h-3.5 w-3.5" aria-hidden /> OET Complete Material · all four skills
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {completePlans.map((pl) => (

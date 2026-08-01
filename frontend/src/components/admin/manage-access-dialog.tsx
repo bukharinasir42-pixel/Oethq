@@ -134,10 +134,10 @@ export function ManageAccessDialog({ user, plans, products, open, onOpenChange, 
 
         {!user ? null : (
           <div className="space-y-5">
-            {/* ---------------- Complete Course plan ---------------- */}
+            {/* ---------------- Complete Material plan ---------------- */}
             <section className="rounded-xl border border-border/70 p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-foreground">Complete Course plan</h3>
+                <h3 className="text-sm font-semibold text-foreground">Complete Material plan</h3>
                 <span className="text-xs text-muted-foreground">
                   {onTrial ? "On the free trial" : `${user.plan.name} · ends ${fmt(user.endDate)}`}
                 </span>

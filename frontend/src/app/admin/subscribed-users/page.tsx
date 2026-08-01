@@ -162,7 +162,7 @@ export default function SubscribedUsersPage() {
   const createCustomUser = async (values: CustomUserFormValues) => {
     const hasPlan = Boolean(values.planId) && values.planId !== NO_PLAN;
     if (!hasPlan && values.productSlugs.length === 0) {
-      toast.error("Select a Complete Course plan, one or more individual packages, or both.");
+      toast.error("Select the Complete Material plan, one or more individual packages, or both.");
       return;
     }
     setSubmitting(true);
@@ -450,7 +450,7 @@ export default function SubscribedUsersPage() {
                 name="planId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Complete Course plan <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
+                    <FormLabel>Complete Material plan <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
                     <Select
                       value={field.value || EMPTY_PLAN}
                       onValueChange={(value) => field.onChange(value === EMPTY_PLAN ? "" : value)}
@@ -461,7 +461,7 @@ export default function SubscribedUsersPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={EMPTY_PLAN}>No Complete Course plan</SelectItem>
+                        <SelectItem value={EMPTY_PLAN}>No Complete Material plan</SelectItem>
                         {plans.map((plan) => (
                           <SelectItem key={plan.id} value={plan.id}>
                             {plan.name}
@@ -475,7 +475,7 @@ export default function SubscribedUsersPage() {
                 )}
               />
               {/* Individual (standalone) packages — a candidate can get these
-                  instead of, or alongside, a Complete Course plan. */}
+                  instead of, or alongside, the Complete Material plan. */}
               <FormField
                 control={form.control}
                 name="productSlugs"

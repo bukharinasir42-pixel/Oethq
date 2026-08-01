@@ -38,7 +38,7 @@ const MIN_TIER: Record<string, Partial<Record<ModuleKey, number>>> = {
 /** Does this owned-skill access unlock `module`? (null access = skill not owned.) */
 export function moduleUnlockedForTier(access: SkillAccess | null | undefined, module: ModuleKey): boolean {
   if (!access) return false;
-  if (access.tierRank >= 99) return true; // Complete Course
+  if (access.tierRank >= 99) return true; // Complete Material
   const min = MIN_TIER[access.skill]?.[module];
   if (min == null) return true;           // not tier-restricted
   return access.tierRank >= min;

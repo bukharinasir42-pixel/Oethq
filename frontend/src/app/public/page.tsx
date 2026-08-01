@@ -38,7 +38,7 @@ export default function PublicPage() {
             {/*
               Plans and prices are NOT restated here. This page used to render a
               hard-coded copy of a retired line-up, so it kept selling plans and
-              prices that no longer existed. The Complete Course page is the one
+              prices that no longer existed. The Complete Material page is the one
               place plans are published; link to it instead of duplicating it.
             */}
             <div className="flex flex-wrap gap-3">

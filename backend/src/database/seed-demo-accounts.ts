@@ -30,7 +30,7 @@ const ACCOUNTS: { email: string; name: string; state: State }[] = [
   { email: "demo.reading@oet.test", name: "Demo — Reading Only", state: "reading" },
   { email: "demo.listening@oet.test", name: "Demo — Listening Only", state: "listening" },
   { email: "demo.both@oet.test", name: "Demo — Reading & Listening", state: "both" },
-  { email: "demo.complete@oet.test", name: "Demo — Complete Course", state: "complete" }
+  { email: "demo.complete@oet.test", name: "Demo — Complete Material", state: "complete" }
 ];
 
 const STATE_TO_PRODUCT: Record<Exclude<State, "trial" | "complete">, string> = {

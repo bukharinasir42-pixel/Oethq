@@ -236,7 +236,7 @@ export class UsersService {
     // packages, or both — but not nothing.
     const productSlugs = (dto.productSlugs ?? []).map((s) => s.trim()).filter(Boolean);
     if (!dto.planId && productSlugs.length === 0) {
-      throw new BadRequestException("Select a Complete Course plan, one or more individual packages, or both.");
+      throw new BadRequestException("Select the Complete Material plan, one or more individual packages, or both.");
     }
 
     const plan = dto.planId
@@ -258,7 +258,7 @@ export class UsersService {
         const p = bySlug.get(slug);
         if (!p) throw new NotFoundException(`Package not found: ${slug}`);
         if (p.category === "COMPLETE") {
-          throw new BadRequestException("The Complete Course is granted by plan, not as an individual package.");
+          throw new BadRequestException("The Complete Material is granted by plan, not as an individual package.");
         }
       }
     }

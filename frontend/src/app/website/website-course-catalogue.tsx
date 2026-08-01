@@ -71,7 +71,7 @@ export function WebsiteCourseCatalogue() {
           {/* COMPLETE COURSE — flagship */}
           <Link className="crs-course crs-course--flag crs-stretch" href="/courses">
             <span className="crs-tag">&#9733; Flagship &middot; all four skills</span>
-            <h3>OET Complete Course</h3>
+            <h3>OET Complete Material</h3>
             <p className="crs-desc">Reading, Listening, Writing and Speaking in one system — cohort lectures, live daily drills, writing corrections and the Pass Predictor that tells you when to book the real exam.</p>
             <div className="crs-skills">
               <span className="crs-chip">Reading</span><span className="crs-chip">Listening</span><span className="crs-chip">Writing</span><span className="crs-chip">Speaking</span>
@@ -138,7 +138,7 @@ export function WebsiteCourseCatalogue() {
           {/* WRITING */}
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/writing">
             <span className="crs-tag">Single skill</span>
-            <h3>OET Writing Course</h3>
+            <h3>OET Writing Material</h3>
             <p className="crs-desc">For candidates whose only barrier is the referral letter. Marked line by line against all six official OET Writing criteria — by a human, not a model.</p>
             <div className="crs-skills">
               <span className="crs-chip">6 official criteria</span><span className="crs-chip">Human marked</span><span className="crs-chip">Case notes</span>

@@ -57,7 +57,7 @@ const COURSE_GROUPS: { skill: SkillKey; label: string; icon: LucideIcon; modules
   },
   {
     skill: "WRITING",
-    label: "OET Writing Course",
+    label: "OET Writing Material",
     icon: PenLine,
     modules: [
       { key: "lectures", label: "Writing Lectures", icon: Play, module: "lectures" },

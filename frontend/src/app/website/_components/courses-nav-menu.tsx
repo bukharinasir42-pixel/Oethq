@@ -154,7 +154,7 @@ export function CoursesNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         >
           <span className="hp-cmenu-complete-tag">Most complete · all four skills</span>
           <span className="hp-cmenu-complete-row">
-            <span className="hp-cmenu-complete-title">{complete?.name || "OET Complete Courses"}</span>
+            <span className="hp-cmenu-complete-title">{complete?.name || "OET Complete Material"}</span>
             <span className="hp-cmenu-complete-price">from {money(completeFrom)}</span>
           </span>
           <span className="hp-cmenu-complete-desc">Lectures, past papers, corrections &amp; the clearance-readiness score.</span>
