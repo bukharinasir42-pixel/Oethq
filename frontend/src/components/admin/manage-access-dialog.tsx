@@ -16,7 +16,7 @@
  * individual courses untouched — that is the "downgrade to courses only" move.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Ban, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -282,6 +282,35 @@ export function ManageAccessDialog({ user, plans, products, open, onOpenChange, 
                 Granting a different tier of a skill the student already owns replaces it — that is how a
                 single-skill upgrade or downgrade is applied.
               </p>
+            </section>
+
+            {/* ---------------- cancel everything ---------------- */}
+            <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+              <h3 className="text-sm font-semibold text-destructive">Cancel all access</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Ends the plan, the free-trial row and every individual course in one action. It applies
+                immediately — the student loses the portal on their next click, without being logged out.
+                Reversible: re-apply a plan or re-grant a course above. Remaining days are not banked, so
+                reinstating starts a fresh window.
+              </p>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="mt-3"
+                disabled={busy !== null}
+                onClick={() => {
+                  const what = [
+                    !onTrial ? user.plan.name : "the free trial",
+                    ...held.map((o) => o.productName ?? o.entitlementKey)
+                  ].join(", ");
+                  if (!window.confirm(`Cancel ALL access for ${user.name}?\n\nThis ends: ${what}.\n\nIt takes effect immediately.`)) return;
+                  void run("endAll", () => productsApi.adminEndAllAccess(user.userId), "All access cancelled");
+                }}
+              >
+                {busy === "endAll" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Ban className="mr-1.5 h-3.5 w-3.5" />}
+                Cancel all access now
+              </Button>
             </section>
           </div>
         )}

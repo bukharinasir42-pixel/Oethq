@@ -234,6 +234,16 @@ export function createSubscriptionsRouter(c: AppContainer) {
     })
   );
 
+  // Cut the student off entirely — plan, trial row and every course at once.
+  r.delete(
+    "/admin/users/:userId/access",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      res.json(await c.subscriptionsService.adminEndAllAccess(String(req.params.userId)));
+    })
+  );
+
   return r;
 }
 

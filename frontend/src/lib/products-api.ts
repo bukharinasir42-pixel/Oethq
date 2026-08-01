@@ -109,5 +109,12 @@ export const productsApi = {
 
   /** Admin: end the Complete Course plan. Course entitlements are left alone. */
   adminCancelPlan: (userId: string) =>
-    apiFetch<{ cancelled: number }>(`/admin/users/${userId}/plan`, { method: "DELETE" })
+    apiFetch<{ cancelled: number }>(`/admin/users/${userId}/plan`, { method: "DELETE" }),
+
+  /**
+   * Admin: cancel everything at once — plan, free-trial row and every course.
+   * Effective immediately; the student loses the portal on their next action.
+   */
+  adminEndAllAccess: (userId: string) =>
+    apiFetch<{ subscriptions: number; courses: number }>(`/admin/users/${userId}/access`, { method: "DELETE" })
 };

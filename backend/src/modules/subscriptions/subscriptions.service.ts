@@ -560,6 +560,44 @@ export class SubscriptionsService {
     return { cancelled: result.count };
   }
 
+  /**
+   * Admin: cancel EVERYTHING this candidate has, in one action — the Complete
+   * Course plan, the free-trial row, and every single-skill course.
+   *
+   * adminCancelPlan deliberately spares the individual courses; this does not.
+   * It is the "cut this student off now" control.
+   *
+   * It takes effect immediately: access is never baked into the login token,
+   * every gate re-reads `endDate > now` from the database on each request, so
+   * the student loses the portal on their next action without being logged out.
+   *
+   * Reversible from the same dialog by re-applying a plan or re-granting a
+   * course. Remaining days are NOT banked — reinstating starts a fresh window.
+   */
+  async adminEndAllAccess(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new NotFoundException("User not found");
+
+    const now = new Date();
+    const [subscriptions, entitlements] = await this.prisma.$transaction([
+      this.prisma.subscription.updateMany({
+        where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] } },
+        // No CANCELLED member on the enum; EXPIRED with endDate=now is how the
+        // rest of the codebase represents "access has ended".
+        data: { status: SubscriptionStatus.EXPIRED, endDate: now }
+      }),
+      this.prisma.entitlement.updateMany({
+        where: { userId, status: "ACTIVE" },
+        data: { status: "REVOKED", endDate: now }
+      })
+    ]);
+
+    this.logger.log(
+      `admin ended ALL access for user=${userId} (${subscriptions.count} subscription(s), ${entitlements.count} course(s))`
+    );
+    return { subscriptions: subscriptions.count, courses: entitlements.count };
+  }
+
   async assignPlanToUser(
     userId: string,
     planId: string,
