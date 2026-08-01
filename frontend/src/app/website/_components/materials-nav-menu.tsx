@@ -25,14 +25,18 @@ const ITEMS = [
     name: "OET Reading Material",
     skill: "READING",
     route: "/courses/reading",
-    desc: "Mock tests and OET HQ past papers, sat on the official exam interface.",
+    desc: "Part A speed and spelling, Part C opinion and attitude — sat exactly as on exam day.",
+    mocks: "4–15",
+    papers: "1–10",
     Icon: BookOpen
   },
   {
     name: "OET Listening Material",
     skill: "LISTENING",
     route: "/courses/listening",
-    desc: "Mock tests and OET HQ past papers, each audio played once, exam-style.",
+    desc: "Every audio plays once, no pause and no rewind — the real Listening pressure.",
+    mocks: "4–15",
+    papers: "1–10",
     Icon: Headphones
   }
 ] as const;
@@ -92,25 +96,36 @@ export function MaterialsNavMenu({ onNavigate }: { onNavigate?: () => void }) {
         <ChevronDown className={`hp-courses-chev${open ? " up" : ""}`} aria-hidden />
       </button>
 
-      <div className={`hp-courses-panel${open ? " open" : ""}`} role="menu" aria-label="Materials">
-        <div className="hp-cmenu-divider"><span>Practice papers only</span></div>
-        <ul className="hp-cmenu-list">
-          {ITEMS.map(({ name, skill, route, desc, Icon }) => (
+      <div className={`hp-courses-panel hp-mat-panel${open ? " open" : ""}`} role="menu" aria-label="Materials">
+        <div className="hp-mat-head">
+          <span className="hp-mat-eyebrow">Practice papers only</span>
+          <p className="hp-mat-lede">
+            No lectures, no drills — just exam-format papers on the official OET interface.
+          </p>
+        </div>
+
+        <ul className="hp-cmenu-list hp-mat-list">
+          {ITEMS.map(({ name, skill, route, desc, mocks, papers, Icon }) => (
             <li key={name} role="none">
-              <Link href={route} className="hp-cmenu-item" role="menuitem" onClick={navigate}>
-                <span className="hp-cmenu-ic-wrap" aria-hidden><Icon className="hp-cmenu-ic" /></span>
-                <span className="hp-cmenu-item-name stacked">
-                  {name}
-                  <span className="hp-cmenu-item-desc">{desc}</span>
+              <Link href={route} className="hp-mat-card" role="menuitem" onClick={navigate}>
+                <span className="hp-mat-top">
+                  <span className="hp-mat-ic" aria-hidden><Icon /></span>
+                  <span className="hp-mat-title">{name}</span>
+                  <span className="hp-mat-price">from {money(tierMin(skill, 39))}</span>
                 </span>
-                <span className="hp-cmenu-tail">
-                  <span className="hp-cmenu-price">from {money(tierMin(skill, 39))}</span>
-                  <span className="hp-cmenu-arrow" aria-hidden>→</span>
+                <span className="hp-mat-desc">{desc}</span>
+                <span className="hp-mat-stats">
+                  <span className="hp-mat-stat"><b>{mocks}</b> mock tests</span>
+                  <span className="hp-mat-dot" aria-hidden />
+                  <span className="hp-mat-stat"><b>{papers}</b> OET HQ past papers</span>
+                  <span className="hp-mat-go" aria-hidden>→</span>
                 </span>
               </Link>
             </li>
           ))}
         </ul>
+
+        <p className="hp-mat-foot">Four tiers on each page — pick the volume you need.</p>
       </div>
     </div>
   );

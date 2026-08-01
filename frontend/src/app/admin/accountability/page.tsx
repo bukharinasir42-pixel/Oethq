@@ -7,7 +7,7 @@
  * anyone falling behind (per-student or bulk to everyone incomplete).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarCheck, Check, ChevronLeft, ChevronRight, Loader2, Mail, X } from "lucide-react";
+import { CalendarCheck, Check, ChevronLeft, ChevronRight, Loader2, Mail, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { WorkspaceAccessDeniedState, WorkspaceErrorAlert, WorkspaceLoadingState } from "@/components/layout/workspace-states";
@@ -41,7 +41,12 @@ export default function AdminAccountabilityPage() {
   const [data, setData] = useState<AccountabilityRoster | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+  // Filters. All of these run over the roster the API already returns, so
+  // changing one costs no request — the day picker is the only thing that reloads.
+  const [query, setQuery] = useState("");
+  const [planFilter, setPlanFilter] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<"all" | "incomplete" | "done" | "submitted" | "not-submitted">("all");
+  const [missingFilter, setMissingFilter] = useState<string>("all");
   const [warning, setWarning] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
 
@@ -60,8 +65,31 @@ export default function AdminAccountabilityPage() {
 
   useEffect(() => { void load(day); }, [day, load]);
 
-  const students = data?.students ?? [];
-  const shown = useMemo(() => (onlyIncomplete ? students.filter((s) => s.missed > 0) : students), [students, onlyIncomplete]);
+  // Memoised: it feeds several useMemo filters below, and a fresh [] each render
+  // would invalidate all of them on every keystroke.
+  const students = useMemo(() => data?.students ?? [], [data]);
+  const plans = useMemo(
+    () => Array.from(new Set(students.map((s) => s.plan).filter((p): p is string => Boolean(p)))).sort(),
+    [students]
+  );
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return students.filter((s) => {
+      if (q && !`${s.name} ${s.email}`.toLowerCase().includes(q)) return false;
+      if (planFilter !== "all" && (s.plan ?? "") !== planFilter) return false;
+      if (stateFilter === "incomplete" && s.missed === 0) return false;
+      if (stateFilter === "done" && s.missed > 0) return false;
+      if (stateFilter === "submitted" && !s.submitted) return false;
+      if (stateFilter === "not-submitted" && s.submitted) return false;
+      // "Missed X" — the activity is explicitly not done for this day.
+      if (missingFilter !== "all" && s.done[missingFilter as keyof typeof s.done]) return false;
+      return true;
+    });
+  }, [students, query, planFilter, stateFilter, missingFilter]);
+
+  const filtersOn = query.trim() !== "" || planFilter !== "all" || stateFilter !== "all" || missingFilter !== "all";
+  const clearFilters = () => { setQuery(""); setPlanFilter("all"); setStateFilter("all"); setMissingFilter("all"); };
   const incomplete = useMemo(() => students.filter((s) => s.missed > 0), [students]);
 
   const warnOne = async (s: AccountabilityStudent) => {
@@ -116,14 +144,66 @@ export default function AdminAccountabilityPage() {
               <b className="text-sky-600">{data.summary.submitted}</b> submitted work · <b className="text-emerald-600">{data.summary.allDone}</b> all tasks · <b className="text-rose-500">{data.summary.incomplete}</b> behind · {data.summary.total} active
             </span>
           ) : null}
-          <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <input type="checkbox" checked={onlyIncomplete} onChange={(e) => setOnlyIncomplete(e.target.checked)} className="h-3.5 w-3.5 accent-primary" />
-            Only incomplete
-          </label>
           <Button type="button" onClick={() => void warnAllIncomplete()} disabled={bulkBusy || incomplete.length === 0} className="cursor-pointer">
             {bulkBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
             Warn all incomplete ({incomplete.length})
           </Button>
+        </div>
+
+        {/* Filters — all client-side over the day's roster, so no reload. */}
+        <div className="flex w-full flex-wrap items-center gap-2 border-t border-border pt-3">
+          <div className="relative min-w-[190px] flex-1">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name or email…"
+              aria-label="Search students by name or email"
+              className="h-9 w-full rounded-md border border-border bg-background pl-8 pr-2.5 text-sm"
+            />
+          </div>
+
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+            aria-label="Filter by course or plan"
+            className="h-9 rounded-md border border-border bg-background px-2.5 text-sm"
+          >
+            <option value="all">All courses</option>
+            {plans.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+
+          <select
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value as typeof stateFilter)}
+            aria-label="Filter by completion state"
+            className="h-9 rounded-md border border-border bg-background px-2.5 text-sm"
+          >
+            <option value="all">Any state</option>
+            <option value="incomplete">Behind — missed something</option>
+            <option value="done">Completed everything</option>
+            <option value="submitted">Submitted their work</option>
+            <option value="not-submitted">Did not submit</option>
+          </select>
+
+          <select
+            value={missingFilter}
+            onChange={(e) => setMissingFilter(e.target.value)}
+            aria-label="Filter by which activity was missed"
+            className="h-9 rounded-md border border-border bg-background px-2.5 text-sm"
+          >
+            <option value="all">Missed anything</option>
+            {ACTIVITIES.map((a) => <option key={a.key} value={a.key}>Missed {a.label.toLowerCase()}</option>)}
+          </select>
+
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {shown.length} of {students.length}
+          </span>
+          {filtersOn ? (
+            <Button type="button" variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs">
+              Clear filters
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -143,7 +223,7 @@ export default function AdminAccountabilityPage() {
               {loading && !data ? (
                 <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></TableCell></TableRow>
               ) : shown.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">{onlyIncomplete ? "Everyone completed their tasks — nice." : "No active students."}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">{filtersOn ? "No students match these filters." : "No active students."}</TableCell></TableRow>
               ) : shown.map((s) => (
                 <TableRow key={s.userId} className={s.missed === 0 ? "bg-emerald-50/40" : undefined}>
                   <TableCell>

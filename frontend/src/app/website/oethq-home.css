@@ -1437,12 +1437,67 @@ a.hp-cmenu-item:hover{background:#eff5ff;transform:translateX(2px)}
   flex:1;min-width:0;display:flex;align-items:center;gap:8px;
   font-family:var(--hp-font-sans);font-weight:600;font-size:13.5px;color:var(--hp-ink);
 }
-/* Materials menu: name over a one-line description, rather than the Courses
-   menu's single row. */
-.hp-cmenu-item-name.stacked{flex-direction:column;align-items:flex-start;gap:2px}
-.hp-cmenu-item-desc{
-  font-family:var(--hp-font-sans);font-weight:500;font-size:11.5px;line-height:1.35;
-  color:var(--hp-ink-soft);white-space:normal;
+/* ============ Materials menu ============================================
+   Two cards rather than the Courses menu's compact rows: this is the entry
+   point for candidates buying papers on their own, so each card states the
+   volume it carries instead of making them open the page to find out. */
+.hp-mat-panel{width:400px;padding:14px}
+.hp-mat-head{padding:2px 6px 10px;border-bottom:1px solid var(--hp-line);margin-bottom:10px}
+.hp-mat-eyebrow{
+  display:block;font-family:var(--hp-font-sans);font-size:10.5px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--hp-blue);
+}
+.hp-mat-lede{margin:5px 0 0;font-family:var(--hp-font-sans);font-size:12px;line-height:1.45;color:var(--hp-ink-soft)}
+
+.hp-mat-list{display:grid;gap:8px}
+.hp-mat-card{
+  display:block;text-decoration:none;position:relative;overflow:hidden;
+  padding:13px 14px;border-radius:13px;
+  border:1px solid var(--hp-line);background:linear-gradient(180deg,#fff,#f7faff);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+/* Accent rail, revealed on hover — the flagship card uses the same gradient. */
+.hp-mat-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#1465C8,#0A3060);
+  opacity:0;transition:opacity .18s ease;
+}
+.hp-nav .hp-links a.hp-mat-card,.hp-mat-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+a.hp-mat-card:hover{
+  transform:translateY(-2px);border-color:#bcd8fb;
+  box-shadow:0 16px 30px -18px rgba(13,42,90,.55);
+}
+a.hp-mat-card:hover::before{opacity:1}
+
+.hp-mat-top{display:flex;align-items:center;gap:10px}
+.hp-mat-ic{
+  flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;
+  border-radius:9px;color:#fff;background:linear-gradient(140deg,#1465C8,#0A3060);
+  box-shadow:0 6px 14px -8px rgba(20,101,200,.9);
+}
+.hp-mat-ic svg{width:17px;height:17px}
+.hp-mat-title{
+  flex:1;min-width:0;font-family:var(--hp-font-display);font-weight:700;font-size:14.5px;
+  color:var(--hp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hp-mat-price{flex:none;font-family:var(--hp-font-display);font-weight:800;font-size:12.5px;color:var(--hp-blue)}
+.hp-mat-desc{
+  display:block;margin:7px 0 0;font-family:var(--hp-font-sans);font-size:11.5px;
+  line-height:1.45;color:var(--hp-ink-soft);
+}
+.hp-mat-stats{display:flex;align-items:center;gap:8px;margin-top:9px}
+.hp-mat-stat{font-family:var(--hp-font-sans);font-size:11px;color:var(--hp-ink-faint)}
+.hp-mat-stat b{font-weight:800;color:var(--hp-ink);font-variant-numeric:tabular-nums}
+.hp-mat-dot{flex:none;width:3px;height:3px;border-radius:50%;background:var(--hp-line)}
+.hp-mat-go{margin-left:auto;color:var(--hp-blue);font-size:14px;opacity:0;transform:translateX(-3px);transition:.18s}
+a.hp-mat-card:hover .hp-mat-go{opacity:1;transform:translateX(0)}
+
+.hp-mat-foot{
+  margin:11px 6px 2px 6px;font-family:var(--hp-font-sans);font-size:11px;
+  color:var(--hp-ink-faint);text-align:center;
+}
+@media (max-width:900px){
+  .hp-mat-panel{width:auto}
 }
 .hp-cmenu-soon{
   font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
