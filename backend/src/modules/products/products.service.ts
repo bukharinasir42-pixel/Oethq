@@ -420,6 +420,11 @@ export class ProductsService {
    * Admin: grant a course to a user (manual access). Idempotent per product.
    * The access window is the product's own durationDays, unless the admin passes
    * an explicit `daysOverride` (so support can give custom-length access).
+   *
+   * Granting a TIER supersedes any other tier of the same skill the user holds.
+   * Each tier is its own entitlementKey (reading_foundation, reading_mega, …), so
+   * without this a downgrade did nothing visible: getOwnership keeps the strongest
+   * tier per skill, and the old higher tier would simply win.
    */
   async adminGrantProduct(userId: string, slug: string, daysOverride?: number | null) {
     const product = await this.prisma.product.findUnique({ where: { slug } });
@@ -446,7 +451,38 @@ export class ProductsService {
         }
       });
     }
+    await this.supersedeSiblingTiers(userId, product);
     return this.getOwnership(userId);
+  }
+
+  /**
+   * Retire the user's other ACTIVE tiers of the same skill set, so exactly one
+   * tier per course is live at a time and a downgrade actually lowers access.
+   * Only genuine tier products (tierRank > 0) covering the SAME skills are
+   * touched — the Complete Course and multi-skill bundles are left alone.
+   */
+  private async supersedeSiblingTiers(
+    userId: string,
+    granted: { id: string; tierRank: number; includedSkills: string[] }
+  ) {
+    if ((granted.tierRank ?? 0) <= 0) return;
+    const skills = [...granted.includedSkills].sort().join(",");
+    const others = await this.prisma.entitlement.findMany({
+      where: { userId, status: "ACTIVE", productId: { not: granted.id } },
+      select: { id: true, product: { select: { tierRank: true, includedSkills: true } } }
+    });
+    const supersededIds = others
+      .filter((e) => {
+        const p = e.product;
+        if (!p || (p.tierRank ?? 0) <= 0) return false;
+        return [...p.includedSkills].sort().join(",") === skills;
+      })
+      .map((e) => e.id);
+    if (supersededIds.length === 0) return;
+    await this.prisma.entitlement.updateMany({
+      where: { id: { in: supersededIds } },
+      data: { status: "REVOKED", endDate: new Date() }
+    });
   }
 
   /** Admin: revoke a course entitlement from a user (downgrade). */

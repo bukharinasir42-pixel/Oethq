@@ -94,5 +94,20 @@ export const productsApi = {
   adminGrant: (userId: string, slug: string, days?: number) =>
     apiFetch<Ownership>(`/admin/users/${userId}/entitlements`, { method: "POST", body: { slug, ...(days != null ? { days } : {}) } }),
   adminRevoke: (userId: string, entitlementKey: string) =>
-    apiFetch<Ownership>(`/admin/users/${userId}/entitlements/${entitlementKey}`, { method: "DELETE" })
+    apiFetch<Ownership>(`/admin/users/${userId}/entitlements/${entitlementKey}`, { method: "DELETE" }),
+
+  /**
+   * Admin: move a candidate onto a different Complete Course plan. Takes effect
+   * immediately — an already-activated student is not asked to re-verify by OTP.
+   * `days` overrides the new plan's own duration.
+   */
+  adminChangePlan: (userId: string, planId: string, days?: number) =>
+    apiFetch<{ subscriptionId: string; plan: { id: string; name: string; tier: string }; status: string; startDate: string | null; endDate: string | null }>(
+      `/admin/users/${userId}/plan`,
+      { method: "POST", body: { planId, ...(days != null ? { days } : {}) } }
+    ),
+
+  /** Admin: end the Complete Course plan. Course entitlements are left alone. */
+  adminCancelPlan: (userId: string) =>
+    apiFetch<{ cancelled: number }>(`/admin/users/${userId}/plan`, { method: "DELETE" })
 };

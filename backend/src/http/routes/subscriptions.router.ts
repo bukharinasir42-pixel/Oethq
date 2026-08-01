@@ -208,6 +208,32 @@ export function createSubscriptionsRouter(c: AppContainer) {
     })
   );
 
+  // ---- admin: upgrade / downgrade a candidate's Complete Course plan ----
+  r.post(
+    "/admin/users/:userId/plan",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      const planId = String(req.body?.planId ?? "").trim();
+      if (!planId) {
+        res.status(400).json({ message: "planId required" });
+        return;
+      }
+      const rawDays = Number(req.body?.days);
+      const days = Number.isFinite(rawDays) && rawDays > 0 ? rawDays : null;
+      res.json(await c.subscriptionsService.adminChangePlan(String(req.params.userId), planId, days));
+    })
+  );
+
+  r.delete(
+    "/admin/users/:userId/plan",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      res.json(await c.subscriptionsService.adminCancelPlan(String(req.params.userId)));
+    })
+  );
+
   return r;
 }
 

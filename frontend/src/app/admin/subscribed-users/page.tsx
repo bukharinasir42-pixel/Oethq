@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Mail, UserPlus } from "lucide-react";
+import { Mail, Settings2, UserPlus } from "lucide-react";
 import { InlineLoader } from "@/components/loaders";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { ManageAccessDialog } from "@/components/admin/manage-access-dialog";
 import { WorkspaceAccessDeniedState, WorkspaceErrorAlert, WorkspaceLoadingState } from "@/components/layout/workspace-states";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,8 @@ export default function SubscribedUsersPage() {
   const [mailingUserId, setMailingUserId] = useState<string | null>(null);
   const [createdUser, setCreatedUser] = useState<CreatedCustomUserDto | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  // The candidate whose access is being upgraded / downgraded.
+  const [managing, setManaging] = useState<SubscribedUserDto | null>(null);
   const form = useForm<CustomUserFormValues>({
     defaultValues: {
       name: "",
@@ -306,6 +309,7 @@ export default function SubscribedUsersPage() {
                   <TableRow>
                     <TableHead>Candidate</TableHead>
                     <TableHead>Plan</TableHead>
+                    <TableHead>Courses</TableHead>
                     <TableHead>Tier</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Current band</TableHead>
@@ -325,6 +329,19 @@ export default function SubscribedUsersPage() {
                       </TableCell>
                       <TableCell>{user.plan.name}</TableCell>
                       <TableCell>
+                        {user.courses && user.courses.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.courses.map((c) => (
+                              <Badge key={c.entitlementKey} variant="secondary" className="text-[10px]">
+                                {c.name.replace(/^OET /, "")}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="outline">{user.plan.tier}</Badge>
                       </TableCell>
                       <TableCell>
@@ -337,6 +354,15 @@ export default function SubscribedUsersPage() {
                         <div className="flex flex-wrap justify-end gap-2">
                           <Button asChild variant="outline" size="sm" className="cursor-pointer">
                             <Link href={`/admin/progress?userId=${encodeURIComponent(user.userId)}`}>Progress</Link>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="cursor-pointer"
+                            onClick={() => setManaging(user)}
+                          >
+                            <Settings2 className="mr-1.5 h-3.5 w-3.5" />
+                            Manage
                           </Button>
                           <Button
                             variant="secondary"
@@ -358,6 +384,15 @@ export default function SubscribedUsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <ManageAccessDialog
+        user={managing}
+        plans={plans}
+        products={standaloneProducts}
+        open={managing !== null}
+        onOpenChange={(o) => { if (!o) setManaging(null); }}
+        onChanged={() => void loadData()}
+      />
 
       <Dialog
         open={createModalOpen}

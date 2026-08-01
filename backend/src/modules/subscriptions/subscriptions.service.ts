@@ -466,6 +466,100 @@ export class SubscriptionsService {
     };
   }
 
+  /**
+   * Admin: move a candidate onto a different Complete Course plan — the upgrade
+   * / downgrade control on the Subscribed Candidates table.
+   *
+   * Distinct from assignPlanToUser, which is the CHECKOUT path and deliberately
+   * parks the subscription pending an OTP. An admin changing someone's plan is
+   * an explicit grant, so it takes effect immediately: an already-activated
+   * student is never bounced back to "activate your account", and one who had
+   * not activated yet is activated by this action.
+   *
+   * The access window restarts from now for `days` (default: the new plan's own
+   * durationDays), so a downgrade genuinely shortens access instead of leaving
+   * the longer plan's end date in place.
+   */
+  async adminChangePlan(userId: string, planId: string, daysOverride?: number | null) {
+    const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
+    if (!plan) throw new NotFoundException("Plan not found");
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!user) throw new NotFoundException("User not found");
+
+    const now = new Date();
+    const days = daysOverride != null && daysOverride > 0
+      ? Math.round(daysOverride)
+      : plan.durationDays || 60;
+    const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+    const existing = await this.prisma.subscription.findMany({
+      where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL, SubscriptionStatus.EXPIRED] } },
+      include: { plan: { select: { tier: true } } },
+      orderBy: { createdAt: "desc" }
+    });
+    // Prefer the row that already carries their paid access; fall back to the
+    // STARTER row from signup so an upgrade reuses it rather than leaving a live
+    // trial alongside the new plan.
+    const current =
+      existing.find((s) => s.plan.tier !== PlanTier.STARTER) ??
+      existing.find((s) => s.plan.tier === PlanTier.STARTER) ??
+      null;
+
+    const subscription = await this.prisma.$transaction(async (tx) => {
+      // (userId, planId) is unique — clear any other row already on the target
+      // plan before moving this one onto it.
+      const collision = await tx.subscription.findUnique({
+        where: { userId_planId: { userId, planId } }
+      });
+      if (collision && collision.id !== current?.id) {
+        await tx.subscription.delete({ where: { id: collision.id } });
+      }
+
+      const data = {
+        planId,
+        status: SubscriptionStatus.ACTIVE,
+        startDate: current?.startDate ?? now,
+        endDate,
+        otpVerifiedAt: current?.otpVerifiedAt ?? now,
+        trialUsed: plan.tier !== PlanTier.STARTER ? true : current?.trialUsed ?? false
+      };
+
+      return current
+        ? tx.subscription.update({ where: { id: current.id }, data })
+        : tx.subscription.create({ data: { userId, ...data } });
+    });
+
+    this.logger.log(`admin changed plan for user=${userId} -> plan=${plan.name} (${days}d)`);
+    return {
+      subscriptionId: subscription.id,
+      plan: { id: plan.id, name: plan.name, tier: plan.tier },
+      status: subscription.status,
+      startDate: subscription.startDate,
+      endDate: subscription.endDate
+    };
+  }
+
+  /**
+   * Admin: end a candidate's Complete Course plan. Any single-skill course
+   * entitlements they hold are untouched — this is the "downgrade to their
+   * individual courses" action, not a full revoke.
+   */
+  async adminCancelPlan(userId: string) {
+    const result = await this.prisma.subscription.updateMany({
+      where: {
+        userId,
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] },
+        plan: { tier: { not: PlanTier.STARTER } }
+      },
+      // The enum has no CANCELLED member; EXPIRED with an endDate of now is how
+      // the rest of the codebase represents "access has ended".
+      data: { status: SubscriptionStatus.EXPIRED, endDate: new Date() }
+    });
+    this.logger.log(`admin ended plan for user=${userId} (${result.count} subscription(s))`);
+    return { cancelled: result.count };
+  }
+
   async assignPlanToUser(
     userId: string,
     planId: string,

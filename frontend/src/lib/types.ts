@@ -294,6 +294,14 @@ export type DashboardDto = {
   } | null;
 };
 
+export type SubscribedCourseDto = {
+  entitlementKey: string;
+  name: string;
+  slug: string;
+  tierRank: number;
+  endDate?: string | null;
+};
+
 export type SubscribedUserDto = {
   subscriptionId: string;
   userId: string;
@@ -304,6 +312,8 @@ export type SubscribedUserDto = {
   startDate?: string | null;
   endDate?: string | null;
   currentBand?: string | null;
+  /** Single-skill courses held as entitlements (separate from the plan). */
+  courses?: SubscribedCourseDto[];
 };
 
 export type CandidateProgressSummaryDto = {

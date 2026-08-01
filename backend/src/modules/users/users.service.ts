@@ -75,6 +75,18 @@ export class UsersService {
             plan: { select: { id: true, name: true, tier: true } }
           },
           orderBy: { createdAt: "desc" }
+        },
+        // Single-skill courses (Reading Mega, Listening Precision, …). These are
+        // entitlements, not subscriptions, so without them the table showed a
+        // course buyer as "Starter (Free Trial)" with nothing to manage.
+        entitlements: {
+          where: { status: "ACTIVE", OR: [{ endDate: null }, { endDate: { gt: new Date() } }] },
+          select: {
+            entitlementKey: true,
+            endDate: true,
+            product: { select: { name: true, slug: true, tierRank: true } }
+          },
+          orderBy: { grantedAt: "desc" }
         }
       },
       orderBy: { createdAt: "desc" }
@@ -108,7 +120,16 @@ export class UsersService {
           status: subscription.status,
           startDate: subscription.startDate,
           endDate: subscription.endDate,
-          currentBand: bandByUser.get(user.id) ?? null
+          currentBand: bandByUser.get(user.id) ?? null,
+          courses: user.entitlements
+            .filter((e) => e.entitlementKey !== "complete" && e.product)
+            .map((e) => ({
+              entitlementKey: e.entitlementKey,
+              name: e.product!.name,
+              slug: e.product!.slug,
+              tierRank: e.product!.tierRank,
+              endDate: e.endDate
+            }))
         };
       })
       .filter((row): row is NonNullable<typeof row> => row !== null);
