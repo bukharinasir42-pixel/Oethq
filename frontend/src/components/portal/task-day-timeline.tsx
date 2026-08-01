@@ -30,7 +30,7 @@ export function TaskDayTimeline({ tasks, className }: TaskDayTimelineProps) {
               className={cn(
                 "flex min-w-[5.5rem] shrink-0 flex-col items-center gap-2 rounded-xl border px-3 py-3 text-center transition-colors duration-200",
                 state === "open" && "border-primary/40 bg-primary/[0.07] hover:bg-primary/10",
-                state === "locked" && "border-dashed border-border/70 bg-muted/20 opacity-70",
+                state === "coming-soon" && "border-dashed border-border/70 bg-muted/20 opacity-70",
               )}
             >
               <span className="font-portal-display text-lg font-bold tabular-nums text-foreground">{task.dayNumber}</span>

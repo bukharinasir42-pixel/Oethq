@@ -114,7 +114,7 @@ export function TaskControlDeck({
                   <span className="text-border">·</span>
                   <span className="inline-flex items-center gap-1">
                     <CircleDashed className="h-3 w-3 text-muted-foreground" aria-hidden />
-                    <span className="font-semibold text-foreground">{lockedDayCount}</span> locked
+                    <span className="font-semibold text-foreground">{lockedDayCount}</span> coming soon
                   </span>
                 </>
               ) : (
@@ -187,7 +187,7 @@ export function TaskControlDeck({
                       onClick={() => onSelectDay(task.dayNumber)}
                       aria-label={
                         isCandidate
-                          ? `Day ${task.dayNumber}, ${dayComplete ? "done" : dayOpen ? "open" : "locked"}`
+                          ? `Day ${task.dayNumber}, ${dayComplete ? "done" : dayOpen ? "open" : "lecture coming soon"}`
                           : `Day ${task.dayNumber}, ${task.isPublished ? "published" : "draft"}, ${isConfigured ? "content ready" : "needs content"}${isDirty ? ", unsaved changes" : ""}`
                       }
                       aria-pressed={isSelected}
@@ -235,7 +235,7 @@ export function TaskControlDeck({
                                     : "bg-muted text-muted-foreground"
                               )}
                             >
-                              {dayComplete ? "Done" : dayOpen ? "Open" : "Locked"}
+                              {dayComplete ? "Done" : dayOpen ? "Open" : "Coming soon"}
                             </span>
                           ) : (
                             <>

@@ -239,7 +239,7 @@ export default function TasksPage() {
   return (
     <PortalShell
       title="Task Management"
-      description="Review your 40-day plan, open unlocked resources, and launch any available Reading or Listening attempt."
+      description="Review your 40-day plan and open each day’s lecture. Practice tests and articles live in your Reading and Listening courses."
       profile={profile}
       compact
       packageName={subscription?.plan?.name}
@@ -265,7 +265,7 @@ export default function TasksPage() {
           {openTasks.length} open
         </Badge>
         <Badge variant="outline" className="tabular-nums">
-          {lockedTasks.length} locked
+          {lockedTasks.length} coming soon
         </Badge>
       </div>
 

@@ -1,6 +1,11 @@
 import type { TaskItem, TestSummaryDto } from "@/lib/types";
 
-export type TaskDayState = "locked" | "open";
+/**
+ * "coming-soon" replaces the old "locked": on the study plan a day with nothing
+ * in it is not gated, it is simply unbuilt. Calling it locked implied it would
+ * open later, which it never does — days only open when a lecture is uploaded.
+ */
+export type TaskDayState = "coming-soon" | "open";
 
 export type TaskActivityKind = "lecture" | "article" | "reading" | "listening" | "pastPaper" | "cheatSheet";
 
@@ -16,61 +21,27 @@ function hasLectureResource(task: TaskItem) {
   return Boolean(task.lectureUrl?.trim()) || Boolean(task.lectureAsset?.signedUrl);
 }
 
+/**
+ * Activities shown for a study-plan day.
+ *
+ * Lectures only. The daily article, the Reading and Listening exams and the
+ * cheat sheet all used to appear here as well, but they duplicate what the
+ * Reading and Listening course modules already provide, so the study plan now
+ * carries just the lecture. Nothing is unassigned in the database — the tests
+ * still back the free trial's Day-1 sample and the course modules — this is
+ * purely what the day view renders.
+ */
 export function getTaskActivities(task: TaskItem): TaskActivity[] {
-  const items: TaskActivity[] = [];
-
-  if (hasLectureResource(task)) {
-    items.push({
+  if (!hasLectureResource(task)) return [];
+  return [
+    {
       kind: "lecture",
       label: task.lectureTitle || "Lecture",
       available: true,
       locked: task.lectureLocked,
       href: !task.lectureLocked ? task.lectureAsset?.signedUrl || task.lectureUrl || undefined : undefined
-    });
-  }
-  const hasCoreSkillsResource =
-    Boolean(task.articleUrl?.trim()) || Boolean(task.articleAsset?.signedUrl || task.articleAsset?.publicUrl);
-  if (hasCoreSkillsResource) {
-    items.push({
-      kind: "article",
-      label: task.articleTitle || "Core skills",
-      available: true,
-      locked: task.coreSkillsLocked || task.articleLocked,
-      href: !(task.coreSkillsLocked || task.articleLocked)
-        ? task.articleAsset?.signedUrl || task.articleAsset?.publicUrl || task.articleUrl || undefined
-        : undefined
-    });
-  }
-  if (task.readingTest) {
-    items.push({
-      kind: "reading",
-      label: "Reading exam",
-      available: true,
-      locked: task.readingLocked,
-      href: !task.readingLocked ? `/portal/tests/${task.readingTest.id}` : undefined
-    });
-  }
-  if (task.listeningTest) {
-    items.push({
-      kind: "listening",
-      label: "Listening exam",
-      available: true,
-      locked: task.listeningLocked,
-      href: !task.listeningLocked ? `/portal/tests/${task.listeningTest.id}` : undefined
-    });
-  }
-  const cheatSheetUrl =
-    task.cheatSheetAsset?.signedUrl?.trim() || task.cheatSheetAsset?.publicUrl?.trim() || "";
-  if (cheatSheetUrl) {
-    items.push({
-      kind: "cheatSheet",
-      label: "Cheat sheet",
-      available: true,
-      locked: task.cheatSheetLocked,
-      href: !task.cheatSheetLocked ? cheatSheetUrl : undefined
-    });
-  }
-  return items;
+    }
+  ];
 }
 
 export function getConfiguredItemCount(task: TaskItem) {
@@ -88,7 +59,7 @@ export function getTaskDayProgressPercent(task: TaskItem) {
 }
 
 export function getTaskDayState(task: TaskItem): TaskDayState {
-  return getOpenItemCount(task) > 0 ? "open" : "locked";
+  return getOpenItemCount(task) > 0 ? "open" : "coming-soon";
 }
 
 /**

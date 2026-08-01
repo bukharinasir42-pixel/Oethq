@@ -15,7 +15,6 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { BunnyVideoPlayer } from "@/components/portal/bunny-video-player";
-import { TodaysReadingPassageCard } from "@/components/portal/todays-reading-passage-card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,8 +22,7 @@ import { formatTaskDayTitle } from "@/lib/task-day-utils";
 import { formatTestDurationMinutes, getOpenItemCount } from "@/lib/portal-utils";
 import type { TaskItem, TestSummaryDto } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useOwnership, type SkillKey } from "@/hooks/use-ownership";
-import { usePortalPlanAccess } from "@/hooks/use-portal-plan-access";
+import type { SkillKey } from "@/hooks/use-ownership";
 import { SkillUpgradeModal } from "@/components/portal/skill-upgrade-modal";
 import { SessionCard } from "@/components/cohort/cohort-classes";
 import type { CohortSession } from "@/lib/cohort-api";
@@ -62,14 +60,6 @@ export function getCoreSkillThumbnailUrl(task: TaskItem) {
   return (
     task.articleThumbnailAsset?.signedUrl?.trim() ||
     task.articleThumbnailAsset?.publicUrl?.trim() ||
-    ""
-  );
-}
-
-function getCheatSheetUrl(task: TaskItem) {
-  return (
-    task.cheatSheetAsset?.signedUrl?.trim() ||
-    task.cheatSheetAsset?.publicUrl?.trim() ||
     ""
   );
 }
@@ -374,36 +364,15 @@ export function TaskDayViewer({
   cohortSessions,
   onCohortRefresh
 }: TaskDayViewerProps) {
-  const { ownsSkill, loaded: ownershipLoaded } = useOwnership();
-  const { planTier } = usePortalPlanAccess();
-  // Free-trial (STARTER) users own no skills, but the cohort Day-1 sample tests
-  // are granted to them via backend trial-access. Honour the backend day-lock
-  // (selectedTask.reading/listeningLocked) for trials instead of force-locking
-  // by skill ownership — otherwise the unlocked Day-1 sample would show locked.
-  const isFreeTrial = planTier === "STARTER";
+  // Skill ownership and plan tier are no longer consulted here: the study-plan
+  // day shows only the lecture, whose access is already decided server-side via
+  // selectedTask.lectureLocked. Tests and articles moved to the course modules.
   const lectureSession = cohortSessions?.find((s) => s.slot === "LECTURE");
-  const coreSkillSession = cohortSessions?.find((s) => s.slot === "CORE_SKILLS");
-  const useCohortSessions = Boolean(lectureSession && coreSkillSession);
+  const useCohortSessions = Boolean(lectureSession);
   const [lockedSkill, setLockedSkill] = useState<SkillKey | null>(null);
-  const readingSkillLocked = ownershipLoaded && !ownsSkill("READING") && !isFreeTrial;
-  const listeningSkillLocked = ownershipLoaded && !ownsSkill("LISTENING") && !isFreeTrial;
   const openCount = getOpenItemCount(selectedTask);
   const lectureUrl = getAssetPlaybackUrl(selectedTask, "lecture");
   const lectureThumbnailUrl = getLectureThumbnailUrl(selectedTask);
-  const articleUrl = getAssetPlaybackUrl(selectedTask, "article");
-  const coreSkillThumbnailUrl = getCoreSkillThumbnailUrl(selectedTask);
-  const cheatSheetUrl = getCheatSheetUrl(selectedTask);
-  const hasCheatSheet = Boolean(
-    selectedTask.cheatSheetAssetId || selectedTask.cheatSheetAsset || cheatSheetUrl
-  );
-  const totalSteps = hasCheatSheet ? 4 : 3;
-  const linkedTests = [selectedTask.readingTest, selectedTask.listeningTest].filter(Boolean).length;
-  const readingCompleted = Boolean(
-    selectedTask.readingTest?.id && completedTestIds?.has(selectedTask.readingTest.id)
-  );
-  const listeningCompleted = Boolean(
-    selectedTask.listeningTest?.id && completedTestIds?.has(selectedTask.listeningTest.id)
-  );
 
   return (
     <div
@@ -422,11 +391,8 @@ export function TaskDayViewer({
                   : "text-muted-foreground"
               )}
             >
-              {openCount > 0 ? "Open" : "Locked"}
+              {openCount > 0 ? "Open" : "Coming soon"}
             </Badge>
-            <span className="text-[11.5px] text-muted-foreground tabular-nums">
-              {linkedTests} test{linkedTests === 1 ? "" : "s"} linked
-            </span>
           </div>
           <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight text-[hsl(var(--primary-deep))] sm:text-3xl">
             {formatTaskDayTitle(selectedTask.dayNumber)}
@@ -470,17 +436,16 @@ export function TaskDayViewer({
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {useCohortSessions
-                ? "Daily lecture and core skills at your scheduled times — join live with chat, or watch the recording."
-                : "Daily lecture and core skills with Dr Nasir Bukhari"}
+                ? "Your daily lecture at your scheduled time — join live with chat, or watch the recording."
+                : "Your daily lecture with Dr Nasir Bukhari"}
             </p>
           </div>
-          {useCohortSessions && lectureSession && coreSkillSession ? (
+          {useCohortSessions && lectureSession ? (
             <div className="grid gap-4">
               <SessionCard day={selectedTask.dayNumber} session={lectureSession} onRefresh={() => onCohortRefresh?.()} />
-              <SessionCard day={selectedTask.dayNumber} session={coreSkillSession} onRefresh={() => onCohortRefresh?.()} />
             </div>
           ) : (
-            <div className="equal-card-grid grid gap-4 md:grid-cols-2">
+            <div className="equal-card-grid grid gap-4">
               <LessonVideoCard
                 category="Lecture"
                 title={selectedTask.lectureTitle}
@@ -492,107 +457,10 @@ export function TaskDayViewer({
                 bunnyVideoId={selectedTask.lectureBunnyVideoId}
                 slot="lecture"
               />
-              <LessonVideoCard
-                category="Core skills"
-                title={selectedTask.articleTitle}
-                playbackUrl={articleUrl}
-                locked={selectedTask.coreSkillsLocked || selectedTask.articleLocked}
-                externalUrl={selectedTask.articleUrl}
-                posterUrl={coreSkillThumbnailUrl}
-                dayNumber={selectedTask.dayNumber}
-                bunnyVideoId={selectedTask.articleBunnyVideoId}
-                slot="coreskill"
-              />
             </div>
           )}
         </section>
 
-        <section className="mb-6">
-          <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[hsl(24_90%_48%)]">
-              Step 3 of {totalSteps} · Don&apos;t skip
-            </p>
-            <h3 className="mt-1 font-display text-xl font-semibold tracking-tight text-[hsl(var(--primary-deep))] sm:text-2xl">
-              Timed practice tests
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">Full exam format, linked to today&apos;s lessons</p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <PracticeTestCard
-              type="READING"
-              test={selectedTask.readingTest}
-              locked={selectedTask.readingLocked || readingSkillLocked}
-              completed={readingCompleted}
-              primary
-              onUpgrade={readingSkillLocked ? () => setLockedSkill("READING") : undefined}
-            />
-            <PracticeTestCard
-              type="LISTENING"
-              test={selectedTask.listeningTest}
-              locked={selectedTask.listeningLocked || listeningSkillLocked}
-              completed={listeningCompleted}
-              onUpgrade={listeningSkillLocked ? () => setLockedSkill("LISTENING") : undefined}
-            />
-          </div>
-        </section>
-
-        {hasCheatSheet ? (
-          <Accordion type="multiple" defaultValue={[...ACCORDION_SECTIONS]} className="w-full space-y-2">
-            <AccordionItem
-              value="cheat-sheet"
-              className="overflow-hidden rounded-[16px] border border-border border-b-0 bg-muted/40 px-4 data-[state=open]:shadow-[var(--shadow-card)]"
-            >
-              <AccordionTrigger className="py-4 hover:no-underline">
-                <span className="flex items-center gap-3 text-left">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <FileText className="h-4 w-4" aria-hidden />
-                  </span>
-                  <span>
-                    <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-                      Step 4 of {totalSteps}
-                    </span>
-                    <span className="block font-display text-base font-semibold">Cheat Sheet</span>
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                      PDF reference sheet for this day
-                    </span>
-                  </span>
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="pb-5 pt-0">
-                {selectedTask.cheatSheetLocked ? (
-                  <LockedOverlay label="Cheat sheet unlocks when your plan includes this day." />
-                ) : cheatSheetUrl ? (
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card/70 p-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {selectedTask.cheatSheetAsset?.title || "Day cheat sheet"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Open or download the PDF</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button asChild size="sm" className="h-10 cursor-pointer">
-                        <a href={cheatSheetUrl} target="_blank" rel="noreferrer">
-                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                          Open PDF
-                        </a>
-                      </Button>
-                      <Button asChild size="sm" variant="secondary" className="h-10 cursor-pointer">
-                        <a href={cheatSheetUrl} download target="_blank" rel="noreferrer">
-                          <Download className="mr-1.5 h-3.5 w-3.5" />
-                          Download
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <LockedOverlay label="Cheat sheet is unavailable right now. Try refreshing." />
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        ) : null}
-
-        <TodaysReadingPassageCard task={selectedTask} className="mt-6" />
       </div>
 
       <SkillUpgradeModal skill={lockedSkill} open={lockedSkill !== null} onOpenChange={(v) => { if (!v) setLockedSkill(null); }} />

@@ -1,13 +1,15 @@
-import { Lock, Sparkles } from "lucide-react";
+import { Clock3, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { TaskDayState } from "@/lib/portal-utils";
 import { cn } from "@/lib/utils";
 
-const styles: Record<TaskDayState, { label: string; className: string; icon: typeof Lock }> = {
-  locked: {
-    label: "Locked",
-    className: "border-muted-foreground/30 bg-muted/40 text-muted-foreground",
-    icon: Lock
+const styles: Record<TaskDayState, { label: string; className: string; icon: typeof Clock3 }> = {
+  // Not gated — simply not built yet. A padlock implied it would open on a
+  // schedule, which it never does; the day opens when a lecture is uploaded.
+  "coming-soon": {
+    label: "Coming soon",
+    className: "border-muted-foreground/25 bg-muted/30 text-muted-foreground",
+    icon: Clock3
   },
   open: {
     label: "Open",

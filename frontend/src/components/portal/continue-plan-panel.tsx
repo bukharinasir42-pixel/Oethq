@@ -75,7 +75,7 @@ export function ContinuePlanPanel({ tasks, maxDays = 4 }: ContinuePlanPanelProps
                       "flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition-all duration-200",
                       isNext && "border-primary bg-primary/15 text-primary shadow-sm",
                       !isNext && state === "open" && "border-primary/30 bg-primary/5 text-foreground hover:bg-primary/10",
-                      state === "locked" && "border-dashed border-border/60 text-muted-foreground opacity-60"
+                      state === "coming-soon" && "border-dashed border-border/60 text-muted-foreground opacity-60"
                     )}
                   >
                     {task.dayNumber}
