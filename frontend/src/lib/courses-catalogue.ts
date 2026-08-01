@@ -98,10 +98,10 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
   },
   reading: {
     slug: "reading",
-    metaTitle: "OET Reading Course | OET HQ",
+    metaTitle: "OET Reading Material | OET HQ",
     metaDescription:
       "A focused OET Reading course — Part A/B/C strategy, real-format practice and mock tests, OET HQ Reading past papers, and a Reading progress report.",
-    ogTitle: "OET Reading Course — OET HQ",
+    ogTitle: "OET Reading Material — OET HQ",
     ogDescription:
       "Fix OET Reading with a clear method for Part A, B and C, plenty of real-format practice, OET HQ past papers and progress tracking.",
     eyebrow: "Single skill · Reading",
@@ -151,10 +151,10 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
   },
   listening: {
     slug: "listening",
-    metaTitle: "OET Listening Course | OET HQ",
+    metaTitle: "OET Listening Material | OET HQ",
     metaDescription:
       "A focused OET Listening course — Part A/B/C strategy, real-format practice and mock tests, OET HQ Listening past papers, and a Listening progress report.",
-    ogTitle: "OET Listening Course — OET HQ",
+    ogTitle: "OET Listening Material — OET HQ",
     ogDescription:
       "Fix OET Listening with a clear method for Part A, B and C, real-format practice, OET HQ past papers and progress tracking.",
     eyebrow: "Single skill · Listening",

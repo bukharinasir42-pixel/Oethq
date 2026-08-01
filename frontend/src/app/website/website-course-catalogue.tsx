@@ -94,7 +94,7 @@ export function WebsiteCourseCatalogue() {
           {/* READING */}
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/reading">
             <span className="crs-tag">Single skill</span>
-            <h3>OET Reading Course</h3>
+            <h3>OET Reading Material</h3>
             <p className="crs-desc">For candidates whose only barrier is Reading. Part A speed and spelling, Part C opinion and attitude — every mock sat on the official OET exam interface.</p>
             <div className="crs-skills">
               <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Official interface</span>
@@ -116,7 +116,7 @@ export function WebsiteCourseCatalogue() {
           {/* LISTENING */}
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/listening">
             <span className="crs-tag">Single skill</span>
-            <h3>OET Listening Course</h3>
+            <h3>OET Listening Material</h3>
             <p className="crs-desc">For candidates whose only barrier is Listening. Part A note-taking and spelling, Part C speaker attitude — every mock played once, on the official OET interface.</p>
             <div className="crs-skills">
               <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Single-play audio</span>

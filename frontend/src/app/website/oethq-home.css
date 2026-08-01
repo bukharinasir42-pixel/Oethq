@@ -1437,6 +1437,13 @@ a.hp-cmenu-item:hover{background:#eff5ff;transform:translateX(2px)}
   flex:1;min-width:0;display:flex;align-items:center;gap:8px;
   font-family:var(--hp-font-sans);font-weight:600;font-size:13.5px;color:var(--hp-ink);
 }
+/* Materials menu: name over a one-line description, rather than the Courses
+   menu's single row. */
+.hp-cmenu-item-name.stacked{flex-direction:column;align-items:flex-start;gap:2px}
+.hp-cmenu-item-desc{
+  font-family:var(--hp-font-sans);font-weight:500;font-size:11.5px;line-height:1.35;
+  color:var(--hp-ink-soft);white-space:normal;
+}
 .hp-cmenu-soon{
   font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
   color:#0369A1;background:#E0F2FE;border:1px solid #BAE6FD;border-radius:999px;padding:2px 7px;

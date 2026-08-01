@@ -31,7 +31,7 @@ type CourseModule = { key: string; label: string; icon: LucideIcon; module: stri
 const COURSE_GROUPS: { skill: SkillKey; label: string; icon: LucideIcon; modules: CourseModule[] }[] = [
   {
     skill: "READING",
-    label: "OET Reading Course",
+    label: "OET Reading Material",
     icon: BookOpen,
     modules: [
       { key: "lectures", label: "Reading Lectures", icon: Play, module: "lectures" },
@@ -44,7 +44,7 @@ const COURSE_GROUPS: { skill: SkillKey; label: string; icon: LucideIcon; modules
   },
   {
     skill: "LISTENING",
-    label: "OET Listening Course",
+    label: "OET Listening Material",
     icon: Headphones,
     modules: [
       { key: "lectures", label: "Listening Lectures", icon: Play, module: "lectures" },

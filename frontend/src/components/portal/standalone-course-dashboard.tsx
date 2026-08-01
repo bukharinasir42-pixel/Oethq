@@ -23,7 +23,7 @@ type CourseDef = { skill: SkillKey; name: string; icon: LucideIcon; blurb: strin
 const COURSES: CourseDef[] = [
   {
     skill: "READING",
-    name: "OET Reading Course",
+    name: "OET Reading Material",
     icon: BookOpen,
     blurb: "Lectures, practice + mock tests, OET HQ past papers and core-skill drills for Reading.",
     modules: [
@@ -36,7 +36,7 @@ const COURSES: CourseDef[] = [
   },
   {
     skill: "LISTENING",
-    name: "OET Listening Course",
+    name: "OET Listening Material",
     icon: Headphones,
     blurb: "Lectures, practice + mock tests, OET HQ past papers, spellings and Part C podcasts for Listening.",
     modules: [

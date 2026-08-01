@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CandidateActivePlanHomeRedirect } from "./_components/candidate-active-plan-home-redirect";
 import { CoursesNavMenu } from "./_components/courses-nav-menu";
+import { MaterialsNavMenu } from "./_components/materials-nav-menu";
 import { WebsiteAuthActions } from "./_components/website-auth-actions";
 import { WebsiteTrialCta } from "./_components/website-trial-cta";
 import "./oethq-home.css";
@@ -51,6 +52,7 @@ export function OethqNav() {
 
                 <div className={`hp-links${open ? " open" : ""}`} id="hpLinks">
                     <CoursesNavMenu onNavigate={close} />
+                    <MaterialsNavMenu onNavigate={close} />
                     <Link href="/#whats-inside" onClick={close}>
                         What&apos;s inside
                     </Link>
