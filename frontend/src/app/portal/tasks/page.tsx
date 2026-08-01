@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TaskControlDeck } from "@/components/admin/task-control-deck";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { PortalErrorAlert } from "@/components/portal/portal-error-alert";
+import { CohortLecturesIntroNote } from "@/components/portal/cohort-lectures-intro-note";
 import { CompleteCourseGate } from "@/components/portal/complete-course-gate";
 import { HowToIntroductionPanel } from "@/components/portal/how-to-introduction-panel";
 import { TaskDayViewer } from "@/components/portal/task-day-viewer";
@@ -267,6 +268,9 @@ export default function TasksPage() {
         <Badge variant="outline" className="tabular-nums">
           {lockedTasks.length} coming soon
         </Badge>
+        <div className="ml-auto">
+          <CohortLecturesIntroNote />
+        </div>
       </div>
 
       {!loadError && tasks.length === 0 ? (
