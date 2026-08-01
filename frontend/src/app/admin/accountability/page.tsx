@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, Check, ChevronLeft, ChevronRight, Loader2, Mail, Search, X } from "lucide-react";
+import { CalendarCheck, Check, ChevronLeft, ChevronRight, Loader2, Mail, Minus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { WorkspaceAccessDeniedState, WorkspaceErrorAlert, WorkspaceLoadingState } from "@/components/layout/workspace-states";
@@ -28,7 +28,19 @@ const ACTIVITIES: { key: keyof AccountabilityStudent["done"]; label: string }[] 
   { key: "article", label: "Article" }
 ];
 
-function Tick({ ok }: { ok: boolean }) {
+function Tick({ ok, applicable = true }: { ok: boolean; applicable?: boolean }) {
+  // A student whose plan does not include this task is neither done nor behind —
+  // showing a red cross would count them down for content they cannot open.
+  if (!applicable) {
+    return (
+      <span
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted/40 text-muted-foreground/50"
+        title="Not included in this student's plan"
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
   return ok ? (
     <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><Check className="h-3.5 w-3.5" /></span>
   ) : (
@@ -241,9 +253,9 @@ export default function AdminAccountabilityPage() {
                       ? <Badge className="bg-sky-600 hover:bg-sky-600">Submitted</Badge>
                       : <Badge variant="outline" className="border-rose-300 text-rose-500">Not yet</Badge>}
                   </TableCell>
-                  {ACTIVITIES.map((a) => <TableCell key={a.key} className="text-center"><div className="flex justify-center"><Tick ok={s.done[a.key]} /></div></TableCell>)}
+                  {ACTIVITIES.map((a) => <TableCell key={a.key} className="text-center"><div className="flex justify-center"><Tick ok={s.done[a.key]} applicable={s.applicable?.[a.key] ?? true} /></div></TableCell>)}
                   <TableCell className="text-center">
-                    <Badge variant={s.missed === 0 ? "default" : "outline"} className={s.missed === 0 ? "bg-emerald-600" : ""}>{s.completed}/5</Badge>
+                    <Badge variant={s.missed === 0 ? "default" : "outline"} className={s.missed === 0 ? "bg-emerald-600" : ""}>{s.completed}/{s.expected ?? 5}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button type="button" variant="outline" size="sm" className="cursor-pointer" disabled={s.missed === 0 || warning === s.userId} onClick={() => void warnOne(s)}>

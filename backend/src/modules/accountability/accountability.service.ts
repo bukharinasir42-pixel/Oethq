@@ -185,12 +185,82 @@ export class AccountabilityService {
     };
   }
 
+  /**
+   * Every candidate with live access, whether that came from a Complete Course
+   * subscription or a single-skill entitlement. listSubscribed() only sees
+   * subscription holders, so a Reading-only buyer never appeared in the roster
+   * even though their activity was being recorded.
+   */
+  private async activeStudents() {
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: "CANDIDATE",
+        OR: [
+          { subscriptions: { some: { status: { in: ["ACTIVE", "TRIAL", "EXPIRED"] } } } },
+          { entitlements: { some: { status: "ACTIVE" } } }
+        ]
+      },
+      select: {
+        id: true, name: true, email: true,
+        subscriptions: {
+          where: { status: { in: ["ACTIVE", "TRIAL", "EXPIRED"] } },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true, plan: { select: { name: true, tier: true } } }
+        },
+        entitlements: {
+          where: { status: "ACTIVE" },
+          select: { entitlementKey: true, product: { select: { name: true, tierRank: true, includedSkills: true } } }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return users.map((u) => {
+      const sub = u.subscriptions[0] ?? null;
+      const completePlan = sub && sub.plan.tier !== "STARTER" ? sub.plan.name : null;
+
+      // Strongest owned tier per skill — the same rule the portal gates on.
+      const tierBySkill: Record<string, number> = {};
+      for (const e of u.entitlements) {
+        const p = e.product;
+        if (!p) continue;
+        for (const sk of p.includedSkills) {
+          tierBySkill[sk] = Math.max(tierBySkill[sk] ?? 0, p.tierRank ?? 0);
+        }
+      }
+      if (completePlan) for (const sk of ["READING", "LISTENING", "WRITING", "SPEAKING"]) tierBySkill[sk] = 99;
+
+      const owns = (skill: string, minTier = 1) => (tierBySkill[skill] ?? 0) >= minTier;
+      // Which of the five daily tasks this student can actually do. Marking a
+      // Reading-only buyer "missed the podcast" would be counting them down for
+      // content they cannot open — and would email them about it.
+      const applicable = {
+        lecture: owns("READING") || owns("LISTENING") || owns("WRITING"),
+        test: owns("READING") || owns("LISTENING"),
+        spelling: owns("LISTENING", 3),
+        podcast: owns("LISTENING", 3),
+        article: owns("READING", 3)
+      };
+
+      const courseNames = u.entitlements
+        .filter((e) => e.entitlementKey !== "complete" && e.product)
+        .map((e) => e.product!.name);
+
+      return {
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        status: sub?.status ?? "COURSE",
+        plan: completePlan ?? (courseNames.length ? courseNames.join(", ") : null),
+        applicable
+      };
+    });
+  }
+
   /** Per-day accountability roster for all active students. */
   async roster(dayKey: number) {
-    const subs = (await this.users.listSubscribed()) as Array<{
-      userId: string; name: string; email: string; status: string;
-      plan: { name: string } | null;
-    }>;
+    const subs = await this.activeStudents();
     const ids = subs.map((s) => s.userId);
     const dayStart = new Date(dayKey * DAY_MS);
     const dayEnd = new Date((dayKey + 1) * DAY_MS);
@@ -225,16 +295,21 @@ export class AccountabilityService {
         podcast: podcastSet.has(s.userId) || set.has("podcast"),
         article: set.has("article")
       };
-      const completed = Object.values(done).filter(Boolean).length;
+      // Count only what this student's access actually includes.
+      const keys = Object.keys(done) as (keyof typeof done)[];
+      const expected = keys.filter((k) => s.applicable[k]);
+      const completed = expected.filter((k) => done[k]).length;
       return {
         userId: s.userId,
         name: s.name,
         email: s.email,
         status: s.status,
-        plan: s.plan?.name ?? null,
+        plan: s.plan,
         done,
+        applicable: s.applicable,
+        expected: expected.length,
         completed,
-        missed: 5 - completed,
+        missed: expected.length - completed,
         // Explicit "Submit today's work" attestation from the dashboard button.
         submitted: set.has("submit")
       };
@@ -249,8 +324,14 @@ export class AccountabilityService {
     return { dayKey, students, summary };
   }
 
-  private missingFor(done: Record<string, boolean>): string[] {
-    return Object.entries(done).filter(([, v]) => !v).map(([k]) => ACTIVITY_LABELS[k] ?? k);
+  /**
+   * What to chase this student about. Scoped to `applicable`, so a Reading-only
+   * buyer is never emailed about the Listening podcast they cannot open.
+   */
+  private missingFor(done: Record<string, boolean>, applicable?: Record<string, boolean>): string[] {
+    return Object.entries(done)
+      .filter(([k, v]) => !v && (!applicable || applicable[k]))
+      .map(([k]) => ACTIVITY_LABELS[k] ?? k);
   }
 
   /** Email a "complete your tasks" warning to one student (for `dayKey`). */
@@ -261,7 +342,7 @@ export class AccountabilityService {
 
     const { students } = await this.roster(day);
     const row = students.find((s) => s.userId === userId);
-    const missing = row ? this.missingFor(row.done) : Object.values(ACTIVITY_LABELS);
+    const missing = row ? this.missingFor(row.done, row.applicable) : Object.values(ACTIVITY_LABELS);
 
     const firstName = (user.name || "there").split(" ")[0];
     const listHtml = missing.map((m) => `<li style="margin:4px 0">${m}</li>`).join("");

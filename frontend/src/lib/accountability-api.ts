@@ -9,6 +9,10 @@ export type AccountabilityStudent = {
   status: string;
   plan: string | null;
   done: ActivityDone;
+  /** Which of the five tasks this student's access actually includes. */
+  applicable?: ActivityDone;
+  /** How many tasks were expected of them today (applicable ones only). */
+  expected?: number;
   completed: number;
   missed: number;
   /** Clicked "Submit today's work" on the dashboard. */

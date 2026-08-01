@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Check, Loader2, Minus } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Minus, Printer } from "lucide-react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { WorkspaceAccessDeniedState, WorkspaceErrorAlert, WorkspaceLoadingState } from "@/components/layout/workspace-states";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,26 @@ const DAILY = [
   { key: "podcast", label: "Podcast" },
   { key: "article", label: "Article" }
 ] as const;
+
+/**
+ * Print rules live here rather than in globals: this is the only page laid out
+ * for paper. The report must print in FULL — every row of both tables, not just
+ * whatever fits the scroll viewport — so the max-height panels are released and
+ * the admin chrome (sidebar, header, buttons) is dropped.
+ */
+const PRINT_CSS = `
+@page { size: A4 portrait; margin: 12mm; }
+@media print {
+  html, body { background: #fff !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  aside, nav, header { display: none !important; }
+  main, [data-admin-main] { padding: 0 !important; margin: 0 !important; }
+  .acc-report table { font-size: 10px; }
+  .acc-report thead { display: table-header-group; }
+  .acc-report tr { break-inside: avoid; page-break-inside: avoid; }
+  .acc-report section { break-inside: auto; box-shadow: none !important; }
+}
+`;
 
 function Tick({ on }: { on: boolean }) {
   return on ? (
@@ -79,6 +99,16 @@ export default function StudentAccountabilityPage() {
     [data, skill]
   );
 
+  /** First → last day with recorded activity, for the printed letterhead. */
+  const range = useMemo(() => {
+    const days = data?.days ?? [];
+    if (days.length === 0) return null;
+    const keys = days.map((d) => d.dayKey).sort();
+    const first = keys[0];
+    const last = keys[keys.length - 1];
+    return first === last ? first : `${first} → ${last}`;
+  }, [data]);
+
   if (status === "loading" || status === "idle") {
     return <WorkspaceLoadingState title="Loading student…" layout="table" />;
   }
@@ -105,11 +135,23 @@ export default function StudentAccountabilityPage() {
       onRefresh={() => void load()}
       onLogout={logout}
     >
-      <div className="mb-4">
+      <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs">
           <Link href="/admin/accountability">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to accountability
           </Link>
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5 px-3 text-xs"
+          disabled={!data}
+          onClick={() => window.print()}
+        >
+          <Printer className="h-3.5 w-3.5" /> Download PDF
         </Button>
       </div>
 
@@ -118,7 +160,20 @@ export default function StudentAccountabilityPage() {
       {loading && !data ? (
         <div className="py-16 text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : data && s && sum ? (
-        <div className="space-y-6">
+        <div className="acc-report space-y-6">
+          {/* Paper letterhead. On screen the AdminShell header already carries
+              the name, so this only appears in the printed/PDF copy. */}
+          <div className="hidden print:block">
+            <h1 className="font-display text-lg font-semibold">{s.name} — accountability report</h1>
+            <p className="text-xs text-muted-foreground">
+              {s.email} · joined {new Date(s.joinedAt).toLocaleDateString()}
+              {range ? ` · activity ${range}` : ""}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Generated {new Date().toLocaleString()} · OET HQ
+            </p>
+          </div>
+
           {/* What they own — the answer to "which course is this?" */}
           <div className="flex flex-wrap items-center gap-2">
             {s.plan ? <Badge variant="default">{s.plan}{s.planStatus ? ` · ${s.planStatus}` : ""}</Badge> : null}
@@ -144,7 +199,7 @@ export default function StudentAccountabilityPage() {
               <h2 className="font-display text-base font-semibold text-[hsl(var(--primary-deep))]">
                 Tests submitted <span className="text-muted-foreground">({tests.length})</span>
               </h2>
-              <div className="flex gap-1">
+              <div className="flex gap-1 print:hidden">
                 {(["ALL", "READING", "LISTENING"] as const).map((k) => (
                   <Button
                     key={k}
@@ -159,7 +214,7 @@ export default function StudentAccountabilityPage() {
                 ))}
               </div>
             </div>
-            <div className="max-h-[26rem] overflow-auto">
+            <div className="max-h-[26rem] overflow-auto print:max-h-none print:overflow-visible">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -219,7 +274,7 @@ export default function StudentAccountabilityPage() {
                 Only days with activity appear. A dash means not done that day, not that it was unavailable.
               </p>
             </div>
-            <div className="max-h-[26rem] overflow-auto">
+            <div className="max-h-[26rem] overflow-auto print:max-h-none print:overflow-visible">
               <Table>
                 <TableHeader>
                   <TableRow>
