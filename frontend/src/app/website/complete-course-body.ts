@@ -58,8 +58,8 @@ export const CC_PLANS = `<section class="section" id="plans">
         <li><span class="ic">&#10003;</span> 1 Reading mock test</li>
         <li><span class="ic">&#10003;</span> 1 Listening mock test</li>
         <li><span class="ic">&#10003;</span> 1 day of live spelling</li>
-        <li><span class="ic">&#10003;</span> 1 podcast episode</li>
-        <li class="no"><span class="ic">&#10005;</span> No past papers, cheat sheets, live drills or Pass Predictor</li>
+        <li><span class="ic">&#10003;</span> 1 Reading Part A skill drill</li>
+        <li class="no"><span class="ic">&#10005;</span> No daily podcasts, Part B &amp; C articles, past papers, cheat sheets or Pass Predictor</li>
       </ul>
       <div class="fs-cta">
         <a class="btn btn-primary btn-block" href="#enroll">Start free</a>

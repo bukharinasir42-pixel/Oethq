@@ -71,13 +71,13 @@ const TRIAL_FIXED_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
 // these open for the full 7-day window would hand out seven of each instead of
 // the single sample the Tier 0 card sells. Day 1 only.
 const TRIAL_DAY_ONE_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>([
-  "spellings",       // 1 day of live spelling
-  "part-c-podcasts", // 1 podcast episode
-  "part-a-core"      // 1 Reading Part A skill drill
+  "spellings",  // 1 day of live spelling
+  "part-a-core" // 1 Reading Part A skill drill
 ]);
 
-// Deliberately in neither set: cheat-sheets, past-papers, part-bc-core (Part B/C
-// articles) and writing. Anything absent here stays locked for the whole trial.
+// Deliberately in neither set: part-c-podcasts (daily podcast), part-bc-core
+// (Part B/C articles), cheat-sheets, past-papers and writing. Anything absent
+// here stays locked for the whole trial.
 
 /**
  * Does the free trial preview `module` on `trialDay`? Mirrors the server-side

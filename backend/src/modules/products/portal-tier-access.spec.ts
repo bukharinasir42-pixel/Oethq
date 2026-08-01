@@ -24,12 +24,23 @@ describe("portal tier access", () => {
 
   describe("dailyContentUnlocked", () => {
     it("gives the free trial its Day-1 sample and locks it from Day 2", () => {
-      // The Tier 0 card sells ONE of each, not one per day for the 7-day window.
-      for (const module of ["spellings", "part-c-podcasts", "part-a-core"] as const) {
+      // One of each, not one per day for the 7-day window.
+      for (const module of ["spellings", "part-a-core"] as const) {
         expect(dailyContentUnlocked({}, module, trialOn(1))).toBe(true);
         expect(dailyContentUnlocked({}, module, trialOn(2))).toBe(false);
         expect(dailyContentUnlocked({}, module, trialOn(7))).toBe(false);
       }
+    });
+
+    it("keeps podcasts and Part B/C articles closed to the trial on every day", () => {
+      // Paid daily content. Before, ANY module passed the trial check, which also
+      // left /skill-drills/of-day?module=part-bc-core open to trial users.
+      for (const module of ["part-c-podcasts", "part-bc-core"] as const) {
+        expect(dailyContentUnlocked({}, module, trialOn(1))).toBe(false);
+        expect(dailyContentUnlocked({}, module, trialOn(2))).toBe(false);
+      }
+      // Still open to a paying Precision buyer.
+      expect(dailyContentUnlocked(access("LISTENING", 3), "part-c-podcasts", NO_TRIAL)).toBe(true);
     });
 
     it("locks daily content for a signed-in user with no plan and no trial", () => {

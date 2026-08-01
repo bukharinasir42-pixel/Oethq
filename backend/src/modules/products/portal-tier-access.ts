@@ -67,10 +67,20 @@ export const MODULE_SKILL: Record<string, string> = {
 };
 
 /**
+ * The only rotating modules the free trial previews, and only on Day 1.
+ *
+ * Podcasts and Part B/C articles are deliberately absent: they are paid daily
+ * content. Previously any module passed the trial check, which handed a trial
+ * user the podcast and left `/skill-drills/of-day?module=part-bc-core` open to
+ * them as well.
+ */
+const TRIAL_DAY_ONE_MODULES: ReadonlySet<ModuleKey> = new Set<ModuleKey>(["spellings", "part-a-core"]);
+
+/**
  * Gate for the rotating daily content (spelling, Part A drill, Part B/C article,
- * podcast): the owner's tier unlocks it, OR the caller is on Day 1 of the free
- * trial. Day 2 onward the trial is locked out — the Tier 0 card sells one sample
- * of each, not one per day for the plan's whole 7-day window.
+ * podcast): the owner's tier unlocks it, or the caller is on Day 1 of the free
+ * trial AND the module is one the trial previews. Day 2 onward the trial is
+ * locked out entirely — it samples one of each, not one per day for a week.
  */
 export function dailyContentUnlocked(
   skillAccess: Record<string, SkillAccessLite>,
@@ -79,7 +89,7 @@ export function dailyContentUnlocked(
 ): boolean {
   const skill = MODULE_SKILL[module];
   if (skill && skillModuleUnlocked(skillAccess, skill, module)) return true;
-  return trial.isTrial && trial.trialDay === 1;
+  return trial.isTrial && trial.trialDay === 1 && TRIAL_DAY_ONE_MODULES.has(module);
 }
 
 /** Does ANY owned skill unlock `module`? (for cross-skill content like cheat sheets) */
