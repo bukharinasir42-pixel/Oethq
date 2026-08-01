@@ -3,11 +3,12 @@
 /**
  * MaterialsNavMenu — "Materials" dropdown for the website header.
  *
- * For candidates who do not want a taught course and only want papers to sit:
- * OET Reading Material and OET Listening Material. Both point at the existing
- * single-skill landing pages (/courses/reading, /courses/listening), which are
- * now presented as Material rather than Course. Nothing about what a buyer
- * unlocks changes — the tiers on those pages already decide that.
+ * For candidates who want one skill rather than the full programme: OET Reading
+ * Material and OET Listening Material. Both point at the existing single-skill
+ * landing pages (/courses/reading, /courses/listening), which are now presented
+ * as Material rather than Course, with "Course" kept as a kicker on the card.
+ * Nothing about what a buyer unlocks changes — the tiers on those pages already
+ * decide that, and every tier includes the scheduled cohort lectures and drills.
  *
  * Interaction mirrors CoursesNavMenu so the two behave identically: hover-open
  * with a close-intent delay on desktop, click/Esc/outside-click to close, and
@@ -98,9 +99,9 @@ export function MaterialsNavMenu({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className={`hp-courses-panel hp-mat-panel${open ? " open" : ""}`} role="menu" aria-label="Materials">
         <div className="hp-mat-head">
-          <span className="hp-mat-eyebrow">Practice papers only</span>
+          <span className="hp-mat-eyebrow">One skill, done properly</span>
           <p className="hp-mat-lede">
-            No lectures, no drills — just exam-format papers on the official OET interface.
+            Cohort lectures, drills and exam-format papers — all on the official OET interface.
           </p>
         </div>
 
@@ -110,7 +111,12 @@ export function MaterialsNavMenu({ onNavigate }: { onNavigate?: () => void }) {
               <Link href={route} className="hp-mat-card" role="menuitem" onClick={navigate}>
                 <span className="hp-mat-top">
                   <span className="hp-mat-ic" aria-hidden><Icon /></span>
-                  <span className="hp-mat-title">{name}</span>
+                  <span className="hp-mat-name">
+                    <span className="hp-mat-title">{name}</span>
+                    {/* The material IS the course — the kicker keeps that word on
+                        the card without pushing the product name back to "Course". */}
+                    <span className="hp-mat-kicker">Course</span>
+                  </span>
                   <span className="hp-mat-price">from {money(tierMin(skill, 39))}</span>
                 </span>
                 <span className="hp-mat-desc">{desc}</span>

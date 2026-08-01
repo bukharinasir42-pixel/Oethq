@@ -204,10 +204,10 @@ export const COURSE_LANDING: Record<string, CourseLandingCopy> = {
   },
   writing: {
     slug: "writing",
-    metaTitle: "OET Writing Material — Choose Your Plan | OET HQ",
+    metaTitle: "OET Writing Corrections — Choose Your Plan | OET HQ",
     metaDescription:
-      "The OET Writing Material from OET HQ. Four plans from US$39. Letter corrections marked by a human against all six official OET Writing criteria, case-note tasks, drills and the Pass Predictor.",
-    ogTitle: "OET Writing Material — OET HQ",
+      "The OET Writing Corrections from OET HQ. Four plans from US$39. Letter corrections marked by a human against all six official OET Writing criteria, case-note tasks, drills and the Pass Predictor.",
+    ogTitle: "OET Writing Corrections — OET HQ",
     ogDescription:
       "Four plans from US$39. Human-marked letter corrections against the six official OET Writing criteria, case-note tasks, cheat sheets and the Pass Predictor.",
     eyebrow: "Single skill · Writing",

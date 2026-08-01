@@ -138,7 +138,7 @@ export function WebsiteCourseCatalogue() {
           {/* WRITING */}
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/writing">
             <span className="crs-tag">Single skill</span>
-            <h3>OET Writing Material</h3>
+            <h3>OET Writing Corrections</h3>
             <p className="crs-desc">For candidates whose only barrier is the referral letter. Marked line by line against all six official OET Writing criteria — by a human, not a model.</p>
             <div className="crs-skills">
               <span className="crs-chip">6 official criteria</span><span className="crs-chip">Human marked</span><span className="crs-chip">Case notes</span>
