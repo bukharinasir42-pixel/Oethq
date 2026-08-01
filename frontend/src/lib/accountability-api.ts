@@ -21,7 +21,39 @@ export type AccountabilityRoster = {
   summary: { total: number; allDone: number; incomplete: number; submitted: number };
 };
 
+export type StudentTestRow = {
+  attemptId: string; testId: string; title: string; type: "READING" | "LISTENING";
+  status: string; startedAt: string | null; submittedAt: string | null; dayKey: number | null;
+  autoSubmitted: boolean;
+  score: number | null; totalQuestions: number | null;
+  partAScore: number | null; partBScore: number | null; partCScore: number | null;
+  scaledScore: number | null; grade: string | null;
+};
+
+export type StudentDayRow = {
+  dayKey: number; date: string;
+  lecture: boolean; spelling: boolean; article: boolean; podcast: boolean; drill: boolean;
+  submitted: boolean; tests: number;
+};
+
+export type StudentHistory = {
+  student: {
+    id: string; name: string; email: string; joinedAt: string; lastLogin: string | null;
+    plan: string | null; planStatus: string | null; accessEnds: string | null;
+    courses: { name: string; slug: string | null; endDate: string | null }[];
+  };
+  summary: {
+    activeDays: number; submittedDays: number; testsSubmitted: number;
+    bestScaled: number | null; avgScaled: number | null;
+    avgReading: number | null; avgListening: number | null;
+    firstActivity: string | null; lastActivity: string | null;
+  };
+  tests: StudentTestRow[];
+  days: StudentDayRow[];
+};
+
 export const accountabilityApi = {
+  student: (userId: string) => apiFetch<StudentHistory>(`/admin/accountability/student/${encodeURIComponent(userId)}`),
   roster: (day?: number, token?: string) =>
     apiFetch<AccountabilityRoster>(`/admin/accountability${day !== undefined ? `?day=${day}` : ""}`, token !== undefined ? { token } : {}),
   warn: (userId: string, day?: number) =>

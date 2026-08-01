@@ -2,6 +2,7 @@
  * accountability.router.ts — daily student accountability.
  *   Candidate: POST /activity/mark { kind }   (self-mark lecture/spelling/article/podcast)
  *   Admin:     GET  /admin/accountability?day=<dayKey>
+ *              GET  /admin/accountability/student/:userId   (full history)
  *              POST /admin/accountability/warn        { userId }
  *              POST /admin/accountability/warn-bulk   { userIds: [] }
  */
@@ -30,6 +31,13 @@ export function createAccountabilityRouter(c: AppContainer): Router {
     const day = dayRaw !== undefined && String(dayRaw).trim() !== "" ? Number(dayRaw) : svc.todayKey();
     if (!Number.isFinite(day)) { res.status(400).json({ message: "Invalid day" }); return; }
     res.json(await svc.roster(Math.floor(day)));
+  }));
+
+  // Full history for one student, regardless of what they bought.
+  r.get("/admin/accountability/student/:userId", auth, admin, asyncHandler(async (req, res) => {
+    const userId = String(req.params.userId ?? "").trim();
+    if (!userId) { res.status(400).json({ message: "userId required" }); return; }
+    res.json(await svc.studentHistory(userId));
   }));
 
   r.post("/admin/accountability/warn", auth, admin, asyncHandler(async (req, res) => {

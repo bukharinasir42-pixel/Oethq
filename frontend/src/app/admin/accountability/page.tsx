@@ -7,6 +7,7 @@
  * anyone falling behind (per-student or bulk to everyone incomplete).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { CalendarCheck, Check, ChevronLeft, ChevronRight, Loader2, Mail, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -126,7 +127,7 @@ export default function AdminAccountabilityPage() {
   const isToday = day === todayKey();
 
   return (
-    <AdminShell title="Accountability" description="Track daily student completion and nudge anyone falling behind." profile={profile} onRefresh={() => void load(day)} onLogout={logout}>
+    <AdminShell title="Accountability" description="Track daily student completion and nudge anyone falling behind. Click a name for that student\u2019s full history." profile={profile} onRefresh={() => void load(day)} onLogout={logout}>
       {loadError ? <WorkspaceErrorAlert title="Unable to load" description={loadError} /> : null}
 
       {/* controls */}
@@ -227,10 +228,13 @@ export default function AdminAccountabilityPage() {
               ) : shown.map((s) => (
                 <TableRow key={s.userId} className={s.missed === 0 ? "bg-emerald-50/40" : undefined}>
                   <TableCell>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">{s.name}</p>
+                    {/* Opens this student's full history — every test, every day. */}
+                    <Link href={`/admin/accountability/${s.userId}`} className="group block min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground group-hover:text-primary group-hover:underline">
+                        {s.name}
+                      </p>
                       <p className="truncate text-xs text-muted-foreground">{s.email}{s.plan ? ` · ${s.plan}` : ""}</p>
-                    </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="text-center">
                     {s.submitted

@@ -53,6 +53,138 @@ export class AccountabilityService {
     return { ok: true, dayKey, kind };
   }
 
+  /**
+   * Everything one student has ever done, for the admin drill-down.
+   *
+   * Deliberately not filtered by product or plan: a Reading-only buyer records
+   * the same activities as a Complete Course student, and the point of this view
+   * is to answer "what has this person actually done" regardless of what they
+   * bought. Also why it reads the user directly rather than going through
+   * listSubscribed(), which only sees subscription holders.
+   */
+  async studentHistory(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, name: true, email: true, createdAt: true, lastLogin: true,
+        subscriptions: {
+          where: { status: { in: ["ACTIVE", "TRIAL", "EXPIRED"] } },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true, startDate: true, endDate: true, plan: { select: { name: true, tier: true } } }
+        },
+        entitlements: {
+          where: { status: "ACTIVE" },
+          select: { entitlementKey: true, endDate: true, product: { select: { name: true, slug: true } } }
+        }
+      }
+    });
+    if (!user) throw Object.assign(new Error("Student not found"), { statusCode: 404 });
+
+    const [acts, podcasts, attempts] = await Promise.all([
+      this.prisma.studentActivity.findMany({
+        where: { userId },
+        select: { dayKey: true, kind: true, createdAt: true },
+        orderBy: { dayKey: "desc" }
+      }),
+      this.prisma.podcastListen.findMany({ where: { userId }, select: { dayKey: true } }),
+      this.prisma.testAttempt.findMany({
+        where: { userId, status: { in: [AttemptStatus.SUBMITTED, AttemptStatus.AUTO_SUBMITTED] } },
+        orderBy: { submittedAt: "desc" },
+        select: {
+          id: true, status: true, startedAt: true, submittedAt: true,
+          score: true, partAScore: true, partBScore: true, partCScore: true,
+          scaledScore: true, oetGrade: true,
+          test: { select: { id: true, title: true, type: true, totalQuestions: true } }
+        }
+      })
+    ]);
+
+    const tests = attempts.map((a) => ({
+      attemptId: a.id,
+      testId: a.test.id,
+      title: a.test.title,
+      type: a.test.type,
+      status: a.status,
+      startedAt: a.startedAt?.toISOString() ?? null,
+      submittedAt: a.submittedAt?.toISOString() ?? null,
+      dayKey: a.submittedAt ? Math.floor(a.submittedAt.getTime() / DAY_MS) : null,
+      autoSubmitted: a.status === AttemptStatus.AUTO_SUBMITTED,
+      score: a.score,
+      totalQuestions: a.test.totalQuestions,
+      partAScore: a.partAScore,
+      partBScore: a.partBScore,
+      partCScore: a.partCScore,
+      scaledScore: a.scaledScore,
+      grade: a.oetGrade ? (a.oetGrade === "C_PLUS" ? "C+" : a.oetGrade) : null
+    }));
+
+    // One row per day the student did anything at all, newest first.
+    const podcastDays = new Set(podcasts.map((p) => p.dayKey));
+    const testsByDay = new Map<number, number>();
+    for (const t of tests) if (t.dayKey != null) testsByDay.set(t.dayKey, (testsByDay.get(t.dayKey) ?? 0) + 1);
+
+    const dayKeys = new Set<number>([
+      ...acts.map((a) => a.dayKey),
+      ...podcastDays,
+      ...testsByDay.keys()
+    ]);
+    const kindsByDay = new Map<number, Set<string>>();
+    for (const a of acts) {
+      if (!kindsByDay.has(a.dayKey)) kindsByDay.set(a.dayKey, new Set());
+      kindsByDay.get(a.dayKey)!.add(a.kind);
+    }
+
+    const days = [...dayKeys].sort((a, b) => b - a).map((dayKey) => {
+      const k = kindsByDay.get(dayKey) ?? new Set<string>();
+      return {
+        dayKey,
+        date: new Date(dayKey * DAY_MS).toISOString().slice(0, 10),
+        lecture: k.has("lecture"),
+        spelling: k.has("spelling"),
+        article: k.has("article"),
+        podcast: podcastDays.has(dayKey) || k.has("podcast"),
+        drill: k.has("drill"),
+        submitted: k.has("submit"),
+        tests: testsByDay.get(dayKey) ?? 0
+      };
+    });
+
+    const scored = tests.filter((t) => t.scaledScore != null).map((t) => t.scaledScore as number);
+    const readingScored = tests.filter((t) => t.type === "READING" && t.scaledScore != null);
+    const listeningScored = tests.filter((t) => t.type === "LISTENING" && t.scaledScore != null);
+    const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+
+    return {
+      student: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        joinedAt: user.createdAt.toISOString(),
+        lastLogin: user.lastLogin?.toISOString() ?? null,
+        plan: user.subscriptions[0]?.plan?.name ?? null,
+        planStatus: user.subscriptions[0]?.status ?? null,
+        accessEnds: user.subscriptions[0]?.endDate?.toISOString() ?? null,
+        courses: user.entitlements
+          .filter((e) => e.entitlementKey !== "complete")
+          .map((e) => ({ name: e.product?.name ?? e.entitlementKey, slug: e.product?.slug ?? null, endDate: e.endDate?.toISOString() ?? null }))
+      },
+      summary: {
+        activeDays: days.length,
+        submittedDays: days.filter((d) => d.submitted).length,
+        testsSubmitted: tests.length,
+        bestScaled: scored.length ? Math.max(...scored) : null,
+        avgScaled: avg(scored),
+        avgReading: avg(readingScored.map((t) => t.scaledScore as number)),
+        avgListening: avg(listeningScored.map((t) => t.scaledScore as number)),
+        firstActivity: days.length ? days[days.length - 1].date : null,
+        lastActivity: days.length ? days[0].date : null
+      },
+      tests,
+      days
+    };
+  }
+
   /** Per-day accountability roster for all active students. */
   async roster(dayKey: number) {
     const subs = (await this.users.listSubscribed()) as Array<{
