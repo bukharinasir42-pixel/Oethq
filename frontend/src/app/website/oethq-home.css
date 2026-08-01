@@ -1499,6 +1499,11 @@ a.hp-mat-card:hover::before{opacity:1}
 .hp-mat-go{margin-left:auto;color:var(--hp-blue);font-size:14px;opacity:0;transform:translateX(-3px);transition:.18s}
 a.hp-mat-card:hover .hp-mat-go{opacity:1;transform:translateX(0)}
 
+/* Coming soon — same card, visibly inert (no hover lift, no accent rail). */
+.hp-mat-card--soon{cursor:default;opacity:.62;background:linear-gradient(180deg,#fff,#f4f6fa)}
+.hp-mat-card--soon .hp-mat-ic{background:linear-gradient(140deg,#9fb2cc,#6f8199);box-shadow:none}
+.hp-mat-card--soon .hp-mat-kicker{color:var(--hp-ink-faint)}
+
 .hp-mat-foot{
   margin:11px 6px 2px 6px;font-family:var(--hp-font-sans);font-size:11px;
   color:var(--hp-ink-faint);text-align:center;

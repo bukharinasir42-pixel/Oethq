@@ -115,11 +115,16 @@ export function usePortalPlanAccess() {
       ? Math.max(...daysCandidates)
       : subDaysLeft ?? null;
 
-  // The "Complete Course experience" = cohort live classes + the daily study-plan
-  // journey. Granted by any active subscription (a paid Complete plan OR a free
-  // trial preview). Standalone-only buyers (no active subscription) DON'T get it,
-  // so cohort + study plan lock for them. See standalone-vs-complete-portal-scope.
-  const completeExperienceAccess = Boolean(subscriptionAccessGranted);
+  // Cohort live classes + the daily study-plan journey. Granted by any active
+  // subscription (a paid Complete plan OR a free-trial preview) AND by owning any
+  // single-skill course.
+  //
+  // Course buyers are included because all four tiers on every course page
+  // advertise "Scheduled OET <skill> cohort lectures". They were previously
+  // excluded, so the cohort appeared only while the leftover signup free-trial row
+  // survived and vanished when it lapsed — taking away something they had paid for.
+  // Mirrored server-side in tasks.service#listForUser.
+  const completeExperienceAccess = Boolean(subscriptionAccessGranted) || hasProductEntitlement;
   // On the free trial (STARTER) rather than a paid plan. The trial previews the
   // cohort + study plan but only a named subset of modules, so callers must not
   // treat it as full access — see moduleUnlockedForTrial.

@@ -151,14 +151,25 @@ export class TasksService {
   }
 
   async listForUser(userId: string) {
-    const subscriptions = await this.prisma.subscription.findMany({
-      where: {
-        userId,
-        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL, SubscriptionStatus.EXPIRED] }
-      },
-      include: { plan: true }
-    });
+    const now = new Date();
+    const [subscriptions, courseEntitlements] = await Promise.all([
+      this.prisma.subscription.findMany({
+        where: {
+          userId,
+          status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL, SubscriptionStatus.EXPIRED] }
+        },
+        include: { plan: true }
+      }),
+      // Every single-skill tier advertises the scheduled cohort lectures, and a
+      // course is granted as an ENTITLEMENT with no subscription behind it. Without
+      // this, those buyers had the whole plan locked and only kept the lectures for
+      // as long as the signup free-trial row happened to survive.
+      this.prisma.entitlement.count({
+        where: { userId, status: "ACTIVE", OR: [{ endDate: null }, { endDate: { gt: now } }] }
+      })
+    ]);
     const subscription = pickEffectiveSubscriptionForAccess(subscriptions);
+    const ownsACourse = courseEntitlements > 0;
 
     const tasks = await this.prisma.dailyTask.findMany({
       where: { isPublished: true },
@@ -177,13 +188,16 @@ export class TasksService {
     });
 
     if (!subscription?.plan) {
+      // A course buyer with no Complete plan still gets the cohort LECTURES their
+      // tier was sold. Tests, past papers, articles and cheat sheets stay locked
+      // here — those are served by their own course pages, gated by tier.
       return Promise.all(
         tasks.map(async (task) => ({
           ...(await this.serializeTask(task)),
           readingLocked: true,
           listeningLocked: true,
           pastPaperLocked: true,
-          lectureLocked: true,
+          lectureLocked: !ownsACourse,
           coreSkillsLocked: true,
           articleLocked: true,
           cheatSheetLocked: true
