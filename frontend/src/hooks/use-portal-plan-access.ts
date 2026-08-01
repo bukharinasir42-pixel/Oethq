@@ -123,7 +123,14 @@ export function usePortalPlanAccess() {
   // On the free trial (STARTER) rather than a paid plan. The trial previews the
   // cohort + study plan but only a named subset of modules, so callers must not
   // treat it as full access — see moduleUnlockedForTrial.
-  const isFreeTrial = Boolean(subscriptionAccessGranted) && planTier === "STARTER";
+  //
+  // `hasProductEntitlement` has to be part of this. Buying a single-skill course
+  // creates an entitlement and does NOT clear the STARTER subscription created at
+  // signup, so testing the plan tier alone reported "free trial" for students who
+  // had paid — and the trial's Day-1-only module list then locked their content
+  // at the next UTC midnight. Mirrors the server's resolveTrialAccess.
+  const isFreeTrial =
+    Boolean(subscriptionAccessGranted) && planTier === "STARTER" && !hasProductEntitlement;
   // 1-based trial day by CALENDAR date, matching the server's resolveTrialAccess.
   // The rotating daily modules (spelling, podcast, Part A drill) are Day-1 only,
   // so the tiles must know the day or they render open onto a 403 on day 2.

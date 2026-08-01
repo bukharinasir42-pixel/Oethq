@@ -39,8 +39,10 @@ export class CourseLecturesService {
         durationMin: l.durationMin,
         displayOrder: l.displayOrder,
         hasVideo: Boolean(l.bunnyVideoId || l.videoUrl),
-        // Trial: exactly the one sample lecture is unlocked; the rest → upgrade.
-        locked: trial.isTrial ? l.id !== trial.lectureId : !owned.has(l.skill)
+        // Ownership FIRST, trial sample second. Written as a ternary on isTrial
+        // this locked every lecture but the sample for anyone who still held a
+        // STARTER row — which a single-skill course purchase does not clear.
+        locked: !(owned.has(l.skill) || (trial.isTrial && l.id === trial.lectureId))
       }))
     };
   }
@@ -55,7 +57,9 @@ export class CourseLecturesService {
       this.products.getOwnedSkills(userId),
       resolveTrialAccess(this.prisma, userId)
     ]);
-    const allowed = trial.isTrial ? lecture.id === trial.lectureId : ownedSkills.includes(lecture.skill);
+    // Ownership FIRST — owning the skill must never be overridden by a leftover
+    // STARTER subscription, which is what returned 403 to paying course buyers.
+    const allowed = ownedSkills.includes(lecture.skill) || (trial.isTrial && lecture.id === trial.lectureId);
     if (!allowed) {
       throw Object.assign(new Error(`${lecture.skill} is not part of your plan`), { statusCode: 403 });
     }
@@ -96,15 +100,16 @@ export class CourseLecturesService {
     const trialTestId = skill === "READING" ? trial.readingTestId : trial.listeningTestId;
     let unlockedCount = 0;
     const testLocked = (id: string) => {
-      if (trial.isTrial) return id !== trialTestId;
-      if (!ownsSkill) return true;
+      // Ownership FIRST. Testing isTrial first locked every test but the sample
+      // for a course buyer who still carried the signup STARTER row.
+      if (!ownsSkill) return !(trial.isTrial && id === trialTestId);
       if (unlockedCount >= mockLimit) return true; // over the tier's allowance
       unlockedCount += 1;
       return false;
     };
     return {
       skill,
-      locked: trial.isTrial ? false : !ownsSkill,
+      locked: !ownsSkill && !trial.isTrial,
       mockLimit: Number.isFinite(mockLimit) ? mockLimit : null,
       tests: tests
         .filter((t) => !ppIds.has(t.id) && !isPastPaperTestTitle(t.title))

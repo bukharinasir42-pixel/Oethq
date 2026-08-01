@@ -119,7 +119,13 @@ type Props = {
 export function PremiumPortalDashboard({ profileName, dashboard, tasks, completedTestIds, ownedSkills = [], skillAccess = {}, fullAccess = true, isFreeTrial: isFreeTrialProp = false, trialDay = null, passPredictor = true, accessDaysLeft = null }: Props) {
   // Prefer the caller's value (from the subscription hook, authoritative even
   // before the dashboard payload lands); fall back to the dashboard's own plan.
-  const isFreeTrial = isFreeTrialProp || dashboard?.subscription?.plan?.tier === "STARTER";
+  //
+  // Owning a course wins over the plan tier. A single-skill purchase creates an
+  // entitlement and leaves the signup STARTER subscription in place, so reading
+  // the tier alone reported "free trial" for students who had paid.
+  const ownsACourse = ownedSkills.length > 0 || Object.keys(skillAccess).length > 0;
+  const isFreeTrial = !fullAccess && !ownsACourse
+    && (isFreeTrialProp || dashboard?.subscription?.plan?.tier === "STARTER");
   const [lockedSkill, setLockedSkill] = useState<SkillKey | null>(null);
   // A tile is locked when the skill isn't owned, OR it is owned but the student's
   // tier doesn't unlock that module (e.g. cheat sheets below Precision).
@@ -127,11 +133,19 @@ export function PremiumPortalDashboard({ profileName, dashboard, tasks, complete
     // The trial has no entitlements, so tier rank says nothing about it: gate on
     // the advertised trial module list instead of showing everything as open and
     // letting the student hit a 403.
-    if (isFreeTrial) return module ? !moduleUnlockedForTrial(module, trialDay) : false;
     if (fullAccess) return false;
-    if (!ownedSkills.includes(s)) return true;
-    if (module && !moduleUnlockedForTier(skillAccess[s], module)) return true;
-    return false;
+    // Ownership FIRST — a student who owns the skill is gated by their TIER, never
+    // by the trial list. Checking the trial first locked paying course buyers out
+    // of their own tiles, and did it a day late: the rotating modules are Day-1
+    // only, so the tiles looked right until the next UTC midnight and then shut.
+    if (ownedSkills.includes(s)) {
+      return module ? !moduleUnlockedForTier(skillAccess[s], module) : false;
+    }
+    // The trial has no entitlements, so tier rank says nothing about it: gate on
+    // the advertised trial module list instead of showing everything as open and
+    // letting the student hit a 403.
+    if (isFreeTrial) return module ? !moduleUnlockedForTrial(module, trialDay) : false;
+    return true;
   }, [fullAccess, isFreeTrial, trialDay, ownedSkills, skillAccess]);
   const firstOwned = (ownedSkills[0] as SkillKey | undefined) ?? "READING";
   const [cohort, setCohort] = useState<CohortMe | null>(null);

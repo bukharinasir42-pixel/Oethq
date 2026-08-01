@@ -251,7 +251,10 @@ export class AccountabilityService {
         userId: u.id,
         name: u.name,
         email: u.email,
-        status: sub?.status ?? "COURSE",
+        // A course buyer keeps the STARTER row from signup, so the raw
+        // subscription status reads TRIAL even though they have paid. What they
+        // own decides the label.
+        status: courseNames.length > 0 && !completePlan ? "COURSE" : (sub?.status ?? "COURSE"),
         plan: completePlan ?? (courseNames.length ? courseNames.join(", ") : null),
         applicable
       };

@@ -7,6 +7,13 @@
  * the oldest published test of that type. Everything else stays locked →
  * upgrade. Spelling and the Part A drill are allowed on the practice surface
  * (frontend-gated, no backend ownership).
+ *
+ * "On a trial" means: holds a live STARTER subscription AND owns nothing paid.
+ * Paid means either a non-STARTER subscription (Complete Course) OR any live
+ * entitlement (a single-skill course). Both have to be checked — buying a
+ * Complete Course plan rewrites the STARTER subscription row, but buying or
+ * being granted a single-skill course only creates an entitlement and leaves
+ * the STARTER row from signup exactly where it was.
  */
 import { PlanTier, SubscriptionStatus, TestType, Prisma } from "@prisma/client";
 import type { PrismaService } from "../../common/prisma.service";
@@ -44,12 +51,22 @@ const NO_TRIAL: TrialAccess = {
 
 export async function resolveTrialAccess(prisma: PrismaService, userId: string): Promise<TrialAccess> {
   const now = new Date();
-  const subs = await prisma.subscription.findMany({
-    where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] } },
-    select: { startDate: true, endDate: true, plan: { select: { tier: true } } }
-  });
+  const [subs, paidEntitlements] = await Promise.all([
+    prisma.subscription.findMany({
+      where: { userId, status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] } },
+      select: { startDate: true, endDate: true, plan: { select: { tier: true } } }
+    }),
+    // A single-skill course (Reading Mega, Listening Precision, …) is granted as
+    // an ENTITLEMENT and creates no subscription, so the STARTER row from signup
+    // survives the purchase. Counting only subscriptions here meant every such
+    // buyer stayed isTrial=true and was collapsed back to the one-sample trial:
+    // one lecture, one Reading test, one Listening test, everything else locked.
+    prisma.entitlement.count({
+      where: { userId, status: "ACTIVE", OR: [{ endDate: null }, { endDate: { gt: now } }] }
+    })
+  ]);
   const active = subs.filter((s) => !s.endDate || s.endDate > now);
-  const hasPaid = active.some((s) => s.plan.tier !== PlanTier.STARTER);
+  const hasPaid = active.some((s) => s.plan.tier !== PlanTier.STARTER) || paidEntitlements > 0;
   const starter = active.find((s) => s.plan.tier === PlanTier.STARTER);
   const isTrial = !hasPaid && Boolean(starter);
   if (!isTrial) return NO_TRIAL;

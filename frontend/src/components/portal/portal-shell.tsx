@@ -119,14 +119,13 @@ export function PortalShell({
     accessGranted,
     completeExperienceAccess,
     subscription,
-    planTier,
+    isFreeTrial,
     ownsSkill,
     accessDaysLeft,
     loading
   } = usePortalPlanAccess();
   const isHome = pathname === "/portal";
   const isExam = pathname.startsWith("/portal/tests/");
-  const isFreeTrial = planTier === "STARTER";
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [lockedSkill, setLockedSkill] = useState<SkillKey | null>(null);
   const activeSkillParam = searchParams.get("skill")?.toUpperCase() ?? "";

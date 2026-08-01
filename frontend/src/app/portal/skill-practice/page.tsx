@@ -99,7 +99,7 @@ function SkillPracticeInner() {
   const def = MODULES[moduleKey];
 
   const { profile, status, error, refresh, logout } = useSession();
-  const { subscription, ownsSkill, planTier, trialDay, skillAccess, completeExperienceAccess, loading: loadingPlanAccess } = usePortalPlanAccess();
+  const { subscription, ownsSkill, isFreeTrial, trialDay, skillAccess, completeExperienceAccess, loading: loadingPlanAccess } = usePortalPlanAccess();
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const isCheatSheets = moduleKey === "cheat-sheets";
@@ -112,7 +112,6 @@ function SkillPracticeInner() {
   // Uses the shared list rather than a local one, which previously omitted
   // part-c-podcasts (so the advertised episode was unreachable) and had no notion
   // of the trial day (so the rotating content stayed open for all 7 days).
-  const isFreeTrial = planTier === "STARTER";
   const trialAllowed = isFreeTrial && moduleUnlockedForTrial(moduleKey as ModuleKey, trialDay);
   // Tier gate: owning the skill isn't enough — the student's course tier must
   // include this module (e.g. cheat sheets require Precision). Complete/trial bypass.
