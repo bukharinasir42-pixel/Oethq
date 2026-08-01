@@ -128,6 +128,25 @@
 .dash .greet .m{display:block;margin-bottom:11px}
 .dash .greet-act{margin-left:auto;display:flex;gap:11px;flex-wrap:wrap}
 
+/* Daily refresh countdown — one strip covering the article, podcast, Part A
+   drill and spelling, which all rotate together at 00:00 UTC. */
+.dash .daily-refresh{
+  display:flex;align-items:center;gap:10px;
+  margin:14px 2px 0;padding:11px 16px;
+  border:1px solid var(--sky-line);border-radius:14px;
+  background:var(--sky-wash);
+  font-size:14px;color:var(--ink);line-height:1.45;
+}
+.dash .daily-refresh svg{width:17px;height:17px;flex:0 0 auto;color:var(--sky)}
+.dash .daily-refresh b{font-weight:700;color:var(--sky-deep);font-variant-numeric:tabular-nums}
+.dash .daily-refresh .dr-when{color:var(--dim)}
+@media (max-width:640px){
+  .dash .daily-refresh{font-size:13px;padding:10px 13px;gap:9px;align-items:flex-start}
+  /* Stack the local-time note under the countdown rather than wrapping mid-phrase. */
+  .dash .daily-refresh .dr-sep{display:none}
+  .dash .daily-refresh .dr-when{display:block;margin-top:2px}
+}
+
 
 .dash .t{position:relative;border-radius:22px;padding:24px;overflow:hidden;
   background:var(--surf);border:1px solid var(--edge);backdrop-filter:blur(20px);box-shadow:var(--shadow);

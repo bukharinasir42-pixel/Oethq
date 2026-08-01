@@ -33,7 +33,52 @@ const NASIR = [
 const GATE_IDX = 4;
 
 const fmtLong = (d: Date) => `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+const IcRefresh = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>);
+
 const greetWord = (h: number) => (h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
+
+/**
+ * The daily content — Part C article, podcast, Part A drill and the spelling set
+ * — all rotate off the same boundary on the server: `Math.floor(now / DAY_MS)`,
+ * i.e. 00:00 UTC. Deriving the next boundary the same way keeps this in step
+ * without an extra request, and means one countdown covers all four.
+ */
+const nextRefreshAt = (now: number) => (Math.floor(now / DAY_MS) + 1) * DAY_MS;
+
+/**
+ * Countdown to the next daily refresh. Ticks once a minute rather than once a
+ * second: the event is hours away, and a live-ticking clock on a study
+ * dashboard reads as exam pressure.
+ */
+function DailyRefreshStrip() {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now()); // set on mount, so server and client markup agree
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  if (now == null) return null;
+
+  const target = nextRefreshAt(now);
+  const totalMinutes = Math.max(0, Math.ceil((target - now) / 60_000));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  const left = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  // The refresh instant shown in the student's own timezone, so they learn the
+  // daily rhythm (00:00 UTC is 5:30 AM in India, 8:00 AM in the Philippines).
+  const localTime = new Date(target).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+  return (
+    <div className="daily-refresh" role="status">
+      <IcRefresh />
+      <span>
+        New article, podcast, drill and spelling in <b>{left}</b>
+        <span className="dr-sep"> · </span>
+        <span className="dr-when">refreshes {localTime} your time</span>
+      </span>
+    </div>
+  );
+}
 
 // ---- task-tile icons (from the design) ----
 const IcLecture = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="15" height="16" rx="2" /><path d="m17 10 5-3v10l-5-3z" /></svg>);
@@ -210,6 +255,8 @@ export function PremiumPortalDashboard({ profileName, dashboard, tasks, complete
             </button>
           </div>
         </div>
+
+        <DailyRefreshStrip />
 
         {/* alert — only when scores are still zero (and the Pass Predictor is unlocked) */}
         {passPredictor && !isFreeTrial && retained === 0 ? (
