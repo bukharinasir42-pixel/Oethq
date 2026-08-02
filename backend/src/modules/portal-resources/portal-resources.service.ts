@@ -123,6 +123,50 @@ export class PortalResourcesService {
   }
 
   // ------------------------------------------------------------- admin
+
+  /**
+   * OET Speaking hack sentences for the signed-in student.
+   *
+   * Speaking ships with the Complete Material only, so ownership is checked
+   * against the derived "complete" entitlement rather than a Speaking tier —
+   * there is no purchasable Speaking product yet.
+   *
+   * The sheets are per-profession: a nurse and a dietitian get different
+   * sentence banks. Anyone whose profession has no sheet yet falls back to the
+   * "*" general sheet, so a new profession sees the general bank rather than an
+   * empty screen while the library is being built out.
+   */
+  async listSpeakingHackSentences(userId: string) {
+    const [{ entitlementKeys }, user] = await Promise.all([
+      this.products.getOwnership(userId),
+      this.prisma.user.findUnique({ where: { id: userId }, select: { profession: true } })
+    ]);
+    const owned = entitlementKeys.includes("complete");
+    if (!owned) {
+      return { locked: true, profession: user?.profession ?? null, usingGeneral: false, items: [] as PortalResourceItem[] };
+    }
+
+    const profession = user?.profession?.trim() || null;
+    const where = { placement: PortalResourcePlacement.SPEAKING_HACK_SENTENCES, isPublished: true };
+    const order = [{ displayOrder: "asc" as const }, { createdAt: "asc" as const }];
+
+    let rows = profession
+      ? await this.prisma.portalResource.findMany({ where: { ...where, profession }, orderBy: order })
+      : [];
+    const usingGeneral = rows.length === 0;
+    if (usingGeneral) {
+      rows = await this.prisma.portalResource.findMany({ where: { ...where, profession: "*" }, orderBy: order });
+    }
+
+    return {
+      locked: false,
+      profession,
+      /** True when we fell back to the general sheet, so the UI can say so. */
+      usingGeneral,
+      items: rows.map((r) => this.toItem(r))
+    };
+  }
+
   async listAll(placement?: PortalResourcePlacement) {
     return this.prisma.portalResource.findMany({
       where: placement ? { placement } : undefined,
@@ -134,12 +178,18 @@ export class PortalResourcesService {
     placement: PortalResourcePlacement; kind: PortalResourceKind; title: string;
     description?: string | null; displayOrder?: number; pdfUrl?: string | null;
     bunnyVideoId?: string | null; videoUrl?: string | null; isPublished?: boolean;
+    profession?: string | null;
   }) {
     return this.prisma.portalResource.create({
       data: {
         placement: data.placement,
         kind: data.kind,
         title: data.title,
+        // Only meaningful for the per-profession speaking sheets.
+        profession:
+          data.placement === PortalResourcePlacement.SPEAKING_HACK_SENTENCES
+            ? (data.profession?.trim() || "*")
+            : null,
         description: data.description ?? null,
         displayOrder: data.displayOrder ?? 0,
         pdfUrl: data.kind === PortalResourceKind.PDF ? data.pdfUrl ?? null : null,

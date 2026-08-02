@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   BookOpen, ClipboardCheck, ClipboardCopy, ClipboardList, Clock, FileText, Gauge, Headphones,
-  History, House, PenLine, Play, Podcast, SpellCheck, Target, TrendingUp, Trophy, type LucideIcon
+  History, House, Mic, PenLine, Play, Podcast, SpellCheck, Target, TrendingUp, Trophy, type LucideIcon
 } from "lucide-react";
 import { WorkspaceShellFrame } from "@/components/layout/workspace-shell-frame";
 import { PremiumPortalShell } from "@/components/portal/premium-portal-shell";
@@ -63,6 +63,17 @@ const COURSE_GROUPS: { skill: SkillKey; label: string; icon: LucideIcon; modules
       { key: "lectures", label: "Writing Lectures", icon: Play, module: "lectures" },
       { key: "writing", label: "Writing Corrections", icon: PenLine, module: "writing" }
     ]
+  },
+  {
+    // Speaking ships with the Complete Material only — there is no purchasable
+    // Speaking product, so ownership comes from the "complete" entitlement.
+    skill: "SPEAKING",
+    label: "OET Speaking",
+    icon: Mic,
+    modules: [
+      { key: "lectures", label: "Speaking Lectures", icon: Play, module: "lectures" },
+      { key: "hack-sentences", label: "Speaking Hack Sentences", icon: FileText, module: "hack-sentences" }
+    ]
   }
 ];
 
@@ -72,6 +83,7 @@ function moduleHref(skill: SkillKey, module: string): string {
   if (module === "tests") return `/portal/course-tests?skill=${skill}`;
   if (module === "past-papers") return `/portal/past-papers?skill=${skill}`;
   if (module === "writing") return "/portal/writing";
+  if (module === "hack-sentences") return "/portal/speaking-hack-sentences";
   return `/portal/skill-practice?skill=${skill}&module=${module}`;
 }
 
@@ -175,12 +187,15 @@ export function PortalShell({
     // Free trial can browse the course group so it can reach its ONE sample
     // lecture / reading test / listening test + the Part A drill & spelling.
     // Individual locked items inside each module page raise the flagship upgrade.
-    const owned = ownsSkill(g.skill) || isFreeTrial;
+    // Speaking is Complete-Material-only and is not part of the trial preview,
+    // so the trial pass-through does not extend to it.
+    const owned = ownsSkill(g.skill) || (isFreeTrial && g.skill !== "SPEAKING");
     const isActiveModule = (module: string) => {
       const skillMatch = activeSkillParam === g.skill;
       if (module === "lectures") return pathname === "/portal/lectures" && skillMatch;
       if (module === "tests") return pathname === "/portal/course-tests" && skillMatch;
       if (module === "past-papers") return pathname === "/portal/past-papers" && skillMatch;
+      if (module === "hack-sentences") return pathname === "/portal/speaking-hack-sentences";
       return pathname === "/portal/skill-practice" && skillMatch && activeModuleParam === module;
     };
     return {

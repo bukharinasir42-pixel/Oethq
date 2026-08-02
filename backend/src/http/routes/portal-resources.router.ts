@@ -40,6 +40,11 @@ export function createPortalResourcesRouter(c: AppContainer): Router {
     res.json(await svc.listCheatSheets((req as AuthedRequest).user.id, raw));
   }));
 
+  // OET Speaking hack sentences for the signed-in student's profession.
+  router.get("/speaking-hack-sentences", auth, asyncHandler(async (req, res) => {
+    res.json(await svc.listSpeakingHackSentences((req as AuthedRequest).user.id));
+  }));
+
   router.get("/article-intro", auth, asyncHandler(async (_req, res) => {
     res.json({ intro: await svc.articleIntro() });
   }));
@@ -72,6 +77,7 @@ export function createPortalResourcesRouter(c: AppContainer): Router {
       pdfUrl: optionalStr(b.pdfUrl) ?? null,
       bunnyVideoId: optionalStr(b.bunnyVideoId) ?? null,
       videoUrl: optionalStr(b.videoUrl) ?? null,
+      profession: optionalStr(b.profession) ?? null,
       isPublished: b.isPublished === undefined ? true : Boolean(b.isPublished)
     }));
   }));
@@ -88,6 +94,8 @@ export function createPortalResourcesRouter(c: AppContainer): Router {
     if (b.bunnyVideoId !== undefined) data.bunnyVideoId = optionalStr(b.bunnyVideoId);
     if (b.videoUrl !== undefined) data.videoUrl = optionalStr(b.videoUrl);
     if (b.isPublished !== undefined) data.isPublished = Boolean(b.isPublished);
+    // Blank profession on a speaking sheet means the general "*" fallback.
+    if (b.profession !== undefined) data.profession = optionalStr(b.profession) || "*";
     res.json(await svc.update(String(req.params.id), data));
   }));
 

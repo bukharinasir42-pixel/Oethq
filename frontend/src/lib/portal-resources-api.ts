@@ -4,7 +4,8 @@ export type PortalResourcePlacement =
   | "READING_CHEATSHEET"
   | "LISTENING_CHEATSHEET"
   | "READING_ARTICLE_INTRO"
-  | "ONBOARDING_INTRO";
+  | "ONBOARDING_INTRO"
+  | "SPEAKING_HACK_SENTENCES";
 export type PortalResourceKind = "PDF" | "VIDEO";
 
 /** Candidate-facing (URLs already resolved server-side; premium fields withheld if locked). */
@@ -43,6 +44,8 @@ export type AdminPortalResource = {
   pdfUrl: string | null;
   bunnyVideoId: string | null;
   videoUrl: string | null;
+  /** SPEAKING_HACK_SENTENCES only: the profession this sheet is for, "*" = general. */
+  profession: string | null;
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
@@ -57,6 +60,8 @@ export type PortalResourceInput = {
   pdfUrl?: string | null;
   bunnyVideoId?: string | null;
   videoUrl?: string | null;
+  /** SPEAKING_HACK_SENTENCES only. Blank means the general "*" sheet. */
+  profession?: string | null;
   isPublished?: boolean;
 };
 

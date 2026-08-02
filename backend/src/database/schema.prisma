@@ -371,6 +371,9 @@ enum PortalResourcePlacement {
   LISTENING_CHEATSHEET
   READING_ARTICLE_INTRO
   ONBOARDING_INTRO
+  /// OET Speaking hack sentences. Unlike every other placement these are
+  /// per-profession: a nurse and a dietitian get different sentence banks.
+  SPEAKING_HACK_SENTENCES
 }
 
 enum PortalResourceKind {
@@ -389,6 +392,11 @@ model PortalResource {
   title        String
   description  String?
   displayOrder Int                     @default(0)
+  /// Only used by SPEAKING_HACK_SENTENCES: the profession this resource is for
+  /// ("Nursing", "Medicine / Doctor", ...), or "*" for the general fallback
+  /// shown to anyone whose profession has no sheet yet. Same convention the
+  /// writing inbox already uses. Null on every other placement.
+  profession   String?
   pdfUrl       String?
   bunnyVideoId String?
   videoUrl     String?
@@ -397,6 +405,7 @@ model PortalResource {
   updatedAt    DateTime                @updatedAt
 
   @@index([placement, isPublished, displayOrder])
+  @@index([placement, profession, isPublished])
 }
 
 // Unified per-user ownership. Additive: a user can hold many concurrently

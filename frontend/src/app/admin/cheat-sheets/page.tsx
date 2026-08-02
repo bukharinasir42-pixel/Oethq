@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
+import { PROFESSIONS } from "@/lib/profile-options";
 import {
   portalResourcesApi,
   type AdminPortalResource,
@@ -31,7 +32,8 @@ const PLACEMENTS: { value: PortalResourcePlacement; label: string; hint: string 
   { value: "READING_CHEATSHEET", label: "Reading cheat sheet", hint: "Shows on the Reading Cheat Sheets page" },
   { value: "LISTENING_CHEATSHEET", label: "Listening cheat sheet", hint: "Shows on the Listening Cheat Sheets page" },
   { value: "READING_ARTICLE_INTRO", label: "Article intro video (Part C)", hint: "Shows above the Reading Part C articles reader" },
-  { value: "ONBOARDING_INTRO", label: "Onboarding intro (mandatory)", hint: "The 'how to use the course' video every student must watch before the portal opens" }
+  { value: "ONBOARDING_INTRO", label: "Onboarding intro (mandatory)", hint: "The 'how to use the course' video every student must watch before the portal opens" },
+  { value: "SPEAKING_HACK_SENTENCES", label: "Speaking hack sentences", hint: "Per-profession PDF on the OET Speaking page. Upload one per profession; the General sheet covers anyone you have not written one for yet." }
 ];
 const placementLabel = (p: PortalResourcePlacement) => PLACEMENTS.find((x) => x.value === p)?.label ?? p;
 
@@ -46,11 +48,12 @@ type FormState = {
   pdfUrl: string;
   bunnyVideoId: string;
   videoUrl: string;
+  profession: string;
   isPublished: boolean;
 };
 const emptyForm: FormState = {
   placement: "READING_CHEATSHEET", kind: "PDF", title: "", description: "",
-  displayOrder: "0", pdfUrl: "", bunnyVideoId: "", videoUrl: "", isPublished: true
+  displayOrder: "0", pdfUrl: "", bunnyVideoId: "", videoUrl: "", profession: "", isPublished: true
 };
 
 function toInput(f: FormState): PortalResourceInput {
@@ -63,6 +66,8 @@ function toInput(f: FormState): PortalResourceInput {
     pdfUrl: f.kind === "PDF" ? f.pdfUrl.trim() || null : null,
     bunnyVideoId: f.kind === "VIDEO" ? f.bunnyVideoId.trim() || null : null,
     videoUrl: f.kind === "VIDEO" ? f.videoUrl.trim() || null : null,
+    // Blank on a speaking sheet means the general bank; the server stores "*".
+    profession: f.placement === "SPEAKING_HACK_SENTENCES" ? f.profession.trim() || null : null,
     isPublished: f.isPublished
   };
 }
@@ -121,6 +126,7 @@ export default function AdminCheatSheetsPage() {
     try {
       await portalResourcesApi.adminUpdate(editing.id, {
         placement: editing.placement,
+        profession: editing.profession && editing.profession !== "*" ? editing.profession : "",
         kind: editing.kind,
         title: editing.title.trim(),
         description: editing.description?.trim() || null,
@@ -166,6 +172,23 @@ export default function AdminCheatSheetsPage() {
                   {PLACEMENTS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                 </select>
                 <p className="text-[11px] text-muted-foreground">{PLACEMENTS.find((p) => p.value === form.placement)?.hint}</p>
+              </div>
+
+              <div className={form.placement === "SPEAKING_HACK_SENTENCES" ? "space-y-1" : "hidden"}>
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="pr-profession">Profession</label>
+                <select
+                  id="pr-profession"
+                  className={selectClass}
+                  value={form.profession}
+                  onChange={(e) => setForm({ ...form, profession: e.target.value })}
+                >
+                  <option value="">General — everyone without their own sheet</option>
+                  {PROFESSIONS.map((pr) => <option key={pr} value={pr}>{pr}</option>)}
+                </select>
+                <p className="text-[11px] text-muted-foreground">
+                  Students see only the sheet for the profession on their account. Leave as General to cover
+                  professions you have not written a sheet for yet.
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Type</Label>
