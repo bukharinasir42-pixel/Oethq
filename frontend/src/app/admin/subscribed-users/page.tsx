@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Mail, Settings2, UserPlus } from "lucide-react";
+import { Mail, Search, Settings2, UserPlus, X } from "lucide-react";
 import { InlineLoader } from "@/components/loaders";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -80,6 +80,12 @@ export default function SubscribedUsersPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   // The candidate whose access is being upgraded / downgraded.
   const [managing, setManaging] = useState<SubscribedUserDto | null>(null);
+  // Table filters. Kept in state rather than the URL: this is a working view an
+  // admin re-filters constantly, not something they link to or bookmark.
+  const [query, setQuery] = useState("");
+  const [planFilter, setPlanFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [courseFilter, setCourseFilter] = useState("ALL");
   const form = useForm<CustomUserFormValues>({
     defaultValues: {
       name: "",
@@ -124,6 +130,45 @@ export default function SubscribedUsersPage() {
     () => subscribedUsers.filter((user) => Boolean(user.currentBand)).length,
     [subscribedUsers]
   );
+
+  /** Every plan and course actually present, so the dropdowns never offer a dead option. */
+  const planOptions = useMemo(
+    () => [...new Set(subscribedUsers.map((u) => u.plan.name))].sort((a, b) => a.localeCompare(b)),
+    [subscribedUsers]
+  );
+  const courseOptions = useMemo(
+    () => [...new Set(subscribedUsers.flatMap((u) => (u.courses ?? []).map((c) => c.name)))].sort((a, b) => a.localeCompare(b)),
+    [subscribedUsers]
+  );
+
+  const visibleUsers = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return subscribedUsers.filter((u) => {
+      // Name, email, plan and course names all match — an admin searching
+      // "nursing" or "elite" means the same thing as searching a person.
+      if (q) {
+        const haystack = [u.name, u.email, u.plan.name, ...(u.courses ?? []).map((c) => c.name)]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (planFilter !== "ALL" && u.plan.name !== planFilter) return false;
+      if (statusFilter !== "ALL" && u.status !== statusFilter) return false;
+      if (courseFilter === "NONE" && (u.courses?.length ?? 0) > 0) return false;
+      if (courseFilter !== "ALL" && courseFilter !== "NONE") {
+        if (!(u.courses ?? []).some((c) => c.name === courseFilter)) return false;
+      }
+      return true;
+    });
+  }, [subscribedUsers, query, planFilter, statusFilter, courseFilter]);
+
+  const filtersOn = query.trim() !== "" || planFilter !== "ALL" || statusFilter !== "ALL" || courseFilter !== "ALL";
+  const clearFilters = () => {
+    setQuery("");
+    setPlanFilter("ALL");
+    setStatusFilter("ALL");
+    setCourseFilter("ALL");
+  };
 
   const openCreateModal = () => {
     setCreatedUser(null);
@@ -292,6 +337,66 @@ export default function SubscribedUsersPage() {
             <StatTile label="Plans" value={plans.length} />
           </div>
 
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[220px] flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-9 pl-8 text-sm"
+                placeholder="Search name, email, plan or course"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {query ? (
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  onClick={() => setQuery("")}
+                  aria-label="Clear search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </div>
+
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="h-9 w-auto min-w-[150px] text-sm"><SelectValue placeholder="Plan" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All plans</SelectItem>
+                {planOptions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={courseFilter} onValueChange={setCourseFilter}>
+              <SelectTrigger className="h-9 w-auto min-w-[150px] text-sm"><SelectValue placeholder="Course" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All courses</SelectItem>
+                <SelectItem value="NONE">No individual course</SelectItem>
+                {courseOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9 w-auto min-w-[130px] text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Any status</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="TRIAL">Trial</SelectItem>
+                <SelectItem value="EXPIRED">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {filtersOn ? (
+              <Button type="button" variant="ghost" size="sm" className="h-9 px-2 text-xs" onClick={clearFilters}>
+                Clear
+              </Button>
+            ) : null}
+
+            <span className="ml-auto text-xs text-muted-foreground">
+              {filtersOn ? `${visibleUsers.length} of ${subscribedUsers.length}` : `${subscribedUsers.length}`} candidates
+            </span>
+          </div>
+
           {subscribedUsers.length === 0 ? (
             <EmptyState
               title="No subscribed candidates yet"
@@ -300,6 +405,15 @@ export default function SubscribedUsersPage() {
               <Button type="button" className="mt-2 cursor-pointer" onClick={openCreateModal}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Create Candidate Access
+              </Button>
+            </EmptyState>
+          ) : visibleUsers.length === 0 ? (
+            <EmptyState
+              title="No candidates match"
+              description="Nothing matches these filters. Clear them to see every candidate again."
+            >
+              <Button type="button" variant="outline" className="mt-2 cursor-pointer" onClick={clearFilters}>
+                Clear filters
               </Button>
             </EmptyState>
           ) : (
@@ -319,7 +433,7 @@ export default function SubscribedUsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subscribedUsers.map((user) => (
+                  {visibleUsers.map((user) => (
                     <TableRow key={user.userId}>
                       <TableCell>
                         <div className="min-w-0">
