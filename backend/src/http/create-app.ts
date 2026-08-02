@@ -7,6 +7,7 @@ import { asyncHandler, httpErrorHandler } from "./middleware";
 import { auditContextFromRequest } from "./request-audit";
 import { createAuditRouter } from "./routes/audit.router";
 import { createAuthRouter } from "./routes/auth.router";
+import { createDevicesRouter } from "./routes/devices.router";
 import { createBlogsRouter } from "./routes/blogs.router";
 import { createHowToIntroductionRouter } from "./routes/how-to-introduction.router";
 import { createWebsiteHomeRouter } from "./routes/website-home.router";
@@ -89,6 +90,7 @@ export function createHttpApp(c: AppContainer) {
   app.get("/auth/register", redirectAuthPagesToWebApp);
 
   app.use(createSystemRouter(systemService));
+  app.use(createDevicesRouter(c));
   app.use(createUsersRouter(c));
   app.use(createGradingRouter(c));
   app.use(createTasksRouter(c));

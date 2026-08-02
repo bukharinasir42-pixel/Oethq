@@ -130,6 +130,13 @@ export class DeviceSessionService {
       });
     }
     if (existing) {
+      // Resuming a REVOKED session has to go through the cap again. Without
+      // this, a student cycles devices past the limit for free: sign in on a
+      // third device to evict the first, then sign in on the first again — its
+      // row is simply un-revoked and they hold three at once.
+      if (existing.revokedAt && role === Role.CANDIDATE) {
+        await this.enforceLimit(userId, now);
+      }
       const resumed = await this.prisma.userSession.update({
         where: { id: existing.id },
         data: {

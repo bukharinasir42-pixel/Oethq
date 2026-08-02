@@ -29,6 +29,17 @@ export type RequestAuditContext = {
  * both come back undefined, and the admin screen shows "Unknown" rather than
  * guessing — see the note in the device-audit instructions.
  */
+/** Device id, fingerprint and geo — shared by both context builders. */
+export function deviceContextFromRequest(req: Request): {
+  deviceId?: string; fingerprint?: string; country?: string; city?: string;
+} {
+  return {
+    deviceId: firstForwardedValue(req.headers["x-device-id"]) || undefined,
+    fingerprint: firstForwardedValue(req.headers["x-device-fp"]) || undefined,
+    ...geoFromHeaders(req)
+  };
+}
+
 function geoFromHeaders(req: Request): { country?: string; city?: string } {
   const pick = (...names: string[]) => {
     for (const n of names) {
@@ -86,8 +97,6 @@ export function buildRequestAuditContext(
     userAgent: req.get("user-agent") || undefined,
     actorUserId: currentUser?.userId || requestUser?.userId,
     actorEmail: currentUser?.email || requestUser?.email,
-    deviceId: firstForwardedValue(req.headers["x-device-id"]) || undefined,
-    fingerprint: firstForwardedValue(req.headers["x-device-fp"]) || undefined,
-    ...geoFromHeaders(req)
+    ...deviceContextFromRequest(req)
   };
 }

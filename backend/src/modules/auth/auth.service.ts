@@ -215,11 +215,10 @@ export class AuthService {
         where: { id: user.id },
         data: {
           emailVerifiedAt: verifiedAt,
-          // Registration verify should not auto-login; other OTP flows may.
-          ...(isRegistrationOtp ? {} : { lastLogin: verifiedAt })
+          lastLogin: verifiedAt
         }
       });
-    } else if (!isRegistrationOtp) {
+    } else {
       await this.prisma.user.update({
         where: { id: user.id },
         data: { lastLogin: verifiedAt }
@@ -239,14 +238,29 @@ export class AuthService {
       }
     });
 
-    // After registration OTP: email is verified — candidate must sign in next.
+    // After the registration code: sign them straight in.
+    //
+    // This used to return "Please sign in to continue" with no token, so a
+    // student who had just typed a code out of their inbox was sent back to
+    // type their email and password again. The code proves the same inbox a
+    // password would, so the second form asked for nothing new — it was pure
+    // drop-off at the first step of the funnel.
     if (isRegistrationOtp) {
+      const accessToken = await this.issueAccessToken(user, context);
+      const access = await this.getCandidateAccessState(user.id, user.role);
       return {
-        message: "OTP verified. Your email is confirmed. Please sign in to continue.",
+        message: "Email confirmed. You're signed in.",
+        accessToken,
+        role: user.role,
         email: user.email,
         name: user.name,
         requiresOtp: false,
-        verified: true
+        verified: true,
+        requiresPlanActivation: access.requiresPlanActivation,
+        activationUrl: access.activationUrl,
+        accessGranted: access.accessGranted,
+        accessExpired: access.accessExpired,
+        expiresInDays: access.expiresInDays
       };
     }
 

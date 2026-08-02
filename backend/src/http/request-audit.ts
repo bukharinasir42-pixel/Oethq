@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import type { RequestAuditContext } from "../common/http/request-context";
+import { deviceContextFromRequest, type RequestAuditContext } from "../common/http/request-context";
 
 export function auditContextFromRequest(req: Request): RequestAuditContext {
   const forwarded = req.headers["x-forwarded-for"];
@@ -15,6 +15,11 @@ export function auditContextFromRequest(req: Request): RequestAuditContext {
     ipAddress: forwardedFor || req.ip || req.socket?.remoteAddress,
     userAgent: typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : undefined,
     actorUserId: user?.id,
-    actorEmail: user?.email
+    actorEmail: user?.email,
+    // Device id, fingerprint and CDN geo. Auth routes build their context HERE,
+    // not with buildRequestAuditContext — without this the sign-in path never
+    // sees x-device-id, no UserSession is ever created, and the two-device cap
+    // silently does nothing at all.
+    ...deviceContextFromRequest(req)
   };
 }
