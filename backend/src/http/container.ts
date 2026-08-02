@@ -4,6 +4,8 @@ import { PrismaService } from "../common/prisma.service";
 import { RateLimitService } from "../common/services/rate-limit.service";
 import { AuditService } from "../modules/audit/audit.service";
 import { AuthService } from "../modules/auth/auth.service";
+import { DeviceSessionService } from "../modules/auth/device-session.service";
+import { installSessionGuard } from "./middleware";
 import { BlogsService } from "../modules/blogs/blogs.service";
 import { HowToIntroductionService } from "../modules/how-to-introduction/how-to-introduction.service";
 import { WebsiteHomeService } from "../modules/website-home/website-home.service";
@@ -39,6 +41,7 @@ export type AppContainer = {
   emailService: EmailService;
   auditService: AuditService;
   authService: AuthService;
+  deviceSessions: DeviceSessionService;
   stripeService: StripeService;
   subscriptionsService: SubscriptionsService;
   usersService: UsersService;
@@ -77,7 +80,11 @@ export function createAppContainer(): AppContainer {
   const rateLimit = new RateLimitService();
   const emailService = new EmailService(appConfig);
   const auditService = new AuditService(prisma);
-  const authService = new AuthService(prisma, jwtHelper, appConfig, emailService, auditService);
+  const deviceSessions = new DeviceSessionService(prisma);
+  // Global, so none of the 23 routers that call requireAuth can opt out of the
+  // session check by omission.
+  installSessionGuard((sid) => deviceSessions.isLive(sid));
+  const authService = new AuthService(prisma, jwtHelper, appConfig, emailService, auditService, deviceSessions);
   const stripeService = new StripeService(appConfig);
   const subscriptionsService = new SubscriptionsService(prisma, authService, appConfig, auditService, stripeService);
   const productsService = new ProductsService(prisma);
@@ -122,6 +129,7 @@ export function createAppContainer(): AppContainer {
     emailService,
     auditService,
     authService,
+    deviceSessions,
     stripeService,
     subscriptionsService,
     usersService,

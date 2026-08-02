@@ -21,6 +21,7 @@ import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import * as bcrypt from "bcrypt";
 import { OTPPurpose, PlanTier, Role, SubscriptionStatus } from "@prisma/client";
 import { AuditService } from "../audit/audit.service";
+import { DeviceSessionService } from "./device-session.service";
 import { EmailService } from "../email/email.service";
 import {
   calendarDaysRemaining,
@@ -40,8 +41,35 @@ export class AuthService {
     private readonly jwtHelper: JwtHelper,
     private readonly configService: AppConfig,
     private readonly emailService: EmailService,
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    private readonly deviceSessions?: DeviceSessionService
   ) {}
+
+
+  /**
+   * Issue an access token bound to this device's session.
+   *
+   * Every path that signs a user in goes through here, so no route can hand out
+   * a token that escapes the device cap or that cannot later be revoked.
+   * `deviceId` comes from the x-device-id header the browser sends; when it is
+   * missing (an old client, or a non-browser caller) we fall back to a stateless
+   * token so nobody is locked out by the upgrade.
+   */
+  private async issueAccessToken(user: { id: string; role: Role }, context?: RequestAuditContext) {
+    const deviceId = context?.deviceId?.trim();
+    if (!deviceId || !this.deviceSessions) {
+      return this.jwtHelper.signAsync({ sub: user.id, role: user.role });
+    }
+    const sid = await this.deviceSessions.open({
+      userId: user.id,
+      role: user.role,
+      deviceId,
+      fingerprint: context?.fingerprint ?? null,
+      userAgent: context?.userAgent ?? null,
+      ip: context?.ipAddress ?? null
+    });
+    return this.jwtHelper.signAsync({ sub: user.id, role: user.role, sid });
+  }
 
   async register(dto: RegisterDto, context?: RequestAuditContext) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
@@ -129,10 +157,7 @@ export class AuthService {
     });
 
     // Paid plans start only after purchase activation OTP. Free trial is opt-in from packages.
-    const accessToken = await this.jwtHelper.signAsync({
-      sub: user.id,
-      role: user.role
-    });
+    const accessToken = await this.issueAccessToken(user, context);
 
     const access = await this.getCandidateAccessState(user.id, user.role);
 
@@ -229,10 +254,7 @@ export class AuthService {
       await this.activateStarterSubscriptionIfNeeded(user.id);
     }
 
-    const accessToken = await this.jwtHelper.signAsync({
-      sub: user.id,
-      role: user.role
-    });
+    const accessToken = await this.issueAccessToken(user, context);
 
     return {
       message:
@@ -285,10 +307,7 @@ export class AuthService {
         );
       }
 
-      const accessToken = await this.jwtHelper.signAsync({
-        sub: user.id,
-        role: user.role
-      });
+      const accessToken = await this.issueAccessToken(user, context);
       return {
         message: "This plan is already activated. Your access window is still open.",
         accessToken,
@@ -346,10 +365,7 @@ export class AuthService {
       }
     });
 
-    const accessToken = await this.jwtHelper.signAsync({
-      sub: user.id,
-      role: user.role
-    });
+    const accessToken = await this.issueAccessToken(user, context);
 
     return {
       message: `OTP verified. Your ${plan.durationDays || 60}-day access window has started.`,
@@ -642,6 +658,34 @@ export class AuthService {
     }
   }
 
+
+  /**
+   * Open a purchased plan's access window now. Returns the days granted, or null
+   * if the plan row has gone. Shared by the activation-OTP path and the
+   * already-verified fast path, so the window is started one way only.
+   */
+  private async startPlanWindow(subscriptionId: string): Promise<number | null> {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { id: subscriptionId },
+      include: { plan: true }
+    });
+    if (!subscription?.plan) return null;
+    const now = new Date();
+    const days = subscription.plan.durationDays || 60;
+    const endDate = new Date(now.getTime() + days * 86_400_000);
+    await this.prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        status: SubscriptionStatus.ACTIVE,
+        startDate: now,
+        endDate,
+        otpVerifiedAt: now
+      }
+    });
+    this.logger.log(`plan window opened without a second OTP: subscription=${subscription.id} (${days}d)`);
+    return days;
+  }
+
   private async getPendingPaidActivation(userId: string) {
     const subscriptions = await this.prisma.subscription.findMany({
       where: { userId },
@@ -706,6 +750,29 @@ export class AuthService {
 
     const pending = await this.getPendingPaidActivation(userId);
     if (pending) {
+      // A student whose email is already verified has proved they own the inbox.
+      // Making them find a SECOND code before their paid plan starts adds a step
+      // that establishes nothing new, and it is the step most people abandon on.
+      // Start the window here instead and let them straight in.
+      //
+      // Set REQUIRE_PLAN_ACTIVATION_OTP=1 to restore the old two-code flow.
+      const stillRequireOtp = this.configService.get("REQUIRE_PLAN_ACTIVATION_OTP") === "1";
+      const emailVerified = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { emailVerifiedAt: true }
+      });
+      if (!stillRequireOtp && emailVerified?.emailVerifiedAt) {
+        const started = await this.startPlanWindow(pending.id);
+        if (started) {
+          return {
+            accessGranted: true,
+            accessExpired: false,
+            requiresPlanActivation: false,
+            activationUrl: undefined as string | undefined,
+            expiresInDays: started
+          };
+        }
+      }
       return {
         accessGranted: false,
         accessExpired: false,

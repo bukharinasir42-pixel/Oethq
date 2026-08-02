@@ -9,7 +9,7 @@ import {
 import type { JwtHelper } from "../common/jwt-helper";
 import type { RateLimitService } from "../common/services/rate-limit.service";
 
-export type AuthedRequest = Request & { user: { id: string; role: Role } };
+export type AuthedRequest = Request & { user: { id: string; role: Role; sessionId?: string } };
 
 export function asyncHandler(
   fn: (req: Request, res: Response, next: NextFunction) => void | Promise<void>
@@ -19,6 +19,16 @@ export function asyncHandler(
   };
 }
 
+/**
+ * Installed once at startup by the container. Kept module-level deliberately:
+ * 23 routers call requireAuth, and a per-router opt-in would mean one forgotten
+ * call site silently exempts a whole surface from session checks.
+ */
+let sessionGuard: ((sessionId: string) => Promise<boolean>) | null = null;
+export function installSessionGuard(fn: (sessionId: string) => Promise<boolean>) {
+  sessionGuard = fn;
+}
+
 export function requireAuth(jwt: JwtHelper) {
   return asyncHandler(async (req, _res, next) => {
     const authz = req.headers.authorization;
@@ -26,13 +36,21 @@ export function requireAuth(jwt: JwtHelper) {
     if (!token) {
       throw new UnauthorizedException("Unauthorized");
     }
+    let payload: { sub: string; role: Role; sid?: string };
     try {
-      const payload = await jwt.verifyAsync<{ sub: string; role: Role }>(token);
-      (req as AuthedRequest).user = { id: payload.sub, role: payload.role };
-      next();
+      payload = await jwt.verifyAsync<{ sub: string; role: Role; sid?: string }>(token);
     } catch {
       throw new UnauthorizedException("Invalid or expired token");
     }
+    // Tokens issued before sessions existed carry no `sid`. They stay valid
+    // until they expire so nobody is thrown out by the deploy itself.
+    if (payload.sid && sessionGuard && !(await sessionGuard(payload.sid))) {
+      const err = new UnauthorizedException("This session has ended. Please sign in again.");
+      (err as unknown as { code?: string }).code = "SESSION_ENDED";
+      throw err;
+    }
+    (req as AuthedRequest).user = { id: payload.sub, role: payload.role, sessionId: payload.sid };
+    next();
   });
 }
 

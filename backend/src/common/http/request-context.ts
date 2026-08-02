@@ -6,6 +6,13 @@ export type RequestAuditContext = {
   userAgent?: string;
   actorUserId?: string;
   actorEmail?: string;
+  /**
+   * Browser-generated device id (x-device-id). Rides along here so every
+   * existing caller carries it without a new parameter on 20-odd signatures.
+   */
+  deviceId?: string;
+  /** Hash of stable browser traits (x-device-fp). */
+  fingerprint?: string;
 };
 
 type CurrentUserLike = {
@@ -32,6 +39,8 @@ export function buildRequestAuditContext(
     ipAddress,
     userAgent: req.get("user-agent") || undefined,
     actorUserId: currentUser?.userId || requestUser?.userId,
-    actorEmail: currentUser?.email || requestUser?.email
+    actorEmail: currentUser?.email || requestUser?.email,
+    deviceId: firstForwardedValue(req.headers["x-device-id"]) || undefined,
+    fingerprint: firstForwardedValue(req.headers["x-device-fp"]) || undefined
   };
 }

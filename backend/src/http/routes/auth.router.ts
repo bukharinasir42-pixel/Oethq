@@ -9,7 +9,7 @@ import { ResendActivationOtpDto } from "../../modules/auth/dto/resend-activation
 import { ActivateSubscriptionDto } from "../../modules/auth/dto/activate-subscription.dto";
 import { VerifyOtpDto } from "../../modules/auth/dto/verify-otp.dto";
 import type { AppContainer } from "../container";
-import { asyncHandler, rateLimitMiddleware, requireAuth } from "../middleware";
+import { asyncHandler, rateLimitMiddleware, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
 import { auditContextFromRequest } from "../request-audit";
 import { validateDto } from "../validation";
 
@@ -124,6 +124,39 @@ export function createAuthRouter(c: AppContainer) {
       res.json(out);
     })
   );
+
+  // Sign out THIS device. Ends the session server-side so the token cannot be
+  // replayed, which a stateless bearer token never allowed.
+  r.post(
+    "/logout",
+    requireAuth(c.jwtHelper),
+    asyncHandler(async (req, res) => {
+      const sid = (req as AuthedRequest).user.sessionId;
+      if (sid) await c.deviceSessions.revoke(sid, "signed_out");
+      res.json({ ok: true });
+    })
+  );
+
+  // Admin: the student's devices, with the eviction count that flags sharing.
+  r.get(
+    "/admin/users/:userId/devices",
+    requireAuth(c.jwtHelper),
+    requireAdmin(),
+    asyncHandler(async (req, res) => {
+      res.json(await c.deviceSessions.listForUser(String(req.params.userId)));
+    })
+  );
+
+  // Admin: sign a student out of every device.
+  r.delete(
+    "/admin/users/:userId/devices",
+    requireAuth(c.jwtHelper),
+    requireAdmin(),
+    asyncHandler(async (req, res) => {
+      res.json(await c.deviceSessions.revokeAllForUser(String(req.params.userId), "admin_revoked"));
+    })
+  );
+
 
   return r;
 }

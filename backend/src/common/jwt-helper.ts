@@ -8,6 +8,10 @@ export type JwtSignPayload = Record<string, unknown>;
 export class JwtHelper {
   constructor(
     private readonly secret: string,
+    // Matches the UserSession window (SESSION_DAYS). Unchanged at 7 days, but it
+    // no longer means a weekly logout: the session slides forward on every
+    // request, so this is 7 days of INACTIVITY. An active student is never
+    // signed out; an abandoned session on a shared computer closes itself.
     private readonly defaultExpiresIn: string | number = "7d"
   ) {}
 

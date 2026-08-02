@@ -1,4 +1,5 @@
 import { getBackendOrigin } from "./backend-origin";
+import { deviceHeaders } from "@/lib/device-id";
 import type { UserProfile } from "./types";
 
 /**
@@ -222,6 +223,10 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   warnIfApiBasePointsAtThisNextApp();
   const { body, token, ...rest } = options;
   const headers: Record<string, string> = {
+    // Device identity travels on every call: the server matches the stored id
+    // first, then the fingerprint, to decide which of the student's two device
+    // slots this is.
+    ...deviceHeaders(),
     ...rest.headers
   };
   if (body !== undefined) {
@@ -267,7 +272,7 @@ export async function apiUpload<T>(
   }
 
   warnIfApiBasePointsAtThisNextApp();
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...deviceHeaders() };
   const bearer = options.token === undefined ? getToken() : options.token;
   if (bearer) headers.Authorization = `Bearer ${bearer}`;
 
@@ -365,7 +370,14 @@ export function signOut(redirectTo = "/") {
 export function isAuthErrorMessage(message: string | undefined): boolean {
   if (!message) return false;
   const lower = message.toLowerCase();
-  return lower.includes("unauthorized") || lower.includes("invalid or expired token");
+  return (
+    lower.includes("unauthorized") ||
+    lower.includes("invalid or expired token") ||
+    // Session ended: signed out elsewhere, or this device was quietly replaced
+    // because the account reached its device limit. Treated as a plain
+    // sign-out — the student sees the login screen, not an error about devices.
+    lower.includes("this session has ended")
+  );
 }
 
 export async function persistAuthSession(

@@ -192,6 +192,44 @@ model User {
   cohortWarnings   CohortWarning[]
   cohortReports    CohortWeeklyReport[]
   cohortChatMessages CohortChatMessage[]
+  sessions           UserSession[]
+}
+
+/// One signed-in device. The JWT carries this row's id, so a session can be
+/// ended server-side — which a stateless bearer token could not do — and so the
+/// number of devices per student can be capped.
+///
+/// `deviceId` is generated in the browser and kept in localStorage, so clearing
+/// site data or using a private window reads as a new device. That is the
+/// intended trade-off: no fingerprinting, nothing invasive, and a shared clinic
+/// computer does not silently merge two students into one device.
+model UserSession {
+  id         String    @id @default(uuid())
+  userId     String
+  deviceId   String
+  /// Hash of stable browser traits (platform, screen, timezone, renderer...).
+  /// Clearing site data mints a new deviceId; the fingerprint lets that session
+  /// be RE-LINKED to the same device instead of burning a second slot — and it
+  /// makes the cap meaningfully harder to sidestep with a private window.
+  fingerprint String?
+  /// Best-effort human label ("Chrome on Windows") for the admin device list.
+  label      String?
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  /// Set when the session ends: signed out, evicted by the device cap, or
+  /// revoked by an admin. Never deleted — the history is the sharing signal.
+  revokedAt  DateTime?
+  revokedReason String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId, fingerprint])
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
 }
 
 model Plan {
