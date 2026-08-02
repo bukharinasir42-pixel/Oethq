@@ -21,7 +21,7 @@ import {
   Tag,
   UserSquare,
   Users,
-  Video
+  Video, MonitorSmartphone
 } from "lucide-react";
 import { WorkspaceShellFrame } from "@/components/layout/workspace-shell-frame";
 import type { UserProfile } from "@/lib/types";
@@ -46,6 +46,7 @@ const links = [
   { href: "/admin/accountability", label: "Accountability", icon: CalendarCheck },
   { href: "/admin/users", label: "All Users", icon: UserSquare },
   { href: "/admin/security", label: "Exam Security", icon: ShieldAlert },
+  { href: "/admin/device-audit", label: "Device Audit", icon: MonitorSmartphone },
   { href: "/admin/progress", label: "Progress", icon: Activity }
 ];
 

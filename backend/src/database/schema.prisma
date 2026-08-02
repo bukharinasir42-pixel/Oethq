@@ -216,6 +216,10 @@ model UserSession {
   label      String?
   userAgent  String?
   ip         String?
+  /// ISO country + city, read from the CDN's geo headers at sign-in. Null when
+  /// the deployment sits behind a proxy that does not inject them.
+  country    String?
+  city       String?
   createdAt  DateTime  @default(now())
   lastSeenAt DateTime  @default(now())
   expiresAt  DateTime
@@ -228,6 +232,7 @@ model UserSession {
 
   @@unique([userId, deviceId])
   @@index([userId, fingerprint])
+  @@index([userId, country])
   @@index([userId, revokedAt])
   @@index([expiresAt])
 }

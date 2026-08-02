@@ -66,7 +66,9 @@ export class AuthService {
       deviceId,
       fingerprint: context?.fingerprint ?? null,
       userAgent: context?.userAgent ?? null,
-      ip: context?.ipAddress ?? null
+      ip: context?.ipAddress ?? null,
+      country: context?.country ?? null,
+      city: context?.city ?? null
     });
     return this.jwtHelper.signAsync({ sub: user.id, role: user.role, sid });
   }

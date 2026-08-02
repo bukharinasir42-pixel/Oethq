@@ -91,6 +91,8 @@ type OpenInput = {
   fingerprint?: string | null;
   userAgent?: string | null;
   ip?: string | null;
+  country?: string | null;
+  city?: string | null;
 };
 
 export class DeviceSessionService {
@@ -136,6 +138,8 @@ export class DeviceSessionService {
           label,
           userAgent: input.userAgent ?? existing.userAgent,
           ip: input.ip ?? existing.ip,
+          country: input.country ?? existing.country,
+          city: input.city ?? existing.city,
           lastSeenAt: now,
           expiresAt,
           revokedAt: null,
@@ -160,6 +164,8 @@ export class DeviceSessionService {
         label,
         userAgent: input.userAgent ?? null,
         ip: input.ip ?? null,
+        country: input.country ?? null,
+        city: input.city ?? null,
         expiresAt
       }
     });
@@ -241,6 +247,115 @@ export class DeviceSessionService {
     return { ended: rows.length };
   }
 
+
+  /**
+   * Accounts that look shared, worst first.
+   *
+   * Nothing here is proof, and the code says so rather than pretending: these
+   * are signals, each with the reason spelled out, so a person decides. The
+   * strongest by far is two countries — a student does not study from Lahore and
+   * Manila in the same week. Evictions come next: the cap only pushes a device
+   * out when a third one signs in, so a steady stream means people are taking
+   * turns. Distinct hardware (fingerprints) and IP spread fill in the picture.
+   *
+   * `minScore` filters the noise; the default surfaces only accounts with at
+   * least one real signal.
+   */
+  async sharingReport(opts?: { minScore?: number; limit?: number }) {
+    const minScore = opts?.minScore ?? 2;
+    const limit = opts?.limit ?? 200;
+    const now = new Date();
+
+    const rows = await this.prisma.userSession.findMany({
+      where: { user: { role: Role.CANDIDATE } },
+      orderBy: { lastSeenAt: "desc" },
+      select: {
+        userId: true, deviceId: true, fingerprint: true, label: true, ip: true,
+        country: true, city: true, createdAt: true, lastSeenAt: true,
+        expiresAt: true, revokedAt: true, revokedReason: true,
+        user: { select: { id: true, name: true, email: true, suspendedAt: true } }
+      }
+    });
+
+    type Acc = {
+      userId: string; name: string; email: string; suspended: boolean;
+      devices: number; liveDevices: number; evictions: number;
+      countries: Set<string>; cities: Set<string>; ips: Set<string>; hardware: Set<string>;
+      lastSeenAt: Date;
+    };
+    const byUser = new Map<string, Acc>();
+    for (const r of rows) {
+      let a = byUser.get(r.userId);
+      if (!a) {
+        a = {
+          userId: r.userId,
+          name: r.user.name,
+          email: r.user.email,
+          suspended: Boolean(r.user.suspendedAt),
+          devices: 0, liveDevices: 0, evictions: 0,
+          countries: new Set(), cities: new Set(), ips: new Set(), hardware: new Set(),
+          lastSeenAt: r.lastSeenAt
+        };
+        byUser.set(r.userId, a);
+      }
+      a.devices += 1;
+      if (!r.revokedAt && r.expiresAt > now) a.liveDevices += 1;
+      if (r.revokedReason === "device_limit") a.evictions += 1;
+      if (r.country) a.countries.add(r.country);
+      if (r.city) a.cities.add(r.city);
+      if (r.ip) a.ips.add(r.ip);
+      if (r.fingerprint) a.hardware.add(r.fingerprint);
+      if (r.lastSeenAt > a.lastSeenAt) a.lastSeenAt = r.lastSeenAt;
+    }
+
+    const scored = [...byUser.values()].map((a) => {
+      const reasons: string[] = [];
+      let score = 0;
+      if (a.countries.size > 1) {
+        score += 4 * (a.countries.size - 1);
+        reasons.push(`Signed in from ${a.countries.size} countries (${[...a.countries].join(", ")})`);
+      }
+      if (a.evictions >= 5) {
+        score += 4;
+        reasons.push(`${a.evictions} devices pushed out by the 2-device limit`);
+      } else if (a.evictions >= 2) {
+        score += 2;
+        reasons.push(`${a.evictions} devices pushed out by the 2-device limit`);
+      }
+      if (a.hardware.size > 3) {
+        score += 2;
+        reasons.push(`${a.hardware.size} different machines`);
+      }
+      if (a.ips.size > 6) {
+        score += 1;
+        reasons.push(`${a.ips.size} different IP addresses`);
+      }
+      if (a.cities.size > 2) {
+        score += 1;
+        reasons.push(`${a.cities.size} cities (${[...a.cities].slice(0, 4).join(", ")})`);
+      }
+      return {
+        userId: a.userId, name: a.name, email: a.email, suspended: a.suspended,
+        devices: a.devices, liveDevices: a.liveDevices, evictions: a.evictions,
+        countries: [...a.countries], cities: [...a.cities],
+        ipCount: a.ips.size, hardwareCount: a.hardware.size,
+        lastSeenAt: a.lastSeenAt.toISOString(),
+        score,
+        risk: score >= 6 ? "high" : score >= 3 ? "medium" : score > 0 ? "low" : "none",
+        reasons
+      };
+    });
+
+    const flagged = scored.filter((r) => r.score >= minScore).sort((a, b) => b.score - a.score).slice(0, limit);
+    return {
+      generatedAt: now.toISOString(),
+      /** True when no session has ever recorded a country — see the geo note. */
+      geoUnavailable: rows.length > 0 && rows.every((r) => !r.country),
+      totalAccounts: scored.length,
+      flagged
+    };
+  }
+
   /**
    * Admin device list for one student. Returns live sessions first, then the
    * history — `evictions` is the number of times the cap pushed a device out,
@@ -257,6 +372,9 @@ export class DeviceSessionService {
       id: r.id,
       label: r.label ?? describeDevice(r.userAgent),
       ip: r.ip,
+      country: r.country,
+      city: r.city,
+      fingerprint: r.fingerprint,
       createdAt: r.createdAt.toISOString(),
       lastSeenAt: r.lastSeenAt.toISOString(),
       expiresAt: r.expiresAt.toISOString(),

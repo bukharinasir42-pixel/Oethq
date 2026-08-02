@@ -116,3 +116,59 @@ describe("DeviceSessionService", () => {
     expect(DEVICE_LIMIT).toBe(2);
   });
 });
+
+describe("sharingReport", () => {
+  const sess = (o: Partial<Record<string, unknown>> & { userId: string }) => ({
+    deviceId: "d", fingerprint: "fp", label: "Chrome on Windows", ip: "1.1.1.1",
+    country: null, city: null, createdAt: new Date(), lastSeenAt: new Date(),
+    expiresAt: new Date(Date.now() + 86_400_000), revokedAt: null, revokedReason: null,
+    user: { id: o.userId, name: "S", email: "s@x.com", suspendedAt: null },
+    ...o
+  });
+
+  const svcWith = (rows: unknown[]) =>
+    new DeviceSessionService({
+      userSession: { findMany: jest.fn().mockResolvedValue(rows) }
+    } as unknown as PrismaService);
+
+  it("flags an account used from two countries", async () => {
+    const svc = svcWith([
+      sess({ userId: "u1", country: "PK", fingerprint: "a", ip: "1.1.1.1" }),
+      sess({ userId: "u1", country: "PH", fingerprint: "b", ip: "2.2.2.2" })
+    ]);
+    const r = await svc.sharingReport();
+    expect(r.flagged).toHaveLength(1);
+    expect(r.flagged[0].risk).toBe("medium");
+    expect(r.flagged[0].reasons[0]).toMatch(/2 countries/);
+  });
+
+  it("does not flag one student on a phone and a laptop", async () => {
+    // The false positive that would matter most: two devices, one country, no
+    // evictions. Flagging this would mean accusing ordinary paying students.
+    const svc = svcWith([
+      sess({ userId: "u2", country: "PK", fingerprint: "phone", ip: "1.1.1.1" }),
+      sess({ userId: "u2", country: "PK", fingerprint: "laptop", ip: "1.1.1.1" })
+    ]);
+    await expect(svc.sharingReport()).resolves.toMatchObject({ flagged: [] });
+  });
+
+  it("flags repeated evictions even with no country data", async () => {
+    const rows = Array.from({ length: 6 }, (_, i) =>
+      sess({ userId: "u3", revokedAt: new Date(), revokedReason: "device_limit", fingerprint: `fp${i}` })
+    );
+    const r = await svc0(rows).sharingReport();
+    expect(r.flagged[0].evictions).toBe(6);
+    expect(r.flagged[0].risk).toBe("high");
+  });
+
+  it("reports when geo data is absent so the UI can say so", async () => {
+    const r = await svc0([sess({ userId: "u4" })]).sharingReport();
+    expect(r.geoUnavailable).toBe(true);
+  });
+
+  function svc0(rows: unknown[]) {
+    return new DeviceSessionService({
+      userSession: { findMany: jest.fn().mockResolvedValue(rows) }
+    } as unknown as PrismaService);
+  }
+});

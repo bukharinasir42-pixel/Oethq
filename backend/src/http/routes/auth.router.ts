@@ -137,6 +137,29 @@ export function createAuthRouter(c: AppContainer) {
     })
   );
 
+  // Admin: accounts that look shared, worst first.
+  r.get(
+    "/admin/device-audit",
+    requireAuth(c.jwtHelper),
+    requireAdmin(),
+    asyncHandler(async (req, res) => {
+      const raw = Number(req.query.minScore);
+      const minScore = Number.isFinite(raw) && raw >= 0 ? raw : undefined;
+      res.json(await c.deviceSessions.sharingReport({ minScore }));
+    })
+  );
+
+  // Admin: end one device.
+  r.delete(
+    "/admin/devices/:sessionId",
+    requireAuth(c.jwtHelper),
+    requireAdmin(),
+    asyncHandler(async (req, res) => {
+      await c.deviceSessions.revoke(String(req.params.sessionId), "admin_revoked");
+      res.json({ ok: true });
+    })
+  );
+
   // Admin: the student's devices, with the eviction count that flags sharing.
   r.get(
     "/admin/users/:userId/devices",
