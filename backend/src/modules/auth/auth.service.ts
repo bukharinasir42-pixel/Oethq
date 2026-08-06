@@ -1,4 +1,5 @@
 import type { AppConfig } from "../../common/app-config";
+import { resolveAppUrl } from "../../common/app-url";
 import {
   BadRequestException,
   ForbiddenException,
@@ -909,6 +910,6 @@ export class AuthService {
   }
 
   private getDefaultPortalUrl() {
-    return `${this.configService.get<string>("NEXT_PUBLIC_APP_URL") || "http://localhost:3000"}/portal`;
+    return `${resolveAppUrl((k) => this.configService.get<string>(k))}/portal`;
   }
 }

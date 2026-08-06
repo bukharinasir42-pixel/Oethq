@@ -9,6 +9,7 @@
  *  - weekly reports unique per (userId, periodStart)
  */
 import { CohortAttendance } from "@prisma/client";
+import { appLink } from "../../common/app-url";
 import { createLogger } from "../../common/logger";
 import type { PrismaService } from "../../common/prisma.service";
 import type { EmailService } from "../email/email.service";
@@ -130,7 +131,7 @@ private async ensureUpcomingSessions() {
         classLabel: isLecture ? "Class 1 · Daily Lecture" : "Class 2 · Core Skills Session",
         title: isLecture ? task.lectureTitle : task.articleTitle,
         localTime: formatLocal(rec.scheduledAt, sched.timezone),
-        portalUrl: `${process.env.FRONTEND_ORIGIN || ""}/portal/tasks`
+        portalUrl: appLink("/portal/tasks")
       });
       const result = await this.email.sendCohortMail(user.email, mail).catch((e: Error) => ({ error: e.message }));
       await this.prisma.$transaction([
@@ -175,7 +176,7 @@ private async ensureUpcomingSessions() {
         name: user.name,
         title: rec.slot === "LECTURE" ? task.lectureTitle : task.articleTitle,
         localTime: formatLocal(rec.scheduledAt, sched.timezone),
-        portalUrl: `${process.env.FRONTEND_ORIGIN || ""}/portal/tasks?day=${rec.dayNumber}`
+        portalUrl: appLink(`/portal/tasks?day=${rec.dayNumber}`)
       });
       const result = await this.email.sendCohortMail(user.email, mail).catch((e: Error) => ({ error: e.message }));
       await this.prisma.cohortNotificationLog.update({
@@ -227,7 +228,7 @@ private async ensureUpcomingSessions() {
       if (!claimed) continue;
       const mail = buildWarningEmail({
         name: user.name, missedCount: consecutive, strong: consecutive >= 3,
-        portalUrl: `${process.env.FRONTEND_ORIGIN || ""}/portal/tasks`
+        portalUrl: appLink("/portal/tasks")
       });
       await this.email.sendCohortMail(user.email, mail).catch(() => undefined);
       await this.prisma.cohortNotificationLog.update({
@@ -277,7 +278,7 @@ private async ensureUpcomingSessions() {
       if (user) {
         const mail = buildWeeklyReportEmail({
           name: user.name, ...data,
-          reportUrl: `${process.env.FRONTEND_ORIGIN || ""}/portal/tasks?report=${report.id}`
+          reportUrl: appLink(`/portal/tasks?report=${report.id}`)
         });
         const sent = await this.email.sendCohortMail(user.email, mail).catch(() => null);
         if (sent) {

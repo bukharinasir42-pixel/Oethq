@@ -2,7 +2,7 @@
 
 Branch: `claude/file-comparison-analysis-qin16k`
 
-24 commits. Five migrations. Everything here has been run against a real
+25 commits. Five migrations. Everything here has been run against a real
 Postgres and a real API, not just typechecked — see [Testing](#testing).
 
 ---
@@ -117,6 +117,16 @@ prefix. Admin routes belong in a root-mounted router.
 **Registration is rate-limited** to 20 per 5 minutes per IP, login to 30. Fine
 in production, surprising when you script against it.
 
+**Links that leave the server must use `appLink()`** (`common/app-url.ts`).
+The cohort emails built theirs from `process.env.FRONTEND_ORIGIN || ""` — a
+variable set nowhere and read nowhere else — so every class link went out as a
+bare path and arrived as `http:///portal/tasks?day=3`. `appLink()` never returns
+a relative URL. Do not hand-build an outbound link.
+
+**Set `NEXT_PUBLIC_APP_URL` in the backend environment.** It is what every
+outbound link resolves from. Without it links fall back to `http://localhost:3000`,
+which is obvious in an inbox — and obvious beats silently broken.
+
 **Access is never in the token.** Every gate re-reads `endDate > now` per
 request, which is why cancelling access takes effect on the student's next
 click. Do not "optimise" this into the JWT.
@@ -192,6 +202,8 @@ phone, PDFs on iOS Safari, or an email arriving. Those need a staging run.
    ever created.
 5. **A lost exam had a button that made it worse.** Autosave swallowed its
    errors and the failure screen restarted the attempt.
+6. **Every cohort email link was dead.** Built from an unset env var, so
+   students clicking their class link landed on `http:///portal/tasks?day=3`.
 
 ---
 

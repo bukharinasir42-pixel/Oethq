@@ -1,4 +1,5 @@
 import type { AppConfig } from "../../common/app-config";
+import { resolveAppUrl } from "../../common/app-url";
 import { BadRequestException, NotFoundException } from "../../common/http-exception";
 import { OTPPurpose, Role, SubscriptionStatus, AttemptStatus } from "@prisma/client";
 import * as bcrypt from "bcrypt";
@@ -292,7 +293,7 @@ export class UsersService {
     }
 
     const activationToken = randomUUID();
-    const appUrl = this.configService.get<string>("NEXT_PUBLIC_APP_URL") || "http://localhost:3000";
+    const appUrl = resolveAppUrl((k) => this.configService.get<string>(k));
     const params = new URLSearchParams({
       activation: activationToken,
       email: user.email,

@@ -1,4 +1,5 @@
 import type { AppConfig } from "../../common/app-config";
+import { resolveAppUrl } from "../../common/app-url";
 import { BadRequestException, NotFoundException } from "../../common/http-exception";
 import { createLogger } from "../../common/logger";
 import {
@@ -740,7 +741,7 @@ export class SubscriptionsService {
       }
     });
 
-    const appUrl = this.configService.get<string>("NEXT_PUBLIC_APP_URL") || "http://localhost:3000";
+    const appUrl = resolveAppUrl((k) => this.configService.get<string>(k));
 
     if (dto.provider === "STRIPE") {
       if (!this.stripeService.isConfigured()) {
@@ -1282,7 +1283,7 @@ export class SubscriptionsService {
   }
 
   private buildActivationUrl(token: string, email?: string, planTier?: PlanTier) {
-    const appUrl = this.configService.get<string>("NEXT_PUBLIC_APP_URL") || "http://localhost:3000";
+    const appUrl = resolveAppUrl((k) => this.configService.get<string>(k));
     const returnTo = planTier ? `/portal?activated=${planTier.toLowerCase()}` : "/portal?purchase=activated";
     const params = new URLSearchParams({
       activation: token,
