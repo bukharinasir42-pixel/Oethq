@@ -32,6 +32,16 @@ export class CreateCustomUserDto {
   @IsPositive()
   productDays?: number;
 
+  /**
+   * The candidate's profession. Optional here, but leaving it blank is what
+   * produced students with no profession at all — they opened Writing and were
+   * told to contact support. They can now set it themselves in the portal, but
+   * setting it here saves them the step.
+   */
+  @IsOptional()
+  @IsString()
+  profession?: string;
+
   @IsOptional()
   @IsString()
   @MinLength(8)

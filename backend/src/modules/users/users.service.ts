@@ -1,4 +1,5 @@
 import type { AppConfig } from "../../common/app-config";
+import { isValidProfession } from "../../common/professions";
 import { resolveAppUrl } from "../../common/app-url";
 import { BadRequestException, NotFoundException } from "../../common/http-exception";
 import { OTPPurpose, Role, SubscriptionStatus, AttemptStatus } from "@prisma/client";
@@ -278,6 +279,9 @@ export class UsersService {
           email: dto.email,
           role: Role.CANDIDATE,
           passwordHash,
+          // Optional. When blank the student picks it in the portal — before
+          // this they had no way to, and Writing told them to contact support.
+          profession: isValidProfession(dto.profession) ? dto.profession.trim() : null,
           // Admin-created invites are trusted; activation OTP still gates plan access.
           emailVerifiedAt: new Date()
         }

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   BookOpen, ClipboardCheck, ClipboardCopy, ClipboardList, Clock, FileText, Gauge, Headphones,
-  History, House, Mic, PenLine, Play, Podcast, SpellCheck, Target, TrendingUp, Trophy, type LucideIcon
+  History, House, Mic, PenLine, Play, Podcast, SpellCheck, Target, TrendingUp, Trophy, UserCog,
+  type LucideIcon
 } from "lucide-react";
 import { WorkspaceShellFrame } from "@/components/layout/workspace-shell-frame";
 import { PremiumPortalShell } from "@/components/portal/premium-portal-shell";
@@ -20,7 +21,8 @@ const baseLinks = [
   { href: "/portal/tasks", label: "Scheduled Cohort Lectures", icon: Clock, requiresComplete: true },
   { href: "/portal/dashboard", label: "Progress", icon: TrendingUp },
   { href: "/portal/results", label: "Results", icon: Trophy },
-  { href: "/portal/history", label: "Retake history", icon: History }
+  { href: "/portal/history", label: "Retake history", icon: History },
+  { href: "/portal/profile", label: "Your profile", icon: UserCog }
 ] as const;
 
 // Each course group expands to its skill's modules. `module` values map to the

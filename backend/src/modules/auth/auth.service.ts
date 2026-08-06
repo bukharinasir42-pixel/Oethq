@@ -23,6 +23,7 @@ import * as bcrypt from "bcrypt";
 import { OTPPurpose, PlanTier, Role, SubscriptionStatus } from "@prisma/client";
 import { AuditService } from "../audit/audit.service";
 import { DeviceSessionService } from "./device-session.service";
+import { isValidProfession } from "../../common/professions";
 import { EmailService } from "../email/email.service";
 import {
   calendarDaysRemaining,
@@ -590,6 +591,37 @@ export class AuthService {
     });
   }
 
+
+  /**
+   * A student setting or changing their own profession.
+   *
+   * Needed because an admin-created candidate has none: the "Create Candidate
+   * Access" form never collected one, so those students opened Writing and were
+   * told their profession was missing and to contact support — a dead end for
+   * something they can answer themselves.
+   *
+   * Validated against the canonical list rather than accepting free text. The
+   * value keys their writing case-note library and their Speaking sheet, so
+   * "nursing" or "Nurse" would leave them with an empty library and no reason
+   * why.
+   *
+   * Changing it is allowed. It re-points them at a different library; it does
+   * not touch letters they have already submitted, and their correction
+   * allowance is unaffected.
+   */
+  async setProfession(userId: string, profession: string) {
+    if (!isValidProfession(profession)) {
+      throw new BadRequestException("Choose a profession from the list");
+    }
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { profession: profession.trim() },
+      select: { id: true, email: true, name: true, role: true, profession: true }
+    });
+    this.logger.log(`profession set for user=${userId}`);
+    return user;
+  }
+
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -599,6 +631,7 @@ export class AuthService {
         name: true,
         role: true,
         emailVerifiedAt: true,
+        profession: true,
         subscriptions: {
           orderBy: { createdAt: "desc" },
           take: 1,

@@ -6,6 +6,7 @@
  * submission history: writing ID, total corrections and each letter's number.
  */
 import { useCallback, useEffect, useState } from "react";
+import { ProfessionPicker } from "@/components/portal/profession-picker";
 import Link from "next/link";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { PortalPageHead } from "@/components/portal/portal-primitives";
@@ -60,10 +61,9 @@ export default function PortalWritingPage() {
       {loadError ? (
         <section className="card card-pad" style={{ borderColor: "var(--bad)" }}><p style={{ color: "var(--bad)" }}>{loadError}</p></section>
       ) : !profession ? (
-        <section className="card card-pad" style={{ textAlign: "center" }}>
-          <h2 style={{ marginBottom: 8 }}>Profession not set</h2>
-          <p style={{ color: "var(--text)", lineHeight: 1.6 }}>Your account has no profession on file, so we can&apos;t show your case-note library. Please contact support to set it.</p>
-        </section>
+        // Was a dead end telling them to contact support. They can answer this
+        // themselves, and an admin-created account never had one to begin with.
+        <ProfessionPicker onSaved={() => void load()} />
       ) : (
         <div className="split">
           <div>

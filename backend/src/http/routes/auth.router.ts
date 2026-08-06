@@ -11,6 +11,7 @@ import { VerifyOtpDto } from "../../modules/auth/dto/verify-otp.dto";
 import type { AppContainer } from "../container";
 import { asyncHandler, rateLimitMiddleware, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
 import { auditContextFromRequest } from "../request-audit";
+import { PROFESSIONS } from "../../common/professions";
 import { validateDto } from "../validation";
 
 export function createAuthRouter(c: AppContainer) {
@@ -134,6 +135,21 @@ export function createAuthRouter(c: AppContainer) {
       const sid = (req as AuthedRequest).user.sessionId;
       if (sid) await c.deviceSessions.revoke(sid, "signed_out");
       res.json({ ok: true });
+    })
+  );
+
+  // The list the portal renders in its picker, so the two cannot drift.
+  r.get("/professions", asyncHandler(async (_req, res) => {
+    res.json({ professions: PROFESSIONS });
+  }));
+
+  // A student setting or changing their own profession.
+  r.patch(
+    "/me/profession",
+    requireAuth(c.jwtHelper),
+    asyncHandler(async (req, res) => {
+      const u = (req as AuthedRequest).user;
+      res.json(await c.authService.setProfession(u.id, String(req.body?.profession ?? "")));
     })
   );
 

@@ -3,6 +3,8 @@ export type UserProfile = {
   email: string;
   name: string;
   role: string;
+  /** Selects the writing case-note library and the Speaking sheet they see. */
+  profession?: string | null;
   subscriptions: {
     status: string;
     startDate: string | null;

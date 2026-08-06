@@ -15,6 +15,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Download, FileText, Loader2, Lock, Mic } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
+import { ProfessionPicker } from "@/components/portal/profession-picker";
 import { WorkspaceAccessDeniedState, WorkspaceErrorAlert, WorkspaceLoadingState } from "@/components/layout/workspace-states";
 import { useSession } from "@/hooks/use-session";
 import { apiFetch } from "@/lib/api";
@@ -103,6 +104,10 @@ export default function SpeakingHackSentencesPage() {
             Speaking lectures and hack sentences come with the Complete Material, alongside all four skills.
           </p>
         </section>
+      ) : !data?.profession ? (
+        // No profession on the account: they cannot be served the right sheet.
+        // Same self-serve fix as Writing rather than a support ticket.
+        <ProfessionPicker onSaved={() => void load()} />
       ) : (data?.items.length ?? 0) === 0 ? (
         <section className="mx-auto max-w-lg rounded-[18px] border border-border bg-card p-8 text-center shadow-[var(--shadow-card)]">
           <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(var(--primary-deep))] text-white">

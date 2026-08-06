@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/hooks/use-session";
+import { PROFESSIONS } from "@/lib/profile-options";
 import { apiFetch } from "@/lib/api";
 import { sendActivationEmail } from "@/lib/emailjs";
 import type { CreatedCustomUserDto, PlanDto, SubscribedUserDto } from "@/lib/types";
@@ -43,11 +44,15 @@ const EMPTY_PLAN = "__select_plan__";
 
 const NO_PLAN = "__no_plan__";
 
+const NO_PROFESSION = "__no_profession__";
+
 type CustomUserFormValues = {
   name: string;
   email: string;
   /** "" / NO_PLAN = no Complete Course; the candidate gets individual packages only. */
   planId: string;
+  /** The candidate's profession. Blank is fine — they can pick it in the portal. */
+  profession: string;
   /** Slugs of the individual (standalone) packages to grant. */
   productSlugs: string[];
   /** Optional override for how long those packages last; blank = each product's own duration. */
@@ -90,6 +95,7 @@ export default function SubscribedUsersPage() {
     defaultValues: {
       name: "",
       email: "",
+      profession: "",
       planId: "",
       productSlugs: [],
       productDays: "",
@@ -218,6 +224,8 @@ export default function SubscribedUsersPage() {
         body: {
           name: values.name,
           email: values.email,
+          // Optional. Left blank, the student picks it in their portal.
+          profession: values.profession || undefined,
           // Either may be omitted, but not both — the API rejects an empty grant.
           planId: values.planId && values.planId !== NO_PLAN ? values.planId : undefined,
           productSlugs: values.productSlugs.length ? values.productSlugs : undefined,
@@ -555,6 +563,32 @@ export default function SubscribedUsersPage() {
                     <FormControl>
                       <Input type="email" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="profession"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profession <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
+                    <Select
+                      value={field.value || NO_PROFESSION}
+                      onValueChange={(v) => field.onChange(v === NO_PROFESSION ? "" : v)}
+                    >
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select profession" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NO_PROFESSION}>Let the student choose</SelectItem>
+                        {PROFESSIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Decides which writing case notes and Speaking sheets they see. Leave it and they pick
+                      it themselves on first use.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
