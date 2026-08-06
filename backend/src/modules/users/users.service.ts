@@ -67,6 +67,7 @@ export class UsersService {
         id: true,
         name: true,
         email: true,
+        profession: true,
         subscriptions: {
           where: {
             status: {
@@ -123,6 +124,7 @@ export class UsersService {
           startDate: subscription.startDate,
           endDate: subscription.endDate,
           currentBand: bandByUser.get(user.id) ?? null,
+          profession: user.profession,
           courses: user.entitlements
             .filter((e) => e.entitlementKey !== "complete" && e.product)
             .map((e) => ({

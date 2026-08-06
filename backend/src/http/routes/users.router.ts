@@ -81,5 +81,23 @@ export function createUsersRouter(c: AppContainer) {
     })
   );
 
+  // Admin: change a student's profession. Takes effect on their next request —
+  // their case-note library and Speaking sheet are both read from this value.
+  r.patch(
+    "/admin/users/:userId/profession",
+    requireAuth(c.jwtHelper),
+    requireAdmin(),
+    asyncHandler(async (req, res) => {
+      res.json(
+        await c.authService.adminSetProfession(
+          String(req.params.userId),
+          String(req.body?.profession ?? ""),
+          auditContextFromRequest(req)
+        )
+      );
+    })
+  );
+
+
   return r;
 }

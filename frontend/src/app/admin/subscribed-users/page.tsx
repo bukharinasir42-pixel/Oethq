@@ -150,10 +150,10 @@ export default function SubscribedUsersPage() {
   const visibleUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
     return subscribedUsers.filter((u) => {
-      // Name, email, plan and course names all match — an admin searching
-      // "nursing" or "elite" means the same thing as searching a person.
+      // Name, email, profession, plan and course names all match — an admin
+      // searching "nursing" or "elite" means the same thing as searching a person.
       if (q) {
-        const haystack = [u.name, u.email, u.plan.name, ...(u.courses ?? []).map((c) => c.name)]
+        const haystack = [u.name, u.email, u.profession, u.plan.name, ...(u.courses ?? []).map((c) => c.name)]
           .join(" ")
           .toLowerCase();
         if (!haystack.includes(q)) return false;
@@ -430,6 +430,7 @@ export default function SubscribedUsersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Candidate</TableHead>
+                    <TableHead>Profession</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Courses</TableHead>
                     <TableHead>Tier</TableHead>
@@ -448,6 +449,14 @@ export default function SubscribedUsersPage() {
                           <p className="font-medium text-foreground">{user.name}</p>
                           <p className="text-xs text-muted-foreground">{user.email}</p>
                         </div>
+                      </TableCell>
+                      {/* Visible at a glance because it decides which case-note
+                          library and Speaking sheet the student is served, and a
+                          blank one means their Writing page has nothing to show. */}
+                      <TableCell className="whitespace-nowrap">
+                        {user.profession
+                          ? <span className="text-sm">{user.profession}</span>
+                          : <span className="text-xs text-muted-foreground">Not set</span>}
                       </TableCell>
                       <TableCell>{user.plan.name}</TableCell>
                       <TableCell>

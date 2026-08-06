@@ -115,6 +115,16 @@ export const productsApi = {
    * Admin: cancel everything at once — plan, free-trial row and every course.
    * Effective immediately; the student loses the portal on their next action.
    */
+  /**
+   * Admin: change a student's profession. Always allowed — a student may only
+   * set theirs once. Applies on their next request; the case-note library and
+   * the Speaking sheet are both read from this value per request.
+   */
+  adminSetProfession: (userId: string, profession: string) =>
+    apiFetch<{ id: string; profession: string | null }>(`/admin/users/${userId}/profession`, {
+      method: "PATCH", body: { profession }
+    }),
+
   adminEndAllAccess: (userId: string) =>
     apiFetch<{ subscriptions: number; courses: number }>(`/admin/users/${userId}/access`, { method: "DELETE" })
 };

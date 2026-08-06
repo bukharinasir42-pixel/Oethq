@@ -314,6 +314,8 @@ export type SubscribedUserDto = {
   startDate?: string | null;
   endDate?: string | null;
   currentBand?: string | null;
+  /** Decides which case notes and Speaking sheet they see. */
+  profession?: string | null;
   /** Single-skill courses held as entitlements (separate from the plan). */
   courses?: SubscribedCourseDto[];
 };

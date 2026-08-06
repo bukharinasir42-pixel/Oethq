@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productsApi, type CatalogueProduct, type Ownership } from "@/lib/products-api";
 import type { PlanDto, SubscribedUserDto } from "@/lib/types";
+import { PROFESSIONS } from "@/lib/profile-options";
 
 /** Sort order for plans, so "higher" and "lower" are well defined. */
 const TIER_ORDER = ["STARTER", "FOUNDATION", "ACCELERATOR", "MASTERY", "CUSTOM"];
@@ -67,6 +68,7 @@ export function ManageAccessDialog({ user, plans, products, open, onOpenChange, 
   const [planDays, setPlanDays] = useState("");
   const [grantSlug, setGrantSlug] = useState("");
   const [grantDays, setGrantDays] = useState("");
+  const [profession, setProfession] = useState("");
 
   const loadOwnership = useCallback(async () => {
     if (!user) return;
@@ -86,6 +88,7 @@ export function ManageAccessDialog({ user, plans, products, open, onOpenChange, 
     setPlanDays("");
     setGrantSlug("");
     setGrantDays("");
+    setProfession(user.profession ?? "");
     void loadOwnership();
   }, [open, user, loadOwnership]);
 
@@ -281,6 +284,40 @@ export function ManageAccessDialog({ user, plans, products, open, onOpenChange, 
               <p className="mt-2 text-xs text-muted-foreground">
                 Granting a different tier of a skill the student already owns replaces it — that is how a
                 single-skill upgrade or downgrade is applied.
+              </p>
+            </section>
+
+            {/* ---------------- profession ---------------- */}
+            <section className="rounded-xl border border-border/70 p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-foreground">Profession</h3>
+                <span className="text-xs text-muted-foreground">
+                  {user.profession ? user.profession : "Not set — the student will be asked to choose"}
+                </span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <Select value={profession} onValueChange={setProfession}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a profession" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROFESSIONS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  disabled={!profession || profession === user.profession || busy !== null}
+                  onClick={() =>
+                    void run("profession", () => productsApi.adminSetProfession(user.userId, profession), "Profession updated")
+                  }
+                >
+                  {busy === "profession" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Students set this once and cannot change it themselves. Applies on their next request —
+                their case notes and Speaking sheet both follow it. Letters already submitted and their
+                correction allowance are untouched.
               </p>
             </section>
 

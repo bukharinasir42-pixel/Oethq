@@ -13,7 +13,7 @@
  * rather than becoming a one-click field.
  */
 import { useCallback, useEffect, useState } from "react";
-import { Mail, ShieldCheck, User } from "lucide-react";
+import { Mail, User } from "lucide-react";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { ProfessionPicker } from "@/components/portal/profession-picker";
 import { WorkspaceAccessDeniedState, WorkspaceLoadingState } from "@/components/layout/workspace-states";
@@ -77,29 +77,23 @@ export default function PortalProfilePage() {
         <section className="card card-pad">
           <Row icon={<User className="h-4 w-4" />} label="Name" value={profile.name} />
           <Row icon={<Mail className="h-4 w-4" />} label="Email" value={profile.email} />
-          <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 12 }}>
-            <span aria-hidden style={{ color: "var(--mute, #7A8CA3)", display: "flex" }}><ShieldCheck className="h-4 w-4" /></span>
-            <span style={{ fontSize: 12.5, color: "var(--mute, #7A8CA3)", minWidth: 96 }}>Profession</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: profession ? "var(--ink, #0C1A2B)" : "var(--mute, #7A8CA3)" }}>
-              {profession ?? "Not set"}
-            </span>
-          </div>
           <p style={{ margin: "14px 0 0", fontSize: 12.5, lineHeight: 1.6, color: "var(--text, #54677E)" }}>
-            To change your name or email, contact support — your email is how you sign in and where your
-            codes are sent.
+            To change your name or email, contact support — your email is how you sign in and where
+            your codes are sent.
           </p>
         </section>
 
         <section className="card card-pad">
           <h2 style={{ margin: "0 0 4px", fontSize: 16 }}>
-            {profession ? "Change your profession" : "Choose your profession"}
+            {profession ? "Your profession" : "Choose your profession"}
           </h2>
           <p style={{ margin: "0 0 14px", fontSize: 13, lineHeight: 1.6, color: "var(--text, #54677E)" }}>
-            Your writing case notes and Speaking hack sentences are written per profession. Changing this
-            swaps which library you see; letters you have already submitted and your correction allowance
-            are not affected.
+            Your writing case notes and Speaking hack sentences are written per profession.
+            {profession
+              ? " It is set once so your material stays consistent — support can change it if you picked the wrong one."
+              : " Choose carefully: this is set once."}
           </p>
-          <ProfessionPicker current={profession} variant="inline" onSaved={() => void load()} />
+          <ProfessionPicker current={profession} onSaved={() => void load()} />
         </section>
       </div>
     </PortalShell>
