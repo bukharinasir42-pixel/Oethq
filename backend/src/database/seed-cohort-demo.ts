@@ -27,6 +27,7 @@ import {
   BandLabel,
   CohortAttendance,
   CohortDayStatus,
+  CohortScheduleMode,
   CohortSessionSlot,
   PrismaClient,
   Role,
@@ -73,6 +74,8 @@ const CANDIDATE_EMAIL = "candidate@oet.test";
 const CANDIDATE_PASSWORD = "Candidate@123"; // matches the main seed
 const TIMEZONE = "Asia/Karachi";
 const REST_WEEKDAY = 0;   // Sunday
+/** Six-day programme: class every weekday except the rest day. */
+const LEGACY_CLASS_WEEKDAYS = new Set([0, 1, 2, 3, 4, 5, 6].filter((w) => w !== REST_WEEKDAY));
 const TOTAL_DAYS = 5;
 const DURATION_MIN = Number(process.env.COHORT_DEFAULT_DURATION_MIN) || 45;
 
@@ -278,15 +281,20 @@ async function main() {
 
   const schedule = await prisma.cohortSchedule.upsert({
     where: { userId: user.id },
+    // Deliberately LEGACY_SIX_DAY: this demo student exists to exercise the
+    // original six-day programme, which enrolled students stay on. Students who
+    // onboard from here on get PICK_FOUR and choose four weekdays instead.
     create: {
       userId: user.id, country: "Pakistan", timezone: TIMEZONE,
+      mode: CohortScheduleMode.LEGACY_SIX_DAY,
       class1Time: class1, class2Time: class2,
-      startDate: start, totalDays: TOTAL_DAYS, restWeekday: REST_WEEKDAY
+      startDate: start, startDayNumber: 1, totalDays: TOTAL_DAYS, restWeekday: REST_WEEKDAY
     },
     update: {
       country: "Pakistan", timezone: TIMEZONE,
+      mode: CohortScheduleMode.LEGACY_SIX_DAY,
       class1Time: class1, class2Time: class2,
-      startDate: start, totalDays: TOTAL_DAYS, restWeekday: REST_WEEKDAY
+      startDate: start, startDayNumber: 1, totalDays: TOTAL_DAYS, restWeekday: REST_WEEKDAY
     }
   });
   log(`Schedule: ${TIMEZONE} · Class 1 ${class1} · Class 2 ${class2} · Day 1 = ${start.toISOString().slice(0, 10)}`);
@@ -294,7 +302,7 @@ async function main() {
 
   // 5. Sessions, progress and results ---------------------------------------
   for (const plan of PLAN) {
-    const d = programmeDayDate(schedule.startDate, plan.day, REST_WEEKDAY);
+    const d = programmeDayDate(schedule.startDate, schedule.startDayNumber, plan.day, LEGACY_CLASS_WEEKDAYS);
     const task = await prisma.dailyTask.findUnique({ where: { dayNumber: plan.day } });
 
     for (const [slot, sp, hhmm] of [

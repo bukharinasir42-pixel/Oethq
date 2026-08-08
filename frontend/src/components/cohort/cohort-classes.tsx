@@ -13,9 +13,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  cohortApi, type AttendanceDashboard, type CohortChatMessage, type CohortDay, type CohortMe,
-  type CohortSession, type CohortSlot, type TimelineDay
+  cohortApi, type AttendanceDashboard, type CohortChatMessage, type CohortClassDay, type CohortDay,
+  type CohortMe, type CohortSession, type CohortSlot, type TimelineDay
 } from "@/lib/cohort-api";
+import {
+  ClassDayPicker, classDaysReady, REQUIRED_CLASS_DAYS, scheduleSummary, WEEKDAYS
+} from "./class-day-picker";
 import { useOwnership, type SkillKey } from "@/hooks/use-ownership";
 import { SkillUpgradeModal } from "@/components/portal/skill-upgrade-modal";
 
@@ -357,7 +360,10 @@ export function SessionCard({
                 )}
                 <button
                   onClick={join}
-                  className="rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  className="transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  style={{ padding: "12px 24px", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: "#1D4ED8", color: "#fff", border: "1px solid #1D4ED8",
+                boxShadow: "0 2px 6px rgba(16,42,90,.22)", cursor: "pointer" }}
                 >
                   {session.primaryAction} →
                 </button>
@@ -371,12 +377,20 @@ export function SessionCard({
 }
 
 // ---------- onboarding modal ----------
-export function OnboardingModal({ onDone }: { onDone: () => void }) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [country, setCountry] = useState("");
-  const [tz, setTz] = useState("");
-  const [t1, setT1] = useState("20:00");
-  const [t2, setT2] = useState("21:30");
+/**
+ * `schedule` is whatever the student has saved so far. Someone who gave their
+ * timezone but never picked their days — the state everyone lands in when the
+ * day picker is introduced — resumes at step 2 with their country and timezone
+ * already filled in, rather than being asked for them a second time.
+ */
+export function OnboardingModal({
+  onDone, schedule
+}: { onDone: () => void; schedule?: CohortMe["schedule"] }) {
+  const hasTimezone = Boolean(schedule?.timezone);
+  const [step, setStep] = useState<1 | 2>(hasTimezone ? 2 : 1);
+  const [country, setCountry] = useState(schedule?.country ?? "");
+  const [tz, setTz] = useState(schedule?.timezone ?? "");
+  const [days, setDays] = useState<CohortClassDay[]>(schedule?.classDays ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const zones = useMemo(() => {
@@ -390,7 +404,7 @@ export function OnboardingModal({ onDone }: { onDone: () => void }) {
         await cohortApi.saveTimezone(country, tz);
         setStep(2);
       } else {
-        await cohortApi.saveSchedule(t1, t2);
+        await cohortApi.saveClassDays(days);
         onDone();
       }
     } catch (e) {
@@ -403,14 +417,16 @@ export function OnboardingModal({ onDone }: { onDone: () => void }) {
          role="dialog" aria-modal="true" aria-labelledby="cohort-onboarding-title">
       <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="bg-gradient-to-r from-[#0A3060] to-[#1465C8] p-7 text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-widest opacity-80">Step {step} of 2 · Cohort setup</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest opacity-80">
+            {hasTimezone ? "Cohort setup" : `Step ${step} of 2 · Cohort setup`}
+          </p>
           <h2 id="cohort-onboarding-title" className="mt-2 text-xl font-extrabold">
-            {step === 1 ? "Where are you joining from?" : "Pick your class times — once, for the whole programme"}
+            {step === 1 ? "Where are you joining from?" : "Choose your class days"}
           </h2>
           <p className="mt-1 text-sm opacity-85">
             {step === 1
               ? "Every class runs in your local time — no timezone maths, ever."
-              : "Two classes daily, Monday to Saturday. Sunday is your rest day."}
+              : `${REQUIRED_CLASS_DAYS} days a week, two classes on each. You choose which days and what time.`}
           </p>
         </div>
         <div className="space-y-4 p-7">
@@ -439,39 +455,36 @@ export function OnboardingModal({ onDone }: { onDone: () => void }) {
             </>
           ) : (
             <>
-              <label className="block text-sm font-semibold text-slate-800">
-                🎓 Class 1 — Daily Lecture
-                <select value={t1} onChange={(e) => setT1(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
-                  {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
-                </select>
-              </label>
-              <label className="block text-sm font-semibold text-slate-800">
-                🧠 Class 2 — Core Skills Session
-                <select value={t2} onChange={(e) => setT2(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
-                  {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
-                </select>
-                <span className="mt-1 block text-xs font-normal text-slate-500">Keep at least 1 hour between the two classes.</span>
-              </label>
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5 text-sm leading-relaxed text-slate-700">
-                📅 <b>Your programme:</b> both classes run at these times Monday–Saturday.
+              <ClassDayPicker value={days} onChange={setDays} />
+              <p className="text-xs leading-relaxed text-slate-500">
                 A reminder email arrives 30 minutes before each class. Missed classes stay
-                available as recordings — right on the same day.
-              </div>
+                available as recordings on the same day. You can change your days later —
+                classes you have already had keep their dates.
+              </p>
             </>
           )}
           {error && <p role="alert" className="text-sm font-medium text-rose-600">{error}</p>}
           <div className="flex justify-between pt-1">
-            {step === 2 ? (
-              <button onClick={() => setStep(1)} className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold">← Back</button>
+            {step === 2 && !hasTimezone ? (
+              <button onClick={() => setStep(1)} className="transition"
+              style={{ padding: "10px 20px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+                background: "#fff", color: "#33415B", border: "1px solid #CBD5E1", cursor: "pointer" }}>← Back</button>
             ) : <span />}
             <button
               onClick={next}
-              disabled={busy || (step === 1 && (!country || !tz))}
-              className="rounded-xl bg-blue-700 px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 disabled:opacity-40"
+              disabled={busy || (step === 1 ? !country || !tz : !classDaysReady(days))}
+              className="transition disabled:opacity-40"
+              style={{ padding: "10px 24px", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: "#1D4ED8", color: "#fff", border: "1px solid #1D4ED8",
+                boxShadow: "0 2px 6px rgba(16,42,90,.22)", cursor: "pointer" }}
             >
-              {busy ? "Saving…" : step === 1 ? "Continue →" : "Save my schedule"}
+              {busy
+                ? "Saving…"
+                : step === 1
+                  ? "Continue →"
+                  : days.length === REQUIRED_CLASS_DAYS
+                    ? "Save my schedule"
+                    : `Pick ${REQUIRED_CLASS_DAYS - days.length} more`}
             </button>
           </div>
         </div>
@@ -484,19 +497,25 @@ export function OnboardingModal({ onDone }: { onDone: () => void }) {
 export function ScheduleSettingsModal({
   schedule, onClose, onDone
 }: { schedule: NonNullable<CohortMe["schedule"]>; onClose: () => void; onDone: () => void }) {
+  const pickFour = schedule.mode === "PICK_FOUR";
   const [country, setCountry] = useState(schedule.country);
   const [tz, setTz] = useState(schedule.timezone);
   const [t1, setT1] = useState(schedule.class1Time);
   const [t2, setT2] = useState(schedule.class2Time);
+  const [days, setDays] = useState<CohortClassDay[]>(schedule.classDays ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const zones = useMemo(() => {
     try { return Intl.supportedValuesOf("timeZone"); } catch { return Object.values(TZ_HINT); }
   }, []);
 
-  const dirty =
-    country !== schedule.country || tz !== schedule.timezone ||
-    t1 !== schedule.class1Time || t2 !== schedule.class2Time;
+  const key = (list: CohortClassDay[]) =>
+    [...list].sort((a, b) => a.weekday - b.weekday)
+      .map((d) => `${d.weekday}:${d.class1Time}:${d.class2Time}`).join("|");
+  const daysDirty = pickFour && key(days) !== key(schedule.classDays ?? []);
+  const timesDirty = !pickFour && (t1 !== schedule.class1Time || t2 !== schedule.class2Time);
+  const dirty = country !== schedule.country || tz !== schedule.timezone || daysDirty || timesDirty;
+  const canSave = dirty && (!pickFour || classDaysReady(days));
 
   const save = async () => {
     setBusy(true); setError("");
@@ -504,9 +523,8 @@ export function ScheduleSettingsModal({
       if (country !== schedule.country || tz !== schedule.timezone) {
         await cohortApi.saveTimezone(country, tz);
       }
-      if (t1 !== schedule.class1Time || t2 !== schedule.class2Time) {
-        await cohortApi.saveSchedule(t1, t2);
-      }
+      if (daysDirty) await cohortApi.saveClassDays(days);
+      if (timesDirty) await cohortApi.saveSchedule(t1, t2);
       onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save changes — please try again.");
@@ -522,7 +540,9 @@ export function ScheduleSettingsModal({
             <p className="text-[11px] font-semibold uppercase tracking-widest opacity-80">Cohort settings</p>
             <h2 id="cohort-settings-title" className="mt-2 text-xl font-extrabold">Change your class schedule</h2>
             <p className="mt-1 text-sm opacity-85">
-              New times apply to every upcoming class. Sessions starting within the next 2 hours keep their current time.
+              {pickFour
+                ? "Classes you have already had keep their dates — only what is still ahead of you moves. Sessions starting within the next 2 hours keep their current time."
+                : "New times apply to every upcoming class. Sessions starting within the next 2 hours keep their current time."}
             </p>
           </div>
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-white/80 hover:bg-white/10 hover:text-white">✕</button>
@@ -546,30 +566,43 @@ export function ScheduleSettingsModal({
               </select>
             </label>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-semibold text-slate-800">
-              🎓 Class 1 — Daily Lecture
-              <select value={t1} onChange={(e) => setT1(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
-                {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
-              </select>
-            </label>
-            <label className="block text-sm font-semibold text-slate-800">
-              🧠 Class 2 — Core Skills
-              <select value={t2} onChange={(e) => setT2(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
-                {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
-              </select>
-            </label>
-          </div>
-          <p className="text-xs text-slate-500">Keep at least 1 hour between the two classes.</p>
+          {pickFour ? (
+            <ClassDayPicker value={days} onChange={setDays} compact />
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm font-semibold text-slate-800">
+                  🎓 Class 1 — Daily Lecture
+                  <select value={t1} onChange={(e) => setT1(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
+                    {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-slate-800">
+                  🧠 Class 2 — Core Skills
+                  <select value={t2} onChange={(e) => setT2(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
+                    {timeOptions().map((t) => <option key={t} value={t}>{fmtHHMM(t)}</option>)}
+                  </select>
+                </label>
+              </div>
+              <p className="text-xs text-slate-500">
+                Keep at least 1 hour between the two classes. Your programme runs Monday–Saturday.
+              </p>
+            </>
+          )}
           {error && <p role="alert" className="text-sm font-medium text-rose-600">{error}</p>}
           <div className="flex justify-end gap-2 pt-1">
-            <button onClick={onClose} className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold">Cancel</button>
+            <button onClick={onClose} className="transition"
+              style={{ padding: "10px 20px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+                background: "#fff", color: "#33415B", border: "1px solid #CBD5E1", cursor: "pointer" }}>Cancel</button>
             <button
               onClick={save}
-              disabled={busy || !dirty}
-              className="rounded-xl bg-blue-700 px-6 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-blue-800 disabled:opacity-40"
+              disabled={busy || !canSave}
+              className="transition disabled:opacity-40"
+              style={{ padding: "10px 24px", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: "#1D4ED8", color: "#fff", border: "1px solid #1D4ED8",
+                boxShadow: "0 2px 6px rgba(16,42,90,.22)", cursor: "pointer" }}
             >
               {busy ? "Saving…" : "Save changes"}
             </button>
@@ -652,7 +685,7 @@ export function CohortClasses({ variant = "page" }: { variant?: "page" | "dashbo
   return (
     <div className={dashboardVariant ? "space-y-4" : "mx-auto max-w-6xl px-4 pb-16 sm:px-6"}>
       {onboardingModalOpen && (
-        <OnboardingModal onDone={() => { setShowOnboard(false); void loadAll(); }} />
+        <OnboardingModal schedule={me?.schedule} onDone={() => { setShowOnboard(false); void loadAll(); }} />
       )}
 
       {dashboardVariant ? (
@@ -666,7 +699,7 @@ export function CohortClasses({ variant = "page" }: { variant?: "page" | "dashbo
                 onClick={() => setShowSettings(true)}
                 className="text-xs font-semibold text-primary hover:underline"
               >
-                ✏️ {fmtHHMM(me.schedule.class1Time)} · {fmtHHMM(me.schedule.class2Time)} — change
+                ✏️ {scheduleSummary(me.schedule)} — change
               </button>
             )}
             <a href="/portal/cohort" className="text-xs font-semibold text-primary hover:underline">Full view →</a>
@@ -677,22 +710,24 @@ export function CohortClasses({ variant = "page" }: { variant?: "page" | "dashbo
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Cohort Live Classes</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-500">
-              Two classes every day at your chosen times, in your timezone. Miss one?
-              The recording plays right here, on the same day.
+              {me?.schedule?.mode === "PICK_FOUR"
+                ? `Two classes on each of your ${REQUIRED_CLASS_DAYS} class days, at the times you chose, in your timezone.`
+                : "Two classes every day at your chosen times, in your timezone."}{" "}
+              Miss one? The recording plays right here, on the same day.
             </p>
           </div>
           {me?.schedule && (
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm">
               <div>
                 <span className="font-semibold text-slate-800">Your schedule:</span>{" "}
-                Lecture {fmtHHMM(me.schedule.class1Time)} · Core Skills {fmtHHMM(me.schedule.class2Time)}{" "}
+                {scheduleSummary(me.schedule)}{" "}
                 <span className="text-slate-400">({me.schedule.timezone.replace(/_/g, " ")})</span>
               </div>
               <button
                 onClick={() => setShowSettings(true)}
                 className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:underline"
               >
-                ✏️ Change class times
+                ✏️ {me.schedule.mode === "PICK_FOUR" ? "Change class days or times" : "Change class times"}
               </button>
             </div>
           )}
@@ -819,8 +854,17 @@ export function CohortClasses({ variant = "page" }: { variant?: "page" | "dashbo
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <p className="font-semibold text-slate-800">No active session today</p>
             <p className="mt-1 text-sm text-slate-500">
-              Either your programme starts soon, or today is your rest day. Pick any open day above to review or catch up.
+              Either your programme starts soon, or today is not one of your class days. Pick any open
+              day above to review or catch up.
             </p>
+            {(me?.schedule?.classDays?.length ?? 0) > 0 && (
+              <p className="mt-2 text-sm font-semibold text-slate-700">
+                Your class days: {[...me!.schedule!.classDays]
+                  .sort((a, b) => WEEKDAYS.findIndex((w) => w.value === a.weekday) - WEEKDAYS.findIndex((w) => w.value === b.weekday))
+                  .map((d) => WEEKDAYS.find((w) => w.value === d.weekday)?.short)
+                  .join(" · ")}
+              </p>
+            )}
           </div>
         )
       )}

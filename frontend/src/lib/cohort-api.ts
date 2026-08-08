@@ -40,10 +40,25 @@ export type CohortDay = {
   completionPct: number;
 };
 
+/** One chosen class weekday and the two class times on it. 0=Sunday … 6=Saturday. */
+export type CohortClassDay = { weekday: number; class1Time: string; class2Time: string };
+
+/**
+ * PICK_FOUR — the student chose four weekdays, each with its own times.
+ * LEGACY_SIX_DAY — students who enrolled before the picker existed: class every
+ * day but `restWeekday`, at the single class1Time/class2Time pair. They are
+ * never migrated, so both shapes have to render.
+ */
+export type CohortScheduleMode = "PICK_FOUR" | "LEGACY_SIX_DAY";
+
 export type CohortMe = {
   onboarded: boolean;
   schedule: {
-    country: string; timezone: string; class1Time: string; class2Time: string;
+    country: string; timezone: string;
+    mode: CohortScheduleMode;
+    classDays: CohortClassDay[];
+    classDaysPerWeek: number;
+    class1Time: string; class2Time: string;
     startDate: string; totalDays: number; restWeekday: number; lockedAt: string | null;
   } | null;
   programmeDays: number;
@@ -81,10 +96,17 @@ export const cohortApi = {
     apiFetch<CohortMe>("/cohort/onboarding/timezone", {
       method: "POST", body: { country, timezone }
     }),
+  /** LEGACY_SIX_DAY only — one time pair for the whole week. */
   saveSchedule: (class1Time: string, class2Time: string) =>
     apiFetch<CohortMe>("/cohort/onboarding/schedule", {
       method: "POST", body: { class1Time, class2Time }
     }),
+  /**
+   * PICK_FOUR — the four class weekdays and each one's times. Used to finish
+   * onboarding and to change days later; already-taught days keep their dates.
+   */
+  saveClassDays: (days: CohortClassDay[]) =>
+    apiFetch<CohortMe>("/cohort/onboarding/class-days", { method: "POST", body: { days } }),
   today: () => apiFetch<{ state: string } & Partial<CohortDay> & { lastDayNumber?: number }>("/cohort/today"),
   days: () => apiFetch<{ days: TimelineDay[] }>("/cohort/days"),
   day: (n: number) => apiFetch<CohortDay>(`/cohort/days/${n}`),

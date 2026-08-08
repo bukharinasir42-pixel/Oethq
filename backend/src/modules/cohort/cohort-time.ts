@@ -69,28 +69,114 @@ export function localDate(utc: Date, timeZone: string) {
   return { year: w.year, month: w.month, day: w.day, weekday };
 }
 
+export type CalendarDate = { year: number; month: number; day: number };
+
+/** Bound on every calendar walk below — a 40-day programme spans ~10 weeks. */
+const WALK_LIMIT = 800;
+
+const midnightUtc = (d: Date) =>
+  new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+
+const asDate = (c: CalendarDate) => new Date(Date.UTC(c.year, c.month - 1, c.day));
+
+const toCalendar = (d: Date): CalendarDate =>
+  ({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() });
+
 /**
- * Map programme dayNumber (1-based) to its local calendar date, skipping the
- * rest weekday (default Sunday). startDate is the local date of Day 1,
- * stored as midnight UTC of that calendar date.
+ * The anchor is "programme day N falls on this date". Callers may hand us an
+ * anchor whose weekday is no longer a class day — that happens the moment a
+ * student drops the weekday they are anchored on — so slide forward to the next
+ * real class day first. Without this the walks below would count from a date
+ * that is not itself a class day and every subsequent day would be off by one.
  */
-export function programmeDayDate(
-  startDate: Date, dayNumber: number, restWeekday: number
-): { year: number; month: number; day: number } {
-  const d = new Date(Date.UTC(
-    startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()
-  ));
-  let counted = 0;
-  // iterate calendar days; count only non-rest days
-  // (bounded loop: dayNumber <= 366 guards runaway)
-  for (let i = 0; i < 400; i++) {
-    if (d.getUTCDay() !== restWeekday) {
-      counted++;
-      if (counted === dayNumber) break;
-    }
+function normaliseAnchor(anchor: Date, classWeekdays: ReadonlySet<number>): Date {
+  const d = midnightUtc(anchor);
+  for (let i = 0; i < 14 && !classWeekdays.has(d.getUTCDay()); i++) {
     d.setUTCDate(d.getUTCDate() + 1);
   }
-  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+  return d;
+}
+
+/**
+ * Map a programme dayNumber to its local calendar date.
+ *
+ * Content advances one day per *class day* — the days the student actually has
+ * classes on — never per calendar day. Day N+1 is simply the next class day
+ * after day N, which is what makes the programme run in order no matter which
+ * weekdays were picked or how sparse they are.
+ *
+ * `anchorDate` is the local date of `anchorDayNumber` (midnight UTC of that
+ * calendar date). Days before the anchor are counted backwards, which is how a
+ * timeline still renders history after a re-anchor.
+ */
+export function programmeDayDate(
+  anchorDate: Date,
+  anchorDayNumber: number,
+  dayNumber: number,
+  classWeekdays: ReadonlySet<number>
+): CalendarDate {
+  if (classWeekdays.size === 0) return toCalendar(midnightUtc(anchorDate));
+  const d = normaliseAnchor(anchorDate, classWeekdays);
+  let remaining = Math.abs(dayNumber - anchorDayNumber);
+  const step = dayNumber >= anchorDayNumber ? 1 : -1;
+  for (let i = 0; i < WALK_LIMIT && remaining > 0; i++) {
+    d.setUTCDate(d.getUTCDate() + step);
+    if (classWeekdays.has(d.getUTCDay())) remaining--;
+  }
+  return toCalendar(d);
+}
+
+/**
+ * Which programme day does `target` fall on?
+ *
+ *   > 0  target is a class day, and this is its day number
+ *   < 0  target is a rest day; |value| is the most recent class day before it
+ *   = 0  the programme has not started yet
+ *
+ * The sign convention is load-bearing: callers use it to tell "today is Day 7"
+ * apart from "today is a rest day and Day 7 was the last one".
+ */
+export function dayNumberOnDate(
+  anchorDate: Date,
+  anchorDayNumber: number,
+  target: CalendarDate,
+  classWeekdays: ReadonlySet<number>
+): number {
+  if (classWeekdays.size === 0) return 0;
+  const anchor = normaliseAnchor(anchorDate, classWeekdays);
+  const t = asDate(target);
+  const targetIsClassDay = classWeekdays.has(t.getUTCDay());
+
+  if (t.getTime() < anchor.getTime()) {
+    // Only reachable before the programme starts, or when reading history that
+    // predates a re-anchor.
+    let count = anchorDayNumber;
+    const d = new Date(anchor);
+    for (let i = 0; i < WALK_LIMIT && d.getTime() > t.getTime(); i++) {
+      d.setUTCDate(d.getUTCDate() - 1);
+      if (classWeekdays.has(d.getUTCDay())) count--;
+    }
+    if (count < 1) return 0;
+    return targetIsClassDay ? count : -count;
+  }
+
+  let count = anchorDayNumber; // the anchor itself is day `anchorDayNumber`
+  const d = new Date(anchor);
+  for (let i = 0; i < WALK_LIMIT && d.getTime() < t.getTime(); i++) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (classWeekdays.has(d.getUTCDay())) count++;
+  }
+  return targetIsClassDay ? count : -count;
+}
+
+/** The first class day strictly after `from`. Used to re-anchor a changed schedule. */
+export function nextClassDayAfter(from: CalendarDate, classWeekdays: ReadonlySet<number>): CalendarDate {
+  const d = asDate(from);
+  for (let i = 0; i < 14; i++) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (classWeekdays.has(d.getUTCDay())) break;
+  }
+  return toCalendar(d);
 }
 
 export function hhmmValid(v: string): boolean {

@@ -368,6 +368,10 @@ export function TaskDayViewer({
   // day shows only the lecture, whose access is already decided server-side via
   // selectedTask.lectureLocked. Tests and articles moved to the course modules.
   const lectureSession = cohortSessions?.find((s) => s.slot === "LECTURE");
+  // Both classes of the day get their own card. Only the lecture used to be
+  // rendered, so Core Skills — the second scheduled class the student picked a
+  // time for, and gets a reminder email about — had nowhere to be watched.
+  const coreSkillsSession = cohortSessions?.find((s) => s.slot === "CORE_SKILLS");
   const useCohortSessions = Boolean(lectureSession);
   const [lockedSkill, setLockedSkill] = useState<SkillKey | null>(null);
   const openCount = getOpenItemCount(selectedTask);
@@ -436,13 +440,18 @@ export function TaskDayViewer({
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {useCohortSessions
-                ? "Your daily lecture at your scheduled time — join live with chat, or watch the recording."
+                ? coreSkillsSession
+                  ? "Both of today's classes at the times you chose — join live with chat, or watch the recording."
+                  : "Your daily lecture at your scheduled time — join live with chat, or watch the recording."
                 : "Your daily lecture with Dr Nasir Bukhari"}
             </p>
           </div>
           {useCohortSessions && lectureSession ? (
             <div className="grid gap-4">
               <SessionCard day={selectedTask.dayNumber} session={lectureSession} onRefresh={() => onCohortRefresh?.()} />
+              {coreSkillsSession ? (
+                <SessionCard day={selectedTask.dayNumber} session={coreSkillsSession} onRefresh={() => onCohortRefresh?.()} />
+              ) : null}
             </div>
           ) : (
             <div className="equal-card-grid grid gap-4">

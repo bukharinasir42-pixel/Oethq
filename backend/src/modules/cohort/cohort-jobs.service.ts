@@ -8,7 +8,7 @@
  *  - warnings deduped by open-warning window
  *  - weekly reports unique per (userId, periodStart)
  */
-import { CohortAttendance } from "@prisma/client";
+import { CohortAttendance, CohortScheduleMode } from "@prisma/client";
 import { appLink } from "../../common/app-url";
 import { createLogger } from "../../common/logger";
 import type { PrismaService } from "../../common/prisma.service";
@@ -81,7 +81,11 @@ try {
 }
 /** Pre-create today's + tomorrow's session records for every onboarded student. */
 private async ensureUpcomingSessions() {
-    const schedules = await this.prisma.cohortSchedule.findMany();
+    const schedules = await this.prisma.cohortSchedule.findMany({
+      // A student who has not chosen their class days yet has no calendar to act on.
+      where: { OR: [{ mode: CohortScheduleMode.LEGACY_SIX_DAY }, { classDays: { some: {} } }] },
+      include: { classDays: true }
+    });
     const liveTotal = Math.max(1, await this.prisma.dailyTask.count({ where: { isPublished: true } }));
     for (const s of schedules) {
       s.totalDays = liveTotal; // track live published-day count, not the onboarding snapshot
@@ -190,7 +194,11 @@ private async ensureUpcomingSessions() {
 
   /** Accountability: 2 consecutive fully-missed study days => warning; 3 => strong warning. */
   private async issueWarnings() {
-    const schedules = await this.prisma.cohortSchedule.findMany();
+    const schedules = await this.prisma.cohortSchedule.findMany({
+      // A student who has not chosen their class days yet has no calendar to act on.
+      where: { OR: [{ mode: CohortScheduleMode.LEGACY_SIX_DAY }, { classDays: { some: {} } }] },
+      include: { classDays: true }
+    });
     const liveTotal = Math.max(1, await this.prisma.dailyTask.count({ where: { isPublished: true } }));
     for (const sched of schedules) {
       sched.totalDays = liveTotal;
@@ -239,7 +247,11 @@ private async ensureUpcomingSessions() {
 
   /** Weekly report — generated once per student per ISO week (Mondays, student-local). */
   private async generateWeeklyReports() {
-    const schedules = await this.prisma.cohortSchedule.findMany();
+    const schedules = await this.prisma.cohortSchedule.findMany({
+      // A student who has not chosen their class days yet has no calendar to act on.
+      where: { OR: [{ mode: CohortScheduleMode.LEGACY_SIX_DAY }, { classDays: { some: {} } }] },
+      include: { classDays: true }
+    });
     for (const sched of schedules) {
       const nowLocal = localDate(new Date(), sched.timezone);
       if (nowLocal.weekday !== 1) continue; // generate on local Monday

@@ -9,7 +9,7 @@ import type { AppContainer } from "../container";
 import { asyncHandler, requireAuth, type AuthedRequest } from "../middleware";
 import { validateDto } from "../validation";
 import {
-  ChatMessageDto, OnboardingScheduleDto, OnboardingTimezoneDto, SessionProgressDto
+  ChatMessageDto, ClassDaysDto, OnboardingScheduleDto, OnboardingTimezoneDto, SessionProgressDto
 } from "../../modules/cohort/dto/cohort.dto";
 
 function parseSlot(raw: string): CohortSessionSlot {
@@ -44,6 +44,13 @@ export function createCohortRouter(c: AppContainer): Router {
     const dto = await validateDto(OnboardingScheduleDto, req.body);
     await svc.saveScheduleTimes((req as AuthedRequest).user.id, dto.class1Time, dto.class2Time);
     res.json(await svc.getMe((req as AuthedRequest).user.id));
+  }));
+
+  // The four class weekdays and each one's pair of times. Used both to finish
+  // onboarding and to change the days later.
+  router.post("/cohort/onboarding/class-days", auth, asyncHandler(async (req, res) => {
+    const dto = await validateDto(ClassDaysDto, req.body);
+    res.json(await svc.saveClassDays((req as AuthedRequest).user.id, dto.days));
   }));
 
   router.get("/cohort/today", auth, asyncHandler(async (req, res) => {

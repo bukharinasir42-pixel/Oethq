@@ -1,4 +1,8 @@
-import { IsIn, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from "class-validator";
+import { Type } from "class-transformer";
+import {
+  ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString,
+  Matches, Max, MaxLength, Min, MinLength, ValidateNested
+} from "class-validator";
 
 export class OnboardingTimezoneDto {
   @IsString()
@@ -18,6 +22,34 @@ export class OnboardingScheduleDto {
   @IsString()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: "class2Time must be HH:mm" })
   class2Time!: string;
+}
+
+export class ClassDayDto {
+  /** 0 = Sunday … 6 = Saturday. */
+  @IsInt() @Min(0) @Max(6)
+  weekday!: number;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: "class1Time must be HH:mm" })
+  class1Time!: string;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: "class2Time must be HH:mm" })
+  class2Time!: string;
+}
+
+/**
+ * Exactly four class days. The count is pinned at both ends so a malformed
+ * payload is refused here rather than producing a half-built calendar; the
+ * service checks it again, along with duplicate weekdays and the class gap.
+ */
+export class ClassDaysDto {
+  @IsArray()
+  @ArrayMinSize(4, { message: "Choose exactly 4 class days" })
+  @ArrayMaxSize(4, { message: "Choose exactly 4 class days" })
+  @ValidateNested({ each: true })
+  @Type(() => ClassDayDto)
+  days!: ClassDayDto[];
 }
 
 export class SessionProgressDto {

@@ -815,22 +815,54 @@ enum CohortDayStatus {
   MISSED
 }
 
+/// How a student's class calendar is laid out.
+///  LEGACY_SIX_DAY — the original model: class every day except `restWeekday`,
+///    at the single class1Time/class2Time pair. Students who onboarded before
+///    the four-day picker existed stay on this and are never migrated.
+///  PICK_FOUR — the student chooses exactly four weekdays and a time pair for
+///    each one. `classDays` holds them; class1Time/class2Time are unused.
+enum CohortScheduleMode {
+  LEGACY_SIX_DAY
+  PICK_FOUR
+}
+
 model CohortSchedule {
   id            String   @id @default(uuid())
   userId        String   @unique
   country       String
   timezone      String   // IANA, e.g. Asia/Karachi — validated server-side
-  class1Time    String   // "HH:mm" local time for Daily Lecture
-  class2Time    String   // "HH:mm" local time for Core Skills Session
-  startDate     DateTime // local date of programme Day 1 (stored midnight UTC of that date)
+  class1Time    String   // "HH:mm" local time for Daily Lecture (LEGACY_SIX_DAY only)
+  class2Time    String   // "HH:mm" local time for Core Skills Session (LEGACY_SIX_DAY only)
+  /// Local date of programme day `startDayNumber` (stored midnight UTC of that
+  /// date) — the anchor the whole calendar is counted from. It starts as the
+  /// date of Day 1 and is re-anchored to the future whenever a student changes
+  /// their class days, which is what keeps already-taught days where they are.
+  startDate     DateTime
+  startDayNumber Int     @default(1)
   totalDays     Int      @default(40)
-  restWeekday   Int      @default(0) // 0=Sunday
+  restWeekday   Int      @default(0) // 0=Sunday (LEGACY_SIX_DAY only)
+  mode          CohortScheduleMode @default(PICK_FOUR)
   lockedAt      DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   user          User     @relation(fields: [userId], references: [id])
   changes       CohortScheduleChange[]
+  classDays     CohortClassDay[]
+}
+
+/// One chosen class weekday and its two class times. Exactly four rows per
+/// PICK_FOUR schedule; none for LEGACY_SIX_DAY.
+model CohortClassDay {
+  id          String   @id @default(uuid())
+  scheduleId  String
+  weekday     Int      // 0=Sunday … 6=Saturday
+  class1Time  String   // "HH:mm" local — Daily Lecture
+  class2Time  String   // "HH:mm" local — Core Skills Session
+
+  schedule    CohortSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  @@unique([scheduleId, weekday])
+  @@index([scheduleId])
 }
 
 model CohortScheduleChange {

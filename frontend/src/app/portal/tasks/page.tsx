@@ -9,6 +9,7 @@ import { CompleteCourseGate } from "@/components/portal/complete-course-gate";
 import { HowToIntroductionPanel } from "@/components/portal/how-to-introduction-panel";
 import { TaskDayViewer } from "@/components/portal/task-day-viewer";
 import { OnboardingModal, ScheduleSettingsModal } from "@/components/cohort/cohort-classes";
+import { scheduleSummary } from "@/components/cohort/class-day-picker";
 import { WorkspaceAccessDeniedState, WorkspaceLoadingState } from "@/components/layout/workspace-states";
 import { usePortalPlanAccess } from "@/hooks/use-portal-plan-access";
 import { cohortApi, type CohortDay, type CohortMe } from "@/lib/cohort-api";
@@ -319,10 +320,12 @@ export default function TasksPage() {
         ) : cohortMe?.schedule ? (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-5 py-3">
             <p className="text-sm text-muted-foreground">
-              Class times: <span className="font-semibold text-foreground">{cohortMe.schedule.class1Time}</span> &amp; <span className="font-semibold text-foreground">{cohortMe.schedule.class2Time}</span> · {cohortMe.schedule.timezone}
+              {cohortMe.schedule.mode === "PICK_FOUR" ? "Your classes: " : "Class times: "}
+              <span className="font-semibold text-foreground">{scheduleSummary(cohortMe.schedule)}</span>
+              {" · "}{cohortMe.schedule.timezone}
             </p>
             <button type="button" onClick={() => setScheduleOpen(true)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-primary/40 hover:text-primary">
-              ✏️ Change class times
+              ✏️ {cohortMe.schedule.mode === "PICK_FOUR" ? "Change class days or times" : "Change class times"}
             </button>
           </div>
         ) : null}
@@ -382,7 +385,7 @@ export default function TasksPage() {
       )}
 
       {completeExperienceAccess && cohortMe && !cohortMe.onboarded ? (
-        <OnboardingModal onDone={() => { loadCohortMe(); }} />
+        <OnboardingModal schedule={cohortMe.schedule} onDone={() => { loadCohortMe(); }} />
       ) : null}
       {scheduleOpen && cohortMe?.schedule ? (
         <ScheduleSettingsModal

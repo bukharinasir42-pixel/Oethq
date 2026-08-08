@@ -16,15 +16,32 @@
  */
 import {
   CohortAttendance,
+  CohortScheduleMode,
   CohortSessionSlot,
   Prisma
 } from "@prisma/client";
 import type { PrismaService } from "../../common/prisma.service";
 import type { BunnyPlaybackService } from "../media/bunny-playback.service";
 import {
-  formatLocal, hhmmValid, isValidTimeZone, localDate, minutesOf,
-  programmeDayDate, zonedTimeToUtc
+  dayNumberOnDate, formatLocal, hhmmValid, isValidTimeZone, localDate, minutesOf,
+  nextClassDayAfter, programmeDayDate, zonedTimeToUtc
 } from "./cohort-time";
+
+/** Exactly this many class days a week, for a student on the picker. */
+export const CLASS_DAYS_PER_WEEK = 4;
+
+export const WEEKDAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+] as const;
+
+export type ClassDayInput = { weekday: number; class1Time: string; class2Time: string };
+
+/**
+ * A schedule plus the class-day rows the calendar is derived from. Both modes
+ * are normalised through `classWeekdaysOf`/`timesForWeekday` so nothing below
+ * this line has to know which mode it is dealing with.
+ */
+type ScheduleWithDays = Prisma.CohortScheduleGetPayload<{ include: { classDays: true } }>;
 
 const num = (env: string | undefined, dflt: number) => {
   const n = Number(env);
@@ -63,18 +80,70 @@ export class CohortService {
     private readonly bunny: BunnyPlaybackService
   ) {}
 
+  // ------------------------------------------------------- calendar shape
+
+  /**
+   * The weekdays this student has class on. A PICK_FOUR student has exactly the
+   * four they chose; a legacy student has every day except their rest day.
+   *
+   * Falls back to the legacy set if a PICK_FOUR schedule somehow has no rows —
+   * an empty set would mean "no class ever", which would strand the student.
+   */
+  private classWeekdaysOf(sched: ScheduleWithDays): Set<number> {
+    if (sched.mode === CohortScheduleMode.PICK_FOUR && sched.classDays.length > 0) {
+      return new Set(sched.classDays.map((d) => d.weekday));
+    }
+    const all = new Set([0, 1, 2, 3, 4, 5, 6]);
+    all.delete(sched.restWeekday);
+    return all;
+  }
+
+  /** The two class times that apply on a given weekday. */
+  private timesForWeekday(sched: ScheduleWithDays, weekday: number): { class1Time: string; class2Time: string } {
+    const picked = sched.classDays.find((d) => d.weekday === weekday);
+    if (picked) return { class1Time: picked.class1Time, class2Time: picked.class2Time };
+    return { class1Time: sched.class1Time, class2Time: sched.class2Time };
+  }
+
+  /** The local calendar date of a programme day, under this student's calendar. */
+  private dateOfDay(sched: ScheduleWithDays, dayNumber: number) {
+    return programmeDayDate(sched.startDate, sched.startDayNumber, dayNumber, this.classWeekdaysOf(sched));
+  }
+
+  /** UTC instant a given day+slot starts at, using that weekday's own times. */
+  private scheduledAtFor(sched: ScheduleWithDays, dayNumber: number, slot: CohortSessionSlot): Date {
+    const d = this.dateOfDay(sched, dayNumber);
+    const weekday = new Date(Date.UTC(d.year, d.month - 1, d.day)).getUTCDay();
+    const times = this.timesForWeekday(sched, weekday);
+    const hhmm = slot === CohortSessionSlot.LECTURE ? times.class1Time : times.class2Time;
+    return zonedTimeToUtc(d.year, d.month, d.day, hhmm, sched.timezone);
+  }
+
   // ---------------------------------------------------------------- onboarding
 
   async getMe(userId: string) {
     const schedule = await this.prisma.cohortSchedule.findUnique({
-      where: { userId }, include: { changes: { orderBy: { changedAt: "desc" }, take: 5 } }
+      where: { userId },
+      include: {
+        changes: { orderBy: { changedAt: "desc" }, take: 5 },
+        classDays: { orderBy: { weekday: "asc" } }
+      }
     });
     const totalPublishedDays = await this.prisma.dailyTask.count({ where: { isPublished: true } });
+    const needsClassDays =
+      Boolean(schedule) && schedule!.mode === CohortScheduleMode.PICK_FOUR && schedule!.classDays.length === 0;
     return {
-      onboarded: Boolean(schedule),
+      // Timezone alone is no longer enough to be onboarded — a PICK_FOUR student
+      // has not finished until they have chosen their four days.
+      onboarded: Boolean(schedule) && !needsClassDays,
       schedule: schedule && {
         country: schedule.country,
         timezone: schedule.timezone,
+        mode: schedule.mode,
+        classDays: schedule.classDays.map((d) => ({
+          weekday: d.weekday, class1Time: d.class1Time, class2Time: d.class2Time
+        })),
+        classDaysPerWeek: CLASS_DAYS_PER_WEEK,
         class1Time: schedule.class1Time,
         class2Time: schedule.class2Time,
         startDate: schedule.startDate.toISOString().slice(0, 10),
@@ -109,10 +178,168 @@ export class CohortService {
     return this.prisma.cohortSchedule.create({
       data: {
         userId, country, timezone,
-        class1Time: "20:00", class2Time: "21:30", // placeholders until Step 2
-        startDate: start, totalDays
+        mode: CohortScheduleMode.PICK_FOUR,
+        class1Time: "20:00", class2Time: "21:30", // unused by PICK_FOUR; kept for the legacy columns
+        startDate: start, startDayNumber: 1, totalDays
       }
     });
+  }
+
+  // ------------------------------------------------------------- class days
+
+  /**
+   * Set (or change) the four weekdays a student has class on, each with its own
+   * pair of times.
+   *
+   * Changing them never disturbs a day that has already been taught. Instead of
+   * re-laying the calendar from Day 1, the schedule is re-anchored: the next
+   * unstudied day is pinned to the next chosen weekday, and everything before it
+   * keeps the dates it ran on. That is why `startDate` means "the date of
+   * `startDayNumber`" rather than "the date of Day 1".
+   */
+  async saveClassDays(userId: string, days: ClassDayInput[]) {
+    const existing = await this.prisma.cohortSchedule.findUnique({
+      where: { userId }, include: { classDays: true }
+    });
+    if (!existing) {
+      throw Object.assign(new Error("Complete the timezone step first"), { statusCode: 400 });
+    }
+    if (existing.mode !== CohortScheduleMode.PICK_FOUR) {
+      throw Object.assign(
+        new Error("Your programme runs on the six-day schedule — change your class times instead"),
+        { statusCode: 409 }
+      );
+    }
+
+    const weekdays = days.map((d) => d.weekday);
+    if (days.length !== CLASS_DAYS_PER_WEEK) {
+      throw Object.assign(
+        new Error(`Choose exactly ${CLASS_DAYS_PER_WEEK} class days`), { statusCode: 400 }
+      );
+    }
+    if (new Set(weekdays).size !== weekdays.length) {
+      throw Object.assign(new Error("Each class day must be a different weekday"), { statusCode: 400 });
+    }
+    for (const d of days) {
+      if (!Number.isInteger(d.weekday) || d.weekday < 0 || d.weekday > 6) {
+        throw Object.assign(new Error("Weekday must be 0 (Sunday) to 6 (Saturday)"), { statusCode: 400 });
+      }
+      if (!hhmmValid(d.class1Time) || !hhmmValid(d.class2Time)) {
+        throw Object.assign(new Error("Times must be HH:mm"), { statusCode: 400 });
+      }
+      const gap = Math.abs(minutesOf(d.class2Time) - minutesOf(d.class1Time));
+      if (Math.min(gap, 1440 - gap) < this.minGapMin) {
+        throw Object.assign(
+          new Error(`Keep at least ${this.minGapMin} minutes between the two classes on ${WEEKDAY_NAMES[d.weekday]}`),
+          { statusCode: 400 }
+        );
+      }
+    }
+
+    const isFirstTime = existing.classDays.length === 0;
+    const before = [...existing.classDays]
+      .sort((a, b) => a.weekday - b.weekday)
+      .map((d) => `${WEEKDAY_NAMES[d.weekday]} ${d.class1Time}/${d.class2Time}`)
+      .join(", ");
+    const after = [...days]
+      .sort((a, b) => a.weekday - b.weekday)
+      .map((d) => `${WEEKDAY_NAMES[d.weekday]} ${d.class1Time}/${d.class2Time}`)
+      .join(", ");
+
+    // Re-anchor BEFORE the rows change, so "the day they have reached" is read
+    // off the calendar they have actually been studying.
+    let startDate = existing.startDate;
+    let startDayNumber = existing.startDayNumber;
+    if (!isFirstTime && before !== after) {
+      const live = await this.requireSchedule(userId);
+      const reached = Math.abs(this.currentDayNumber(live));
+      if (reached > 0) {
+        // Write out every day up to the one they have reached FIRST. A session
+        // record stores the instant it was scheduled for, and the timeline reads
+        // that in preference to recomputing — so this is what actually pins the
+        // past in place. Without it, a day the student never opened would be
+        // recomputed against the new weekdays and appear to move.
+        await this.pinHistory(live, reached);
+
+        const newWeekdays = new Set(weekdays);
+        const today = localDate(new Date(), existing.timezone);
+        const next = nextClassDayAfter(today, newWeekdays);
+        startDate = new Date(Date.UTC(next.year, next.month - 1, next.day));
+        startDayNumber = reached + 1; // days up to `reached` keep the dates they ran on
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.cohortClassDay.deleteMany({ where: { scheduleId: existing.id } }),
+      this.prisma.cohortClassDay.createMany({
+        data: days.map((d) => ({
+          scheduleId: existing.id, weekday: d.weekday,
+          class1Time: d.class1Time, class2Time: d.class2Time
+        }))
+      }),
+      this.prisma.cohortSchedule.update({
+        where: { id: existing.id }, data: { startDate, startDayNumber }
+      }),
+      ...(isFirstTime || before === after
+        ? []
+        : [this.prisma.cohortScheduleChange.create({
+            data: { scheduleId: existing.id, field: "classDays", oldValue: before, newValue: after }
+          })])
+    ]);
+
+    if (!isFirstTime && before !== after) await this.rescheduleUpcoming(userId);
+    return this.getMe(userId);
+  }
+
+  /**
+   * Freeze days 1..throughDay onto the calendar currently in force, by creating
+   * any session record that does not exist yet. Existing records are never
+   * moved, so a day the student actually sat keeps the instant it ran at.
+   */
+  private async pinHistory(sched: ScheduleWithDays, throughDay: number) {
+    const last = Math.min(throughDay, sched.totalDays);
+    for (let dayNumber = 1; dayNumber <= last; dayNumber++) {
+      for (const slot of [CohortSessionSlot.LECTURE, CohortSessionSlot.CORE_SKILLS] as const) {
+        await this.prisma.cohortSessionRecord.upsert({
+          where: { userId_dayNumber_slot: { userId: sched.userId, dayNumber, slot } },
+          create: {
+            userId: sched.userId, dayNumber, slot,
+            scheduledAt: this.scheduledAtFor(sched, dayNumber, slot)
+          },
+          update: {}
+        });
+      }
+    }
+  }
+
+  /**
+   * Move still-upcoming sessions onto the current calendar. Sessions inside the
+   * next two hours are left alone — a student should not find a class they are
+   * about to sit down for has moved under them.
+   */
+  private async rescheduleUpcoming(userId: string) {
+    const sched = await this.requireSchedule(userId);
+    const cutoff = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    // Days at or before the one the student has reached are history and must not
+    // move, whatever instant their record happens to hold. Filtering on the clock
+    // alone is not enough: a re-anchored schedule can leave an old day carrying a
+    // future timestamp, and that day would otherwise be dragged onto the new
+    // calendar — exactly the "my finished classes moved" bug this guards against.
+    const reached = Math.abs(this.currentDayNumber(sched));
+    const upcoming = await this.prisma.cohortSessionRecord.findMany({
+      where: {
+        userId,
+        attendance: CohortAttendance.UPCOMING,
+        scheduledAt: { gt: cutoff },
+        dayNumber: { gt: reached }
+      }
+    });
+    for (const s of upcoming) {
+      await this.prisma.cohortSessionRecord.update({
+        where: { id: s.id },
+        data: { scheduledAt: this.scheduledAtFor(sched, s.dayNumber, s.slot), reminderSentAt: null }
+      });
+    }
   }
 
   async saveScheduleTimes(userId: string, class1Time: string, class2Time: string) {
@@ -126,9 +353,16 @@ export class CohortService {
         { statusCode: 400 }
       );
     }
-    const existing = await this.prisma.cohortSchedule.findUnique({ where: { userId } });
+    const existing = await this.prisma.cohortSchedule.findUnique({
+      where: { userId }, include: { classDays: true }
+    });
     if (!existing) {
       throw Object.assign(new Error("Complete the timezone step first"), { statusCode: 400 });
+    }
+    if (existing.mode === CohortScheduleMode.PICK_FOUR) {
+      throw Object.assign(
+        new Error("Set your times against each of your class days instead"), { statusCode: 409 }
+      );
     }
     // Controlled change: future sessions get rescheduled; sessions within 2h are locked.
     for (const [field, oldV, newV] of [
@@ -144,19 +378,7 @@ export class CohortService {
     const updated = await this.prisma.cohortSchedule.update({
       where: { userId }, data: { class1Time, class2Time }
     });
-    const cutoff = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    // Reschedule future, still-upcoming session records
-    const upcoming = await this.prisma.cohortSessionRecord.findMany({
-      where: { userId, attendance: CohortAttendance.UPCOMING, scheduledAt: { gt: cutoff } }
-    });
-    for (const s of upcoming) {
-      const d = programmeDayDate(updated.startDate, s.dayNumber, updated.restWeekday);
-      const hhmm = s.slot === CohortSessionSlot.LECTURE ? class1Time : class2Time;
-      await this.prisma.cohortSessionRecord.update({
-        where: { id: s.id },
-        data: { scheduledAt: zonedTimeToUtc(d.year, d.month, d.day, hhmm, updated.timezone), reminderSentAt: null }
-      });
-    }
+    await this.rescheduleUpcoming(userId);
     return updated;
   }
 
@@ -165,24 +387,24 @@ export class CohortService {
   /** Idempotently ensure the two session records for a programme day exist. */
   async ensureSessionRecords(userId: string, dayNumber: number) {
     const sched = await this.requireSchedule(userId);
-    const d = programmeDayDate(sched.startDate, dayNumber, sched.restWeekday);
-    for (const [slot, hhmm] of [
-      [CohortSessionSlot.LECTURE, sched.class1Time],
-      [CohortSessionSlot.CORE_SKILLS, sched.class2Time]
-    ] as const) {
-      const scheduledAt = zonedTimeToUtc(d.year, d.month, d.day, hhmm, sched.timezone);
+    for (const slot of [CohortSessionSlot.LECTURE, CohortSessionSlot.CORE_SKILLS] as const) {
       await this.prisma.cohortSessionRecord.upsert({
         where: { userId_dayNumber_slot: { userId, dayNumber, slot } },
-        create: { userId, dayNumber, slot, scheduledAt },
+        create: { userId, dayNumber, slot, scheduledAt: this.scheduledAtFor(sched, dayNumber, slot) },
         update: {} // never move past/locked sessions here
       });
     }
   }
 
-  private async requireSchedule(userId: string) {
-    const sched = await this.prisma.cohortSchedule.findUnique({ where: { userId } });
+  private async requireSchedule(userId: string): Promise<ScheduleWithDays> {
+    const sched = await this.prisma.cohortSchedule.findUnique({
+      where: { userId }, include: { classDays: { orderBy: { weekday: "asc" } } }
+    });
     if (!sched) {
       throw Object.assign(new Error("Cohort onboarding not completed"), { statusCode: 409 });
+    }
+    if (sched.mode === CohortScheduleMode.PICK_FOUR && sched.classDays.length === 0) {
+      throw Object.assign(new Error("Choose your class days to start the programme"), { statusCode: 409 });
     }
     // Always track the LIVE published-day count so admin add/remove/publish of days
     // reflects instantly for every enrolled student, regardless of their onboarding
@@ -192,23 +414,17 @@ export class CohortService {
     return sched;
   }
 
-  /** Which programme day is "today" in the student's timezone? 0 = before Day 1. */
-  currentDayNumber(sched: { startDate: Date; timezone: string; restWeekday: number; totalDays: number }): number {
+  /**
+   * Which programme day is "today" in the student's timezone?
+   * 0 = before Day 1; negative = today is a rest day and |value| was the last
+   * class day. Capped at the number of published days.
+   */
+  currentDayNumber(sched: ScheduleWithDays): number {
     const today = localDate(new Date(), sched.timezone);
-    let count = 0;
-    const d = new Date(Date.UTC(
-      sched.startDate.getUTCFullYear(), sched.startDate.getUTCMonth(), sched.startDate.getUTCDate()
-    ));
-    for (let i = 0; i < 400; i++) {
-      const isToday = d.getUTCFullYear() === today.year &&
-        d.getUTCMonth() + 1 === today.month && d.getUTCDate() === today.day;
-      if (d.getUTCDay() !== sched.restWeekday) count++;
-      if (isToday) return d.getUTCDay() === sched.restWeekday ? -count : count; // negative => rest day, last day was |count|
-      if (count >= sched.totalDays && !isToday) break;
-      d.setUTCDate(d.getUTCDate() + 1);
-    }
-    const startMs = sched.startDate.getTime();
-    return Date.now() < startMs ? 0 : sched.totalDays;
+    const n = dayNumberOnDate(sched.startDate, sched.startDayNumber, today, this.classWeekdaysOf(sched));
+    if (n === 0) return 0;
+    const capped = Math.min(Math.abs(n), sched.totalDays);
+    return n < 0 ? -capped : capped;
   }
 
   // -------------------------------------------------------- state machine
@@ -297,11 +513,23 @@ export class CohortService {
       const title = isLecture ? task.lectureTitle : task.articleTitle;
       const bunnyId = isLecture ? task.lectureBunnyVideoId : task.articleBunnyVideoId;
       const state = this.deriveState(rec, this.defaultDurationMin, { locked: dayIsLocked, earlyAccess });
-      const playable = ["AVAILABLE", "IN_PROGRESS", "RECORDING_AVAILABLE", "COMPLETED"].includes(state);
+      // MISSED belongs here: the card already tells the student "recording
+      // available" and offers Watch Recording, so withholding the URL only
+      // produced an empty player. Missing a class costs attendance, not access.
+      const playable = ["AVAILABLE", "IN_PROGRESS", "MISSED", "RECORDING_AVAILABLE", "COMPLETED"].includes(state);
+      // A lecture may be held either as a Bunny video or as a plain URL. Only the
+      // Bunny case used to produce a playable URL, so a class uploaded as a link
+      // showed an empty player with nothing to click — for the Core Skills slot
+      // especially, which is more often a direct upload.
+      const directUrl = (isLecture ? task.lectureUrl : task.articleUrl)?.trim() || null;
       let embedUrl: string | null = null;
-      if (playable && bunnyId) {
-        try { embedUrl = this.bunny.buildEmbedUrl(bunnyId, { autoplay: false }).url; }
-        catch { embedUrl = isLecture ? task.lectureUrl : task.articleUrl; }
+      if (playable) {
+        if (bunnyId) {
+          try { embedUrl = this.bunny.buildEmbedUrl(bunnyId, { autoplay: false }).url; }
+          catch { embedUrl = directUrl; }
+        } else {
+          embedUrl = directUrl;
+        }
       }
       const durSec = this.defaultDurationMin * 60;
       const watch = Math.max(rec.activeWatchSec + rec.recordingWatchSec, 0);
@@ -399,15 +627,23 @@ export class CohortService {
       }),
       this.prisma.cohortDayProgress.findMany({ where: { userId } }),
       this.prisma.cohortSessionRecord.findMany({
-        where: { userId }, select: { dayNumber: true, attendance: true }
+        where: { userId }, select: { dayNumber: true, attendance: true, scheduledAt: true }
       })
     ]);
     const progressBy = new Map(dayProgress.map((p) => [p.dayNumber, p]));
     const missedDays = new Set(
       sessions.filter((s) => s.attendance === CohortAttendance.MISSED).map((s) => s.dayNumber)
     );
+    // A day that already has a session ran on whatever date that session was
+    // scheduled for. Recomputing it would rewrite history every time a student
+    // changes their class days, so the stored instant wins where we have one.
+    const actualDate = new Map<number, string>();
+    for (const s of sessions) {
+      const w = localDate(s.scheduledAt, sched.timezone);
+      actualDate.set(s.dayNumber, `${w.year}-${String(w.month).padStart(2, "0")}-${String(w.day).padStart(2, "0")}`);
+    }
     return tasks.slice(0, sched.totalDays).map((t) => {
-      const d = programmeDayDate(sched.startDate, t.dayNumber, sched.restWeekday);
+      const d = this.dateOfDay(sched, t.dayNumber);
       const p = progressBy.get(t.dayNumber);
       let label: string;
       if (p?.status === "COMPLETED" || p?.status === "COMPLETED_LATE") label = "Done";
@@ -417,7 +653,8 @@ export class CohortService {
       else label = "Upcoming";
       return {
         dayNumber: t.dayNumber, title: t.title,
-        date: `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`,
+        date: actualDate.get(t.dayNumber)
+          ?? `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`,
         label, completionPct: p?.completionPct ?? 0
       };
     });
