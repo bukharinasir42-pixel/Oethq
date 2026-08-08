@@ -98,6 +98,37 @@ export class CohortService {
     return all;
   }
 
+  /**
+   * Both classes of a programme day run on that one calendar date, so Core
+   * Skills has to come after the Daily Lecture *on the clock*, not merely far
+   * enough from it.
+   *
+   * The old check measured the wrapping distance between the two times, which
+   * treats 23:00 and 00:30 as 90 minutes apart. They are — but only across
+   * midnight, and since both slots are scheduled onto the same date, that pair
+   * put Core Skills 22.5 hours BEFORE the lecture. Measuring forward only makes
+   * the ordering the thing being enforced.
+   */
+  private assertClassPair(class1Time: string, class2Time: string, where = "") {
+    const suffix = where ? ` on ${where}` : "";
+    if (!hhmmValid(class1Time) || !hhmmValid(class2Time)) {
+      throw Object.assign(new Error(`Times must be HH:mm${suffix}`), { statusCode: 400 });
+    }
+    const gap = minutesOf(class2Time) - minutesOf(class1Time);
+    if (gap <= 0) {
+      throw Object.assign(
+        new Error(`Core Skills must start after the lecture${suffix} — both classes run on the same day`),
+        { statusCode: 400 }
+      );
+    }
+    if (gap < this.minGapMin) {
+      throw Object.assign(
+        new Error(`Keep at least ${this.minGapMin} minutes between the two classes${suffix}`),
+        { statusCode: 400 }
+      );
+    }
+  }
+
   /** The two class times that apply on a given weekday. */
   private timesForWeekday(sched: ScheduleWithDays, weekday: number): { class1Time: string; class2Time: string } {
     const picked = sched.classDays.find((d) => d.weekday === weekday);
@@ -161,14 +192,25 @@ export class CohortService {
     }
     const existing = await this.prisma.cohortSchedule.findUnique({ where: { userId } });
     if (existing) {
-      if (existing.timezone !== timezone) {
+      const moved = existing.timezone !== timezone;
+      if (moved) {
         await this.prisma.cohortScheduleChange.create({
           data: { scheduleId: existing.id, field: "timezone", oldValue: existing.timezone, newValue: timezone }
         });
       }
-      return this.prisma.cohortSchedule.update({
+      const updated = await this.prisma.cohortSchedule.update({
         where: { userId }, data: { country, timezone }
       });
+      if (moved) {
+        // Sessions store an absolute instant, so a student who moves country
+        // would keep sitting classes at the old zone's clock — an 8pm class
+        // becoming 4pm after a move to London. The promise on the onboarding
+        // screen is "every class runs in your local time", so re-derive the
+        // upcoming ones against the new zone. Days already taught stay put,
+        // which is the same rule as changing class days.
+        await this.rescheduleUpcoming(userId).catch(() => undefined);
+      }
+      return updated;
     }
     // startDate = tomorrow in the student's timezone (Day 1)
     const nowLocal = localDate(new Date(), timezone);
@@ -224,16 +266,7 @@ export class CohortService {
       if (!Number.isInteger(d.weekday) || d.weekday < 0 || d.weekday > 6) {
         throw Object.assign(new Error("Weekday must be 0 (Sunday) to 6 (Saturday)"), { statusCode: 400 });
       }
-      if (!hhmmValid(d.class1Time) || !hhmmValid(d.class2Time)) {
-        throw Object.assign(new Error("Times must be HH:mm"), { statusCode: 400 });
-      }
-      const gap = Math.abs(minutesOf(d.class2Time) - minutesOf(d.class1Time));
-      if (Math.min(gap, 1440 - gap) < this.minGapMin) {
-        throw Object.assign(
-          new Error(`Keep at least ${this.minGapMin} minutes between the two classes on ${WEEKDAY_NAMES[d.weekday]}`),
-          { statusCode: 400 }
-        );
-      }
+      this.assertClassPair(d.class1Time, d.class2Time, WEEKDAY_NAMES[d.weekday]);
     }
 
     const isFirstTime = existing.classDays.length === 0;
@@ -269,7 +302,11 @@ export class CohortService {
       }
     }
 
-    await this.prisma.$transaction([
+    // Replace-all under a unique (scheduleId, weekday). Two saves landing at once
+    // — a double-clicked Save button — can interleave delete and create and trip
+    // that constraint. Losing the race is not the student's problem, so retry
+    // once and let last-write-win rather than showing them a server error.
+    const write = () => this.prisma.$transaction([
       this.prisma.cohortClassDay.deleteMany({ where: { scheduleId: existing.id } }),
       this.prisma.cohortClassDay.createMany({
         data: days.map((d) => ({
@@ -286,6 +323,14 @@ export class CohortService {
             data: { scheduleId: existing.id, field: "classDays", oldValue: before, newValue: after }
           })])
     ]);
+    try {
+      await write();
+    } catch (e) {
+      const raced =
+        e instanceof Prisma.PrismaClientKnownRequestError && (e.code === "P2002" || e.code === "P2034");
+      if (!raced) throw e;
+      await write();
+    }
 
     if (!isFirstTime && before !== after) await this.rescheduleUpcoming(userId);
     return this.getMe(userId);
@@ -343,16 +388,9 @@ export class CohortService {
   }
 
   async saveScheduleTimes(userId: string, class1Time: string, class2Time: string) {
-    if (!hhmmValid(class1Time) || !hhmmValid(class2Time)) {
-      throw Object.assign(new Error("Times must be HH:mm"), { statusCode: 400 });
-    }
-    const gap = Math.abs(minutesOf(class2Time) - minutesOf(class1Time));
-    if (Math.min(gap, 1440 - gap) < this.minGapMin) {
-      throw Object.assign(
-        new Error(`Keep at least ${this.minGapMin} minutes between the two classes`),
-        { statusCode: 400 }
-      );
-    }
+    // Same ordering rule as the picker: the six-day programme also puts both
+    // classes on one date, so it had the same midnight-crossing hole.
+    this.assertClassPair(class1Time, class2Time);
     const existing = await this.prisma.cohortSchedule.findUnique({
       where: { userId }, include: { classDays: true }
     });

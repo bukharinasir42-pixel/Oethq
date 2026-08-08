@@ -51,10 +51,17 @@ const minutesOf = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
 };
-/** Wrapping distance, so 23:30 and 00:30 read as an hour apart, not 23. */
-export function gapTooSmall(a: string, b: string): boolean {
-  const raw = Math.abs(minutesOf(a) - minutesOf(b));
-  return Math.min(raw, 1440 - raw) < MIN_GAP_MIN;
+/**
+ * Core Skills must come after the lecture, by at least the minimum gap. Measured
+ * forward only — both classes run on the same calendar date, so a pair like
+ * 23:00 / 00:30 is not "90 minutes later", it is 22.5 hours earlier.
+ * Mirrors the server, which enforces the same rule.
+ */
+export function classPairProblem(class1: string, class2: string): string | null {
+  const gap = minutesOf(class2) - minutesOf(class1);
+  if (gap <= 0) return "Core Skills must start after the lecture — both classes run on the same day.";
+  if (gap < MIN_GAP_MIN) return "Keep at least 1 hour between the two classes.";
+  return null;
 }
 
 export type ClassDayPickerProps = {
@@ -119,7 +126,10 @@ export function ClassDayPicker({ value, onChange, compact = false }: ClassDayPic
                 // inherited colour, which outranks utility classes and would
                 // leave every day looking identical to every other.
                 style={{
-                  minWidth: 56, padding: "8px 14px", borderRadius: 12,
+                  // 44x44 is the smallest reliably tappable target on a phone;
+                  // at the previous size these came out 34px tall and the seven
+                  // of them sit close together.
+                  minWidth: 56, minHeight: 44, padding: "10px 16px", borderRadius: 12,
                   fontSize: 14, fontWeight: 700, lineHeight: 1.2,
                   cursor: full ? "not-allowed" : "pointer",
                   transition: "background .15s, border-color .15s, color .15s",
@@ -144,7 +154,7 @@ export function ClassDayPicker({ value, onChange, compact = false }: ClassDayPic
       {value.length > 0 && (
         <div className="space-y-2.5">
           {[...value].sort(byWeekOrder).map((d) => {
-            const bad = gapTooSmall(d.class1Time, d.class2Time);
+            const problem = classPairProblem(d.class1Time, d.class2Time);
             return (
               <div key={d.weekday} className="rounded-xl border border-slate-200 bg-white p-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -169,17 +179,15 @@ export function ClassDayPicker({ value, onChange, compact = false }: ClassDayPic
                       onChange={(e) => setTime(d.weekday, "class2Time", e.target.value)}
                       aria-label={`Core Skills time on ${WEEKDAYS.find((w) => w.value === d.weekday)?.label}`}
                       className={`rounded-lg border px-2 py-1.5 text-sm font-medium text-slate-800 focus:outline-none ${
-                        bad ? "border-rose-400 bg-rose-50" : "border-slate-300 focus:border-blue-500"
+                        problem ? "border-rose-400 bg-rose-50" : "border-slate-300 focus:border-blue-500"
                       }`}
                     >
                       {slots.map((t) => <option key={t} value={t}>{fmt(t)}</option>)}
                     </select>
                   </label>
                 </div>
-                {bad && (
-                  <p role="alert" className="mt-1.5 text-xs font-medium text-rose-600">
-                    Keep at least 1 hour between the two classes.
-                  </p>
+                {problem && (
+                  <p role="alert" className="mt-1.5 text-xs font-medium text-rose-600">{problem}</p>
                 )}
               </div>
             );
@@ -202,7 +210,7 @@ function lastUsedTimes(days: CohortClassDay[]) {
 
 /** True when the selection is complete and every gap is legal. */
 export function classDaysReady(days: CohortClassDay[]): boolean {
-  return days.length === REQUIRED_CLASS_DAYS && days.every((d) => !gapTooSmall(d.class1Time, d.class2Time));
+  return days.length === REQUIRED_CLASS_DAYS && days.every((d) => !classPairProblem(d.class1Time, d.class2Time));
 }
 
 /** "Mon · Wed · Fri · Sat", in week order. */

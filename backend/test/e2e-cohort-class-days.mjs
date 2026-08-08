@@ -372,7 +372,99 @@ console.log("\n=== 9. BOTH CLASSES ARE WATCHABLE, AND THE EMAIL LINK WORKS ===")
   }
 }
 
-console.log("\n=== 10. AUTHORISATION ===");
+console.log("\n=== 10. THE AWKWARD CHOICES STUDENTS ACTUALLY MAKE ===");
+{
+  const a = await makeStudent("awkward");
+  await api("/cohort/onboarding/timezone", { method: "POST", token: a.token, body: { country: "Pakistan", timezone: "Asia/Karachi" } });
+
+  // Both classes run on one calendar date, so Core Skills has to come after the
+  // lecture ON THE CLOCK. Measuring the wrapping distance would call 23:00 and
+  // 00:30 "90 minutes apart" and schedule Core Skills 22.5 hours EARLIER.
+  const pairs = [
+    [["23:00", "00:30"], false, "core skills after midnight"],
+    [["21:30", "20:00"], false, "core skills before the lecture"],
+    [["20:00", "20:00"], false, "both at the same time"],
+    [["20:00", "20:59"], false, "59 minutes apart"],
+    [["20:00", "21:00"], true, "exactly an hour apart"],
+    [["00:00", "23:30"], true, "first thing to last thing"]
+  ];
+  for (const [[c1, c2], ok, label] of pairs) {
+    const r = await api("/cohort/onboarding/class-days", {
+      method: "POST", token: a.token,
+      body: { days: [MON, WED, FRI, SAT].map((weekday) => ({ weekday, class1Time: c1, class2Time: c2 })) }
+    });
+    ck(`${label} → ${ok ? "accepted" : "refused"}`, ok ? r.status === 200 : r.status >= 400,
+      `status ${r.status} ${String(r.body?.message ?? "").slice(0, 80)}`);
+  }
+  const d1 = await api("/cohort/days/1", { token: a.token });
+  const lec = d1.body?.sessions?.find((x) => x.slot === "LECTURE");
+  const core = d1.body?.sessions?.find((x) => x.slot === "CORE_SKILLS");
+  ck("core skills is scheduled after the lecture, never before",
+    lec && core && new Date(core.scheduledAtUtc) > new Date(lec.scheduledAtUtc),
+    `${lec?.scheduledAtUtc} → ${core?.scheduledAtUtc}`);
+
+  // Four consecutive weekdays leave a four-day gap. It is their choice, and it
+  // must still lay out in order.
+  const blocky = await api("/cohort/onboarding/class-days", {
+    method: "POST", token: a.token,
+    body: { days: [MON, TUE, WED, THU].map((weekday) => ({ weekday, class1Time: "20:00", class2Time: "21:30" })) }
+  });
+  ck("four days in a row are allowed", blocky.status === 200, `status ${blocky.status}`);
+  const list = (await api("/cohort/days", { token: a.token })).body?.days ?? [];
+  ck("and still run in strict order across the long gap",
+    list.length > 0 && list.every((d, i) => i === 0 || d.date > list[i - 1].date));
+  ck("on only those four weekdays",
+    list.every((d) => [MON, TUE, WED, THU].includes(weekdayOf(d.date))),
+    list.slice(0, 6).map((d) => `${d.date}(${NAME[weekdayOf(d.date)]})`).join(" "));
+}
+
+console.log("\n=== 11. MOVING COUNTRY KEEPS CLASSES AT THE CHOSEN LOCAL TIME ===");
+{
+  const a = await makeStudent("emigrant");
+  await api("/cohort/onboarding/timezone", { method: "POST", token: a.token, body: { country: "Pakistan", timezone: "Asia/Karachi" } });
+  await api("/cohort/onboarding/class-days", {
+    method: "POST", token: a.token,
+    body: { days: [MON, WED, FRI, SAT].map((weekday) => ({ weekday, class1Time: "20:00", class2Time: "21:30" })) }
+  });
+  const beforeUtc = (await api("/cohort/days/1", { token: a.token })).body?.sessions
+    ?.find((x) => x.slot === "LECTURE")?.scheduledAtUtc;
+
+  const moved = await api("/cohort/onboarding/timezone", {
+    method: "POST", token: a.token, body: { country: "United Kingdom", timezone: "Europe/London" }
+  });
+  ck("a student can move country after picking their days", moved.status === 200, `status ${moved.status}`);
+  ck("their four days survive the move",
+    ((await api("/cohort/me", { token: a.token })).body?.schedule?.classDays ?? []).length === 4);
+
+  const afterLec = (await api("/cohort/days/1", { token: a.token })).body?.sessions
+    ?.find((x) => x.slot === "LECTURE");
+  const localHour = afterLec && new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London", hour: "2-digit", hour12: false
+  }).format(new Date(afterLec.scheduledAtUtc));
+  // Sessions store an absolute instant. Left alone, an 8pm Karachi class becomes
+  // a 4pm London class — which breaks the promise made at onboarding.
+  ck("8pm still means 8pm where they now live", Number(localHour) === 20, `${localHour}h London`);
+  ck("so the stored instant genuinely moved", afterLec?.scheduledAtUtc !== beforeUtc,
+    `${beforeUtc} → ${afterLec?.scheduledAtUtc}`);
+}
+
+console.log("\n=== 12. A DOUBLE-CLICKED SAVE ===");
+{
+  const a = await makeStudent("doubletap");
+  await api("/cohort/onboarding/timezone", { method: "POST", token: a.token, body: { country: "Pakistan", timezone: "Asia/Karachi" } });
+  const body = { days: [MON, WED, FRI, SAT].map((weekday) => ({ weekday, class1Time: "20:00", class2Time: "21:30" })) };
+  const [r1, r2] = await Promise.all([
+    api("/cohort/onboarding/class-days", { method: "POST", token: a.token, body }),
+    api("/cohort/onboarding/class-days", { method: "POST", token: a.token, body })
+  ]);
+  // Replace-all under a unique (scheduleId, weekday): two saves can interleave
+  // delete and create. Losing that race must not surface as a server error.
+  ck("neither save returns a server error", r1.status < 500 && r2.status < 500, `${r1.status}/${r2.status}`);
+  ck("and exactly four class days are left, not eight",
+    sql(`select count(*) from "CohortClassDay" c join "CohortSchedule" s2 on s2.id=c."scheduleId" where s2."userId"='${a.id}'`) === "4");
+}
+
+console.log("\n=== 13. AUTHORISATION ===");
 {
   ck("a signed-out caller cannot set class days",
     (await api("/cohort/onboarding/class-days", { method: "POST", body: { days: FOUR } })).status === 401);
