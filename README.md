@@ -77,6 +77,8 @@ Fill `.env` based on `.env.example`:
 - `NEXT_PUBLIC_API_BASE` must match your API base URL (e.g. `http://localhost:4000` for local Express).
 - **HTTPS frontend + HTTP API (ECS):** set `NEXT_PUBLIC_API_BASE=/api` and `API_URL=http://<ecs-ip>:4000`. For a **fixed IP** that survives redeploys, run `infra/aws-cheapest/scripts/setup-stable-api.ps1` once (NLB + Elastic IP), then redeploy the backend.
 - **Vercel `ROUTER_EXTERNAL_TARGET_CONNECTION_ERROR` on login:** stale `API_URL` on Vercel (ECS task got a new public IP). Update `API_URL` in Vercel project env and redeploy the frontend.
+- `ANTHROPIC_API_KEY` switches the website assistant on. **Backend only** — it must never be given a `NEXT_PUBLIC_` name or reach the browser bundle, because a key in the frontend is a key anyone can spend. Leave it unset and the chat widget does not render at all. Get one from <https://console.anthropic.com>.
+- `TRUST_PROXY=true` matters more once the assistant is live: the anonymous chat rate limit is keyed on the client IP, and behind a CDN every visitor looks like the proxy without it — so one person hitting the cap would lock out everyone.
 
 ## Useful commands
 - Backend: `npm run lint`, `npm run format`, `npm run build`, `npm run prisma:migrate`

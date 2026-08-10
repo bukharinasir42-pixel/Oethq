@@ -32,6 +32,9 @@ import { AccountabilityService } from "../modules/accountability/accountability.
 import { WritingService } from "../modules/writing/writing.service";
 import { SpellingService } from "../modules/spelling/spelling.service";
 import { UsersService } from "../modules/users/users.service";
+import { AttributionService } from "../modules/attribution/attribution.service";
+import { KnowledgeService } from "../modules/chat/knowledge.service";
+import { ChatService } from "../modules/chat/chat.service";
 
 export type AppContainer = {
   config: typeof appConfig;
@@ -67,6 +70,9 @@ export type AppContainer = {
   accountabilityService: AccountabilityService;
   writingService: WritingService;
   spellingService: SpellingService;
+  attributionService: AttributionService;
+  knowledgeService: KnowledgeService;
+  chatService: ChatService;
 };
 
 export function createAppContainer(): AppContainer {
@@ -120,6 +126,9 @@ export function createAppContainer(): AppContainer {
   const accountabilityService = new AccountabilityService(prisma, usersService, emailService);
   const writingService = new WritingService(prisma, emailService);
   const spellingService = new SpellingService(prisma);
+  const attributionService = new AttributionService(prisma);
+  const knowledgeService = new KnowledgeService(prisma);
+  const chatService = new ChatService(prisma, knowledgeService, attributionService);
 
   return {
     config: appConfig,
@@ -152,6 +161,9 @@ export function createAppContainer(): AppContainer {
     accountabilityService,
     writingService,
     spellingService,
+    attributionService,
+    knowledgeService,
+    chatService,
     blogsService,
     howToIntroductionService,
     websiteHomeService

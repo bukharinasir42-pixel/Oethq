@@ -7,7 +7,7 @@ import type { UserProfile } from "./types";
  * - In the browser: always `NEXT_PUBLIC_API_BASE` (inlined at build time).
  * - On the server (RSC, route handlers): prefers `API_URL` / `BACKEND_URL` via {@link getBackendOrigin}.
  */
-function getApiBase(): string {
+export function getApiBase(): string {
   if (typeof window === "undefined") {
     const internal = process.env.API_URL?.trim() || process.env.BACKEND_URL?.trim();
     if (internal) return getBackendOrigin();

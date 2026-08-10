@@ -30,6 +30,8 @@ import { createAccountabilityRouter } from "./http/routes/accountability.router"
 import { createWritingRouter } from "./http/routes/writing.router";
 import { createSpellingRouter } from "./http/routes/spelling.router";
 import { createUsersRouter } from "./http/routes/users.router";
+import { createAttributionRouter } from "./http/routes/attribution.router";
+import { createChatRouter } from "./http/routes/chat.router";
 import { SystemService } from "./system.service";
 
 function publicAppOrigin(): string {
@@ -104,6 +106,8 @@ export function createApp(c: AppContainer) {
   app.use(createSystemRouter(system));
   app.use(createDevicesRouter(c));
   app.use(createUsersRouter(c));
+  app.use(createAttributionRouter(c));
+  app.use(createChatRouter(c));
   app.use(createGradingRouter(c));
   app.use(createTasksRouter(c));
   app.use(createAuditRouter(c));
