@@ -14,6 +14,14 @@ export type OetReadingExamProps = {
   /** Final submit (manual or timer auto-submit). */
   onSubmit: (answers: Record<string, string>) => void;
   submitting: boolean;
+  /**
+   * Keys the student's highlights in local storage.
+   *
+   * The TEST id, not the attempt id: reloading mid-exam starts a fresh attempt,
+   * so keying on the attempt would throw the marking away at exactly the moment
+   * it is most wanted. Cleared on submit, so a later sitting starts clean.
+   */
+  highlightKey?: string | null;
 };
 
 export type OetListeningExamProps = {

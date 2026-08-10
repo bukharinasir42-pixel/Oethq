@@ -10,6 +10,9 @@ import type {
   OetFillBlankQuestion,
 } from "@/lib/oet-test-schema";
 import type { OetReadingExamProps } from "../oet-exam-types";
+import {
+  clearRegion, HL_REGION_ATTR, useCopyProtection, useHighlighting
+} from "./exam-highlighting";
 import "./oet-reading-exam.css";
 
 /* ------------------------------------------------------------------ icons */
@@ -130,79 +133,23 @@ function buildPartCHtml(t: OetReadingPartCText, index: number): string {
 
 /* ------------------------------------------------------------------ highlighting */
 
-function unwrapMark(m: Element): void {
-  const parent = m.parentNode;
-  if (!parent) return;
-  while (m.firstChild) parent.insertBefore(m.firstChild, m);
-  parent.removeChild(m);
-  if (parent instanceof Element || parent instanceof Document) parent.normalize();
-}
-
-type PassageProps = { html: string; paneId: string; paneClassName: string };
+type PassageProps = { html: string; regionKey: string; paneId: string; paneClassName: string };
 
 /**
- * Reading passage pane with in-place text highlighting. Memoized on its
- * (stable) props so answer-state re-renders of the parent never touch this
- * subtree — the <mark> nodes we inject by hand survive React reconciliation.
+ * A reading pane the student can mark up. Memoized on its (stable) props so
+ * answer-state re-renders of the parent never touch this subtree — the <mark>
+ * nodes injected by hand would not survive React reconciliation otherwise.
+ *
+ * The marking itself is handled centrally by useHighlighting on the exam root;
+ * this only declares the region and offers the clear button.
  */
 const HighlightablePassage = React.memo(function HighlightablePassage({
   html,
+  regionKey,
   paneId,
   paneClassName,
 }: PassageProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-
-    const onMouseUp = () => {
-      const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      if (!el.contains(range.commonAncestorContainer)) return;
-      const anchor =
-        range.commonAncestorContainer.nodeType === 1
-          ? (range.commonAncestorContainer as Element)
-          : range.commonAncestorContainer.parentElement;
-      if (anchor && anchor.closest("mark.oet-hl")) {
-        sel.removeAllRanges();
-        return;
-      }
-      const mark = document.createElement("mark");
-      mark.className = "oet-hl";
-      try {
-        range.surroundContents(mark);
-      } catch {
-        try {
-          mark.appendChild(range.extractContents());
-          range.insertNode(mark);
-        } catch {
-          return;
-        }
-      }
-      sel.removeAllRanges();
-    };
-
-    const onClick = (e: MouseEvent) => {
-      const target = e.target as Element | null;
-      const m = target && target.closest ? target.closest("mark.oet-hl") : null;
-      if (m && el.contains(m)) unwrapMark(m);
-    };
-
-    el.addEventListener("mouseup", onMouseUp);
-    el.addEventListener("click", onClick);
-    return () => {
-      el.removeEventListener("mouseup", onMouseUp);
-      el.removeEventListener("click", onClick);
-    };
-  }, []);
-
-  const clearAll = () => {
-    const el = contentRef.current;
-    if (!el) return;
-    el.querySelectorAll("mark.oet-hl").forEach((m) => unwrapMark(m));
-  };
 
   return (
     <div className={paneClassName} id={paneId}>
@@ -211,12 +158,16 @@ const HighlightablePassage = React.memo(function HighlightablePassage({
           type="button"
           className="hl-clear"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={clearAll}
+          onClick={() => contentRef.current && clearRegion(contentRef.current)}
         >
           <HighlighterIcon /> Clear highlights
         </button>
       </div>
-      <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+      <div
+        ref={contentRef}
+        {...{ [HL_REGION_ATTR]: regionKey }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </div>
   );
 });
@@ -226,6 +177,8 @@ const HL_STYLE = `
 .oet-reading .hl-tools{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;padding:8px 12px 0;height:0;overflow:visible;pointer-events:none}
 .oet-reading .hl-clear{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--blue-2);background:var(--sky);border:1px solid var(--sky-2);padding:5px 10px;border-radius:8px;box-shadow:0 1px 3px rgba(13,42,94,.08)}
 .oet-reading .hl-clear:hover{background:var(--sky-2)}
+/* Marking is a drag, so the browser's own drag-to-move-text would fight it. */
+.oet-reading [data-hl-region]{-webkit-user-drag:none}
 `;
 
 /* ------------------------------------------------------------------ modal */
@@ -303,7 +256,14 @@ export function OetReadingExam({
   onAnswersChange,
   onSubmit,
   submitting,
+  highlightKey = null,
 }: OetReadingExamProps) {
+  /**
+   * The whole exam is one protected surface: text can be marked anywhere the
+   * student reads, and can leave by none of the usual routes.
+   */
+  const examRef = useRef<HTMLDivElement>(null);
+  useCopyProtection(examRef);
   const partAMinutes = content.timing.partAMinutes ?? 15;
   const partBCMinutes = content.timing.partBCMinutes ?? 45;
   const A_TIME = partAMinutes * 60;
@@ -318,6 +278,10 @@ export function OetReadingExam({
   // stacked panes divide the height. Percent of the split container.
   const isNarrow = useIsNarrow();
   const [paTab, setPaTab] = useState<number>(0);
+  // Re-run whenever a pane mounts or unmounts: moving between Part A, Part B and
+  // the two Part C texts swaps whole regions in and out, and each one that comes
+  // back has to be restored from what the student had marked on it before.
+  useHighlighting(examRef, highlightKey, [stage, bcTab, paTab, isNarrow]);
   const [splitPct, setSplitPct] = useState<number>(46);
   const resizeSplit = useCallback((clientY: number, container: HTMLElement) => {
     const box = container.getBoundingClientRect();
@@ -536,7 +500,7 @@ export function OetReadingExam({
 
   /* ---------------------------------------------------------------- render */
   return (
-    <div className="oet-reading">
+    <div className="oet-reading" ref={examRef}>
       <style dangerouslySetInnerHTML={{ __html: HL_STYLE }} />
       <div id="app">
         {/* top bar */}
@@ -697,9 +661,14 @@ export function OetReadingExam({
             </div>
           ) : null}
           <div className="body-split" style={isNarrow ? ({ "--pane-split": `${splitPct}%` } as React.CSSProperties) : undefined}>
-            <HighlightablePassage html={partAHtml} paneId="paneAText" paneClassName="pane pane-text" />
+            <HighlightablePassage
+              html={partAHtml}
+              regionKey="A-text"
+              paneId="paneAText"
+              paneClassName="pane pane-text"
+            />
             <PaneResizer onResize={resizeSplit} />
-            <div className="pane pane-q" id="paneAQ">
+            <div className="pane pane-q" id="paneAQ" data-hl-region="A-questions">
               <div className="qwrap">
                 <div className="qhead">
                   <div className="k">Part A</div>
@@ -730,6 +699,7 @@ export function OetReadingExam({
                                   key={L}
                                   type="button"
                                   className={`letter-btn${val === L ? " sel" : ""}`}
+                                  data-hl-answer
                                   onClick={() => setAnswer(q.n, L)}
                                 >
                                   {L}
@@ -801,7 +771,7 @@ export function OetReadingExam({
           <div id="bcContent">
             {bcTab === 0 ? (
               <div className="body-single">
-                <div className="pb-wrap">
+                <div className="pb-wrap" data-hl-region="B">
                   <div className="qhead" style={{ maxWidth: 820, margin: "0 auto 4px" }}>
                     <div className="k">Part B</div>
                     <div className="t" style={{ fontSize: 21, fontWeight: 800, color: "var(--navy)" }}>
@@ -831,6 +801,7 @@ export function OetReadingExam({
                               <div
                                 key={L}
                                 className={`opt${val === L ? " sel" : ""}`}
+                                data-hl-answer
                                 onClick={() => setAnswer(it.n, L)}
                               >
                                 <span className="mk">{L}</span>
@@ -853,6 +824,7 @@ export function OetReadingExam({
                   <div className="body-split" style={isNarrow ? ({ "--pane-split": `${splitPct}%` } as React.CSSProperties) : undefined}>
                     <HighlightablePassage
                       html={partCHtml[ti]}
+                      regionKey={`C${ti}-text`}
                       paneId={`paneCText${ti}`}
                       paneClassName="pane pane-text"
                     />
@@ -860,7 +832,7 @@ export function OetReadingExam({
                         three-row grid (text / handle / questions). Without this the
                         question pane drops into the handle's row and is 14px tall. */}
                     <PaneResizer onResize={resizeSplit} />
-                    <div className="pane pane-q">
+                    <div className="pane pane-q" data-hl-region={`C${ti}-questions`}>
                       <div className="qwrap">
                         <div className="qhead">
                           <div className="k">Part C &middot; Text {ti + 1}</div>
@@ -881,6 +853,7 @@ export function OetReadingExam({
                                   <div
                                     key={L}
                                     className={`opt${val === L ? " sel" : ""}`}
+                                    data-hl-answer
                                     onClick={() => setAnswer(q.n, L)}
                                   >
                                     <span className="mk">{L}</span>
