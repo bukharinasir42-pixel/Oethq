@@ -79,6 +79,8 @@ Fill `.env` based on `.env.example`:
 - **Vercel `ROUTER_EXTERNAL_TARGET_CONNECTION_ERROR` on login:** stale `API_URL` on Vercel (ECS task got a new public IP). Update `API_URL` in Vercel project env and redeploy the frontend.
 - `ANTHROPIC_API_KEY` switches the website assistant on. **Backend only** — it must never be given a `NEXT_PUBLIC_` name or reach the browser bundle, because a key in the frontend is a key anyone can spend. Leave it unset and the chat widget does not render at all. Get one from <https://console.anthropic.com>.
 - `TRUST_PROXY=true` matters more once the assistant is live: the anonymous chat rate limit is keyed on the client IP, and behind a CDN every visitor looks like the proxy without it — so one person hitting the cap would lock out everyone.
+- `ANTHROPIC_CHAT_MODEL` overrides the assistant's model (default `claude-opus-5`). `claude-sonnet-5` costs roughly half and `claude-haiku-4-5` roughly a fifth; the spend estimate in Admin → Assistant follows whichever is set. Read the answers before deciding — the job is answering only from the retrieved passages, and that is where the tiers differ.
+- `PUBLIC_APP_URL` is also used to protect your own email domain from the ingest redactor, so `support@oethq.com` survives while a student's address does not. See [docs/assistant-knowledge-prompt.md](docs/assistant-knowledge-prompt.md) for how to build the assistant's knowledge base.
 
 ## Useful commands
 - Backend: `npm run lint`, `npm run format`, `npm run build`, `npm run prisma:migrate`

@@ -26,8 +26,26 @@ function partialMarkerTail(buf: string): number {
   return 0;
 }
 
-/** Opus 5 — see the model table in the Claude API reference. */
-const MODEL = "claude-opus-5";
+/**
+ * The model. Opus 5 by default — it is the most careful about answering only
+ * from what it was given, which is the whole job here.
+ *
+ * Overridable because the cost difference is real and this is a support bot
+ * reading from passages already in its context, not a reasoning task:
+ *   claude-sonnet-5   — roughly half the price
+ *   claude-haiku-4-5  — roughly a fifth
+ * Change it, then read the answers in Admin → Assistant before deciding.
+ */
+const MODEL = process.env.ANTHROPIC_CHAT_MODEL?.trim() || "claude-opus-5";
+
+/** List price per million tokens, for the spend estimate on the admin page. */
+const PRICING: Record<string, { input: number; output: number }> = {
+  "claude-opus-5": { input: 5, output: 25 },
+  "claude-opus-4-8": { input: 5, output: 25 },
+  "claude-sonnet-5": { input: 3, output: 15 },
+  "claude-sonnet-4-6": { input: 3, output: 15 },
+  "claude-haiku-4-5": { input: 1, output: 5 }
+};
 
 /**
  * A support answer that runs long is a support answer nobody reads, and output
@@ -425,12 +443,16 @@ export class ChatService {
     const inTok = tokens._sum.inputTokens ?? 0;
     const outTok = tokens._sum.outputTokens ?? 0;
     const cachedTok = tokens._sum.cacheReadTokens ?? 0;
-    // Opus 5 list price: $5/M input, $25/M output, cache reads at 10% of input.
+    // Cache reads bill at 10% of the input rate.
+    const price = PRICING[MODEL] ?? PRICING["claude-opus-5"];
     const estimatedCostUsd =
-      ((inTok - cachedTok) / 1_000_000) * 5 + (cachedTok / 1_000_000) * 0.5 + (outTok / 1_000_000) * 25;
+      ((inTok - cachedTok) / 1_000_000) * price.input +
+      (cachedTok / 1_000_000) * (price.input * 0.1) +
+      (outTok / 1_000_000) * price.output;
 
     return {
       days,
+      model: MODEL,
       conversations: convos,
       handoffs,
       messages: msgs,

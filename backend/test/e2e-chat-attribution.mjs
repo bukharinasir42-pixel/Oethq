@@ -111,6 +111,20 @@ async function main() {
   ok("assistant reports itself configured", config.json?.enabled === true);
   ok("knowledge base is not empty", config.json?.knowledgeReady === true, "ingest a source first");
 
+  // Section 12 deliberately burns the anonymous per-hour cap, and the limiter is
+  // in-process and keyed on IP — so a second run from the same machine fails
+  // from here down with a cascade of confusing errors. Say so instead.
+  const probe = await api("/chat/message", { method: "POST", body: { message: "harness probe", visitorKey: visitorKey("probe") }, raw: true });
+  if (probe.status === 429) {
+    console.log(
+      "\n  Rate limited before the suite began.\n" +
+        "  The burst test in section 12 spends the anonymous hourly cap, and it is\n" +
+        "  held in memory keyed on your IP. Restart the API and run this again."
+    );
+    process.exit(1);
+  }
+  await probe.text();
+
   // ------------------------------------------------------- 2. classification
   section("2. Traffic is classified from what the browser reports");
   const cases = [
@@ -343,7 +357,12 @@ async function main() {
 
   const searchable = await api(`/admin/chat/knowledge/search?q=${encodeURIComponent("how many devices can I use")}`, { token });
   ok("a question can be tried against the index without a model call", (searchable.json?.results?.length ?? 0) > 0);
-  ok("the top hit is the passage that answers it", /two devices/i.test(searchable.json.results[0].content), searchable.json.results[0].content.slice(0, 80));
+  // Assert that the top hit ANSWERS the question, not that it uses one
+  // fixture's exact wording — more than one passage can legitimately answer
+  // "how many devices", and the better-worded one winning is a pass, not a fail.
+  const topHit = searchable.json.results[0].content;
+  ok("the top hit is about devices", /device/i.test(topHit), topHit.slice(0, 90));
+  ok("and it carries the answer", /\btwo\b|\b2\b/i.test(topHit), topHit.slice(0, 90));
 
   // Toggle the source that actually OWNS the top hit — disabling an unrelated
   // source and watching an unrelated query stay empty proves nothing.

@@ -83,10 +83,10 @@ export function chunkDocument(raw: string, maxChars = DEFAULT_MAX_CHARS): DraftC
     // A scrap too small to answer anything is appended to the previous chunk
     // instead of becoming its own unrankable row.
     if (content.length < MIN_CHARS && chunks.length > 0) {
-      chunks[chunks.length - 1].content += `\n\n${content}`;
+      chunks[chunks.length - 1].content += `\n\n${redact(content)}`;
       return;
     }
-    chunks.push({ heading, content });
+    chunks.push({ heading: heading ? redact(heading) : null, content: redact(content) });
   };
 
   for (const block of blocks) {
@@ -208,10 +208,40 @@ export function chunkConversation(raw: string, maxChars = DEFAULT_MAX_CHARS): Dr
   return chunks;
 }
 
-/** Strip phone numbers, emails and long digit runs before anything is stored. */
-export function redact(s: string): string {
+/**
+ * Your own domains, which must survive redaction.
+ *
+ * Without this, "email support@oethq.com" becomes "email [email]" and the
+ * assistant loses the one contact detail it most needs to be able to give out.
+ */
+export function companyDomains(): string[] {
+  const raw = process.env.PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
+  try {
+    const host = new URL(raw.includes("://") ? raw : `https://${raw}`).hostname.replace(/^www\./, "");
+    return host && !host.startsWith("localhost") ? [host] : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Strip other people's contact details before anything is stored.
+ *
+ * This runs on EVERY ingest format, not just raw chat exports. The material
+ * being loaded is other people's messages, and a passage that carries a
+ * student's phone number is a passage a stranger's question can surface — the
+ * knowledge base is read out to whoever is chatting.
+ *
+ * It is a filter, not a guarantee: it catches emails, phone numbers and long
+ * digit runs, which is what appears in practice. It cannot catch a name, and it
+ * is not a substitute for not putting personal details in the file.
+ */
+export function redact(s: string, keepDomains: string[] = companyDomains()): string {
   return s
-    .replace(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g, "[email]")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g, (match) => {
+      const domain = match.split("@")[1]?.toLowerCase() ?? "";
+      return keepDomains.some((d) => domain === d || domain.endsWith(`.${d}`)) ? match : "[email]";
+    })
     .replace(/(?:\+?\d[\d\s().-]{7,}\d)/g, "[phone]")
     .replace(/\b\d{9,}\b/g, "[number]");
 }
@@ -231,7 +261,10 @@ export function chunkQaJson(raw: string): DraftChunk[] {
     const q = String(o.question ?? o.q ?? o.title ?? "").trim();
     const a = String(o.answer ?? o.a ?? o.body ?? o.content ?? "").trim();
     if (!a) continue;
-    out.push({ heading: q || null, content: q ? `Q: ${q}\nA: ${a}` : a });
+    out.push({
+      heading: q ? redact(q) : null,
+      content: redact(q ? `Q: ${q}\nA: ${a}` : a)
+    });
   }
   if (out.length === 0) throw new Error("No question/answer pairs found in the JSON.");
   return out;
