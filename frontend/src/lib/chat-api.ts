@@ -56,7 +56,9 @@ export async function sendChatMessage(
   message: string,
   conversationId: string | null,
   handlers: StreamHandlers,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  /** `data:image/...;base64,...` strings. Sent once, never stored by us. */
+  images: string[] = []
 ): Promise<void> {
   const token = getToken();
   let res: Response;
@@ -67,7 +69,7 @@ export async function sendChatMessage(
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: JSON.stringify({ message, conversationId, visitorKey: getVisitorKey() }),
+      body: JSON.stringify({ message, conversationId, visitorKey: getVisitorKey(), images }),
       signal,
       cache: "no-store"
     });

@@ -1261,9 +1261,16 @@ model ChatConversation {
   /// the knowledge base could not answer.
   handoffAt     DateTime?
 
+  /// How many times the assistant has asked this visitor for a contact number.
+  /// The sales script allows two attempts and no more, and the count has to
+  /// survive between messages or every turn would look like the first.
+  leadAskedCount Int       @default(0)
+  leadCapturedAt DateTime?
+
   visitor  Visitor?      @relation(fields: [visitorId], references: [id], onDelete: SetNull)
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   messages ChatMessage[]
+  lead     ChatLead?
 
   @@index([userId])
   @@index([visitorId])
@@ -1289,6 +1296,12 @@ model ChatMessage {
   /// Set when the model refused or the call failed, so the admin list can show
   /// the failures instead of silently storing an apology as if it were an answer.
   errorCode       String?
+
+  /// Images the student attached to this message, as storage-agnostic data URLs
+  /// are NOT kept — only how many, and their media types. The pixels are sent to
+  /// the model and discarded: a score report is a medical-adjacent document and
+  /// there is no reason for this application to become its archive.
+  attachmentCount Int @default(0)
 
   createdAt DateTime @default(now())
 
@@ -1337,4 +1350,31 @@ model KnowledgeChunk {
 
   @@index([sourceId, ordinal])
   @@index([searchVector], type: Gin)
+}
+
+/// A visitor who gave their contact number to the assistant.
+///
+/// One per conversation: the sales script asks at most twice, and a second
+/// number in the same thread is a correction, not a second lead.
+model ChatLead {
+  id             String          @id @default(uuid())
+  conversationId String          @unique
+  whatsapp       String
+  name           String?
+  profession     String?
+  /// Free text as the visitor said it ("next month", "12 October"), not a date:
+  /// parsing it into a timestamp would invent a precision they did not give.
+  examDate       String?
+  /// Copied at capture so the report survives visitor churn.
+  channel        TrafficChannel?
+  source         String?
+  /// Set by an admin once someone has actually followed up.
+  contactedAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([channel])
+  @@index([contactedAt])
 }

@@ -98,8 +98,15 @@ async function main() {
   const panel = page.locator(PANEL);
   await panel.waitFor({ state: "visible", timeout: 5000 });
   ok("it opens", await panel.isVisible());
-  ok("it explains what it is for", (await panel.innerText()).includes("Ask anything about OET HQ"));
+  ok("it opens on the diagnosis, not a sales pitch", (await panel.innerText()).includes("which sub-test is holding you back"));
+  ok("it invites a score report", (await panel.innerText()).toLowerCase().includes("score report"));
   ok("it offers starter questions", (await panel.locator("button", { hasText: "What is included" }).count()) > 0);
+  ok("a photo can be attached", (await panel.locator('button[aria-label="Attach a photo of your score report"]').count()) === 1);
+  ok(
+    "dictation is offered only where the browser supports it",
+    (await panel.locator('button[aria-label="Speak instead of typing"]').count()) ===
+      (await page.evaluate(() => "webkitSpeechRecognition" in window || "SpeechRecognition" in window) ? 1 : 0)
+  );
   ok(
     "it says plainly that it is not a person",
     (await panel.innerText()).toLowerCase().includes("not a person")
@@ -112,14 +119,35 @@ async function main() {
 
   // Catch the answer part-way through: it must appear progressively, not in one
   // lump at the end. A "streaming" widget that renders once is just a slow one.
-  await page.waitForTimeout(220);
-  const midText = await panel.innerText();
-  await panel.locator("text=core skills").first().waitFor({ timeout: 15000 });
-  const endText = await panel.innerText();
+  //
+  // Sampled rather than checked after a fixed delay. Any single delay is wrong
+  // for some machine — too early and nothing has arrived, too late and the whole
+  // answer has, which is exactly how this assertion failed once the reply got
+  // faster. Distinct intermediate lengths are the actual evidence of streaming.
+  const lengths = new Set();
+  const until = Date.now() + 15000;
+  let endText = "";
+  while (Date.now() < until) {
+    const t = await panel.innerText();
+    lengths.add(t.length);
+    if (t.includes("core skills")) {
+      endText = t;
+      break;
+    }
+    await sleep(25);
+  }
+  if (!endText) {
+    await panel.locator("text=core skills").first().waitFor({ timeout: 5000 });
+    endText = await panel.innerText();
+  }
 
   ok("the question appears as the student's message", endText.includes("how do the class days work?"));
   ok("an answer arrives", endText.includes("four class days"));
-  ok("it streamed in rather than appearing at once", midText.length < endText.length, `${midText.length} → ${endText.length}`);
+  ok(
+    "it streamed in rather than appearing at once",
+    lengths.size >= 3,
+    `only ${lengths.size} distinct render(s) observed`
+  );
   ok("the marker never appeared on screen", !endText.includes("[[") && !endText.includes("HANDOFF"));
 
   const convId = await page.evaluate(() => localStorage.getItem("oet_chat_conversation"));
@@ -224,8 +252,12 @@ async function main() {
   await phone.close();
 
   section("10. Nothing broke along the way");
+  // `Failed to fetch RSC payload` is the Next dev server hot-reloading mid-run
+  // — a development-only artifact of recompiling while the browser is driving
+  // it, not something a visitor can ever see.
   const real = consoleErrors.filter(
-    (e) => !/favicon|404|Failed to load resource|hydrat|Download the React DevTools/i.test(e)
+    (e) =>
+      !/favicon|404|Failed to load resource|hydrat|Download the React DevTools|RSC payload|Fast Refresh/i.test(e)
   );
   ok("no uncaught errors in the console", real.length === 0, real.slice(0, 3).join(" | "));
 

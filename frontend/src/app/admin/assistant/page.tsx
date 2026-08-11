@@ -63,6 +63,19 @@ type KnowledgeSource = {
 
 type SearchHit = { id: string; heading: string | null; content: string; sourceName: string; rank: number };
 
+type Lead = {
+  id: string;
+  whatsapp: string;
+  name: string | null;
+  profession: string | null;
+  examDate: string | null;
+  channel: string | null;
+  source: string | null;
+  contactedAt: string | null;
+  createdAt: string;
+  conversation: { id: string; title: string | null; messageCount: number; lastMessageAt: string } | null;
+};
+
 const FORMATS = [
   {
     id: "conversation",
@@ -101,6 +114,10 @@ export default function AdminAssistantPage() {
   const [text, setText] = useState("");
   const [ingesting, setIngesting] = useState(false);
 
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leadTotal, setLeadTotal] = useState(0);
+  const [uncontactedOnly, setUncontactedOnly] = useState(false);
+
   const [probe, setProbe] = useState("");
   const [hits, setHits] = useState<SearchHit[] | null>(null);
 
@@ -115,23 +132,28 @@ export default function AdminAssistantPage() {
       const q = new URLSearchParams({ take: "40" });
       if (handoffOnly) q.set("handoffOnly", "true");
       if (search.trim()) q.set("search", search.trim());
-      const [s, cfg, list, kb] = await Promise.all([
+      const lq = new URLSearchParams({ take: "50" });
+      if (uncontactedOnly) lq.set("uncontactedOnly", "true");
+      const [s, cfg, list, kb, ld] = await Promise.all([
         apiFetch<Stats>("/admin/chat/stats", { token }),
         apiFetch<{ enabled: boolean }>("/chat/config", { token }),
         apiFetch<{ items: ConversationRow[] }>(`/admin/chat/conversations?${q.toString()}`, { token }),
-        apiFetch<{ totalChunks: number; sources: KnowledgeSource[] }>("/admin/chat/knowledge", { token })
+        apiFetch<{ totalChunks: number; sources: KnowledgeSource[] }>("/admin/chat/knowledge", { token }),
+        apiFetch<{ total: number; items: Lead[] }>(`/admin/chat/leads?${lq.toString()}`, { token })
       ]);
       setStats(s);
       setEnabled(cfg.enabled);
       setConversations(list.items);
       setSources(kb.sources);
       setTotalChunks(kb.totalChunks);
+      setLeads(ld.items);
+      setLeadTotal(ld.total);
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "Could not load the assistant.");
     } finally {
       setLoading(false);
     }
-  }, [token, profile?.role, handoffOnly, search]);
+  }, [token, profile?.role, handoffOnly, search, uncontactedOnly]);
 
   useEffect(() => {
     void load();
@@ -195,6 +217,40 @@ export default function AdminAssistantPage() {
     }
   };
 
+  const toggleContacted = async (l: Lead) => {
+    try {
+      await apiFetch(`/admin/chat/leads/${l.id}`, {
+        method: "PATCH",
+        token,
+        body: { contacted: !l.contactedAt }
+      });
+      await load();
+    } catch {
+      toast.error("Could not update that lead.");
+    }
+  };
+
+  const copyLeads = () => {
+    const rows = [
+      ["WhatsApp", "Name", "Profession", "Exam", "Channel", "Captured", "Contacted"].join("\t"),
+      ...leads.map((l) =>
+        [
+          l.whatsapp,
+          l.name ?? "",
+          l.profession ?? "",
+          l.examDate ?? "",
+          l.channel ?? "",
+          new Date(l.createdAt).toISOString().slice(0, 10),
+          l.contactedAt ? "yes" : "no"
+        ].join("\t")
+      )
+    ].join("\n");
+    void navigator.clipboard.writeText(rows).then(
+      () => toast.success("Copied. Paste straight into a spreadsheet."),
+      () => toast.error("Could not copy.")
+    );
+  };
+
   const runProbe = async () => {
     if (!probe.trim()) return;
     try {
@@ -233,6 +289,7 @@ export default function AdminAssistantPage() {
       stats={[
         { label: "Conversations (30d)", value: stats?.conversations.toLocaleString() ?? "—" },
         { label: "Needed a human", value: stats?.handoffs.toLocaleString() ?? "—" },
+        { label: "Leads captured", value: leadTotal.toLocaleString() },
         { label: "Passages known", value: totalChunks.toLocaleString() },
         { label: "Spend (30d)", value: stats ? `$${stats.estimatedCostUsd.toFixed(2)}` : "—" }
       ]}
@@ -259,6 +316,96 @@ export default function AdminAssistantPage() {
             </AlertDescription>
           </Alert>
         ) : null}
+
+        {/* -------------------------------------------------------------- leads */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Leads</CardTitle>
+            <CardDescription>
+              Visitors who gave the assistant their WhatsApp number. It asks once when the chat opens
+              and once more after it has given real advice, and never a third time. Each one carries the
+              channel that brought them, so you can see which traffic actually produces people worth
+              calling.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant={uncontactedOnly ? "default" : "outline"}
+                onClick={() => setUncontactedOnly((v) => !v)}
+              >
+                Not yet contacted
+              </Button>
+              <Button size="sm" variant="outline" onClick={copyLeads} disabled={leads.length === 0}>
+                Copy for spreadsheet
+              </Button>
+              <span className="ml-auto text-xs text-muted-foreground">{leadTotal.toLocaleString()} total</span>
+            </div>
+
+            {leads.length === 0 ? (
+              <EmptyState
+                title="No leads yet"
+                description="Numbers appear here as soon as visitors start sharing them with the assistant."
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>WhatsApp</TableHead>
+                      <TableHead>Who</TableHead>
+                      <TableHead>Exam</TableHead>
+                      <TableHead>Came from</TableHead>
+                      <TableHead>Captured</TableHead>
+                      <TableHead className="text-right">Follow-up</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leads.map((l) => (
+                      <TableRow key={l.id} className={l.contactedAt ? "opacity-60" : undefined}>
+                        <TableCell className="font-mono text-sm font-medium">{l.whatsapp}</TableCell>
+                        <TableCell>
+                          <p className="text-sm">{l.name ?? "—"}</p>
+                          <p className="text-xs text-muted-foreground">{l.profession ?? ""}</p>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{l.examDate ?? "—"}</TableCell>
+                        <TableCell>
+                          {l.channel ? (
+                            <Badge variant="secondary">{l.channel.replace(/_/g, " ").toLowerCase()}</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{when(l.createdAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {l.conversation ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => void openConversation(l.conversation!.id)}
+                              >
+                                Read chat
+                              </Button>
+                            ) : null}
+                            <Button
+                              size="sm"
+                              variant={l.contactedAt ? "outline" : "default"}
+                              onClick={() => void toggleContacted(l)}
+                            >
+                              {l.contactedAt ? "Contacted" : "Mark contacted"}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* ---------------------------------------------------------- knowledge */}
         <Card>

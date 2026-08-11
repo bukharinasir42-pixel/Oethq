@@ -21,7 +21,11 @@ const REPLIES = {
   normal: "You choose four class days a week yourself, and you pick the time for each one. There are two classes on every class day: a lecture and a core skills class.",
   // The marker is split so it arrives across several deltas — the case that
   // makes naive stripping flash "[[HAND" on screen.
-  handoff: "I do not have that detail here. [[HAN" + "DOFF]]"
+  handoff: "I do not have that detail here. [[HAN" + "DOFF]]",
+  // A captured lead plus a link the allowlist does not contain — both must be
+  // cleaned before the student sees anything.
+  lead: "Noted, thank you. [[LEAD:whatsapp=+923001234567; name=Aisha; profession=nursing]] Start here: https://oethq.com/courses/reading-elite",
+  link: "You can enrol here: https://oethq.com/checkout/total-clearance and here https://oethq.com"
 };
 
 function sse(res, event, data) {

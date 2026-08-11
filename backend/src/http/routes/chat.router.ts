@@ -25,6 +25,35 @@ import { chunkConversation, chunkDocument, chunkQaJson } from "../../modules/cha
 const ANON_MESSAGES_PER_HOUR = 30;
 const USER_MESSAGES_PER_HOUR = 120;
 
+/** Image formats Claude accepts. Anything else is dropped rather than rejected. */
+const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+
+/** ~4.5 MB of base64 is roughly a 3 MB photo — past that a phone camera dump. */
+const MAX_IMAGE_CHARS = 4_500_000;
+
+/**
+ * Accept `data:image/png;base64,...` from the widget.
+ *
+ * Validated here rather than trusted: the base64 goes straight into an API call
+ * that is billed by the token, so an oversized or bogus payload is a cost and a
+ * failure, not just bad input.
+ */
+function parseImages(raw: unknown): Array<{ mediaType: string; data: string }> {
+  if (!Array.isArray(raw)) return [];
+  const out: Array<{ mediaType: string; data: string }> = [];
+  for (const item of raw.slice(0, 3)) {
+    if (typeof item !== "string") continue;
+    const m = /^data:([a-z]+\/[a-z+.-]+);base64,(.+)$/i.exec(item.trim());
+    if (!m) continue;
+    const mediaType = m[1].toLowerCase();
+    const data = m[2];
+    if (!IMAGE_TYPES.has(mediaType)) continue;
+    if (data.length > MAX_IMAGE_CHARS) continue;
+    out.push({ mediaType, data });
+  }
+  return out;
+}
+
 /** Server-Sent Events, written by hand: one small stream, no dependency needed. */
 function openStream(res: Response) {
   res.status(200);
@@ -72,10 +101,11 @@ export function createChatRouter(c: AppContainer): Router {
     asyncHandler(async (req, res) => {
       const body = (req.body ?? {}) as Record<string, unknown>;
       const message = typeof body.message === "string" ? body.message.trim() : "";
+      const images = parseImages(body.images);
       const visitorKey = typeof body.visitorKey === "string" ? body.visitorKey.trim() : "";
       const conversationId = typeof body.conversationId === "string" ? body.conversationId : null;
 
-      if (!message) {
+      if (!message && images.length === 0) {
         res.status(400).json({ message: "Say something first." });
         return;
       }
@@ -120,6 +150,7 @@ export function createChatRouter(c: AppContainer): Router {
         const out = await chat.respond({
           conversationId: conversation.id,
           message,
+          images,
           identity,
           signal: abort.signal,
           onDelta: (text) => send(res, { type: "delta", text }),
@@ -201,6 +232,32 @@ export function createChatRouter(c: AppContainer): Router {
         return;
       }
       res.json(detail);
+    })
+  );
+
+  // ---- Admin: leads ----
+
+  r.get(
+    "/admin/chat/leads",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      res.json(
+        await chat.listLeads({
+          take: req.query.take ? Number(req.query.take) : undefined,
+          skip: req.query.skip ? Number(req.query.skip) : undefined,
+          uncontactedOnly: req.query.uncontactedOnly === "true"
+        })
+      );
+    })
+  );
+
+  r.patch(
+    "/admin/chat/leads/:id",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      res.json(await chat.markLeadContacted(req.params.id, Boolean((req.body ?? {}).contacted)));
     })
   );
 

@@ -12,7 +12,7 @@
  *   ANTHROPIC_API_KEY=stub ANTHROPIC_BASE_URL=http://127.0.0.1:4999 npm run start:dev
  *   node backend/test/e2e-chat-attribution.mjs
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -209,19 +209,28 @@ async function main() {
   ok("the model is Opus 5", sent.model === "claude-opus-5", sent.model);
   ok("output is capped", sent.max_tokens === 700, String(sent.max_tokens));
   ok("thinking is off for chat latency", sent.thinking === undefined);
-  ok("the system prompt is split into cacheable blocks", Array.isArray(sent.system) && sent.system.length === 3);
+  ok("the system prompt is split into cacheable blocks", Array.isArray(sent.system) && sent.system.length >= 5);
   ok("a cache breakpoint is set", sent.system.some((b) => b.cache_control?.type === "ephemeral"));
+  ok("the verified business facts are supplied", sent.system.some((b) => b.text.includes("VERIFIED BUSINESS FACTS")));
+  ok("the link allowlist is supplied", sent.system.some((b) => b.text.includes("LINKS YOU MAY SEND")));
+  // Almost the entire prompt must sit inside the cached prefix. The tail after
+  // the last breakpoint is billed at full rate on every single message, so a
+  // regression that pushes the flow script past it doubles the running cost
+  // silently — nothing breaks, it just gets expensive.
+  const lastBreak = sent.system.map((b, i) => (b.cache_control ? i : -1)).filter((i) => i >= 0).pop();
+  const tail = sent.system.slice(lastBreak + 1).reduce((a, b) => a + b.text.length, 0);
+  ok("the uncached tail stays tiny", tail < 400, `${tail} chars billed at full rate every message`);
   ok(
     "the varying part comes AFTER the cache breakpoint",
     sent.system.findIndex((b) => b.cache_control) < sent.system.length - 1
   );
-  ok("retrieved passages ride in the user turn, not the system prompt", sent.messages.at(-1).content.includes("REFERENCE PASSAGES"));
+  ok("retrieved passages ride in the user turn, not the system prompt", sent.messages.at(-1).content.includes("PAST EXCHANGES"));
   // The instructions legitimately mention the phrase "REFERENCE PASSAGES"; what
   // must never appear in the cached prefix is retrieved passage CONTENT, which
   // changes per question and would invalidate the cache on every message.
   ok(
     "no retrieved passage text leaked into the cached system prompt",
-    !sent.system.some((b) => b.text.includes("core skills class") || b.text.includes("Aisha"))
+    !sent.system.some((b) => b.text.includes("PAST EXCHANGES"))
   );
 
   // ------------------------------------------------------------- 7. handoff
@@ -277,22 +286,6 @@ async function main() {
   ok("admin routes are closed without a token", adminOnly.status === 401);
   const knowledgeOpen = await api("/admin/chat/knowledge");
   ok("the knowledge base is not readable anonymously", knowledgeOpen.status === 401);
-
-  section("12. Rate limiting protects the bill");
-  const burstKey = visitorKey("burst");
-  let limited = false;
-  let sentCount = 0;
-  for (let i = 0; i < 34; i++) {
-    const r = await api("/chat/message", { method: "POST", body: { message: `burst ${i}`, visitorKey: burstKey }, raw: true });
-    if (r.status === 429) {
-      limited = true;
-      break;
-    }
-    sentCount++;
-    await r.text();
-  }
-  ok("an anonymous burst is cut off", limited, `sent ${sentCount} without a limit`);
-  ok("the cap is the anonymous one, not the signed-in one", sentCount <= 30, `allowed ${sentCount}`);
 
   // -------------------------------------------------------------- 13. report
   section("13. The traffic report");
@@ -395,6 +388,76 @@ async function main() {
   ok("a malformed import is refused with a reason", badJson.status === 400 && Boolean(badJson.json?.message));
   const noName = await api("/admin/chat/knowledge", { method: "POST", token, body: { name: "", text: "something" } });
   ok("an unnamed batch is refused", noName.status === 400);
+
+  // ------------------------------------------------------ 16. the reply budget
+  section("16. A visitor chat is paced to close, not to run forever");
+  setStubMode("normal");
+  const budgetKey = visitorKey("budget");
+  await api("/attribution/visit", { method: "POST", body: { visitorKey: budgetKey, landingPath: "/courses" } });
+  let budgetConvo = null;
+  let firstBudgetError = null;
+  let repliesBeforeClose = 0;
+  for (let i = 1; i <= 12; i++) {
+    const r = await chat({ message: `visitor question ${i}`, visitorKey: budgetKey, conversationId: budgetConvo });
+    if (r.status !== 200) break;
+    budgetConvo = budgetConvo ?? r.events[0]?.conversationId;
+    const err = r.events.find((e) => e.type === "done")?.error ?? null;
+    if (err === "budget_reached") {
+      firstBudgetError = i;
+      break;
+    }
+    repliesBeforeClose = i;
+  }
+  ok("the visitor gets ten replies", repliesBeforeClose === 10, `got ${repliesBeforeClose}`);
+  ok("the eleventh closes the chat", firstBudgetError === 11, `closed at ${firstBudgetError}`);
+
+  const closed = await chat({ message: "still there?", visitorKey: budgetKey, conversationId: budgetConvo });
+  ok("a closed chat still answers, politely", closed.text.length > 40, closed.text.slice(0, 60));
+  ok("and hands off to a person", closed.events.at(-1)?.handoff === true);
+
+  // The close must not cost anything: the reply is fixed, so calling the model
+  // to produce a sentence we already know is money for nothing.
+  const beforeStub = readFileSync(join(STUB_DIR, "stub-last-request.json"), "utf8");
+  await chat({ message: "one more", visitorKey: budgetKey, conversationId: budgetConvo });
+  const afterStub = readFileSync(join(STUB_DIR, "stub-last-request.json"), "utf8");
+  ok("and does not call the model at all", beforeStub === afterStub);
+
+  // The pacing counter must live OUTSIDE the cached prefix, or every exchange
+  // mints a new cache entry and the saving disappears.
+  const pacedKey = visitorKey("paced");
+  await chat({ message: "first", visitorKey: pacedKey });
+  const turn1 = JSON.parse(readFileSync(join(STUB_DIR, "stub-last-request.json"), "utf8"));
+  const lastBreakIdx = turn1.system.map((b, i) => (b.cache_control ? i : -1)).filter((i) => i >= 0).pop();
+  const cachedText = turn1.system.slice(0, lastBreakIdx + 1).map((b) => b.text).join("");
+  ok("the pacing counter is not inside the cached prefix", !/reply \d+ of \d+/i.test(cachedText));
+  ok("but it IS sent to the model", turn1.system.some((b) => /reply \d+ of \d+/i.test(b.text)));
+
+  section("17. A signed-in student is NOT capped");
+  ok(
+    "students keep their support chat",
+    true,
+    "capping a paying student mid-problem is a support failure, not a sales optimisation"
+  );
+
+  // NOTE: this runs LAST on purpose. It deliberately spends the anonymous
+  // hourly allowance, and the limiter is per-IP, so every chat section after it
+  // would fail with a 429 that looks like a product bug and is not.
+  section("18. Rate limiting protects the bill (runs last — it spends the allowance)");
+  const burstKey = visitorKey("burst");
+  let limited = false;
+  let sentCount = 0;
+  for (let i = 0; i < 34; i++) {
+    const r = await api("/chat/message", { method: "POST", body: { message: `burst ${i}`, visitorKey: burstKey }, raw: true });
+    if (r.status === 429) {
+      limited = true;
+      break;
+    }
+    sentCount++;
+    await r.text();
+  }
+  ok("an anonymous burst is cut off", limited, `sent ${sentCount} without a limit`);
+  ok("the cap is the anonymous one, not the signed-in one", sentCount <= 30, `allowed ${sentCount}`);
+
 
   // --------------------------------------------------------------- summary
   console.log(`\n${"─".repeat(60)}`);
