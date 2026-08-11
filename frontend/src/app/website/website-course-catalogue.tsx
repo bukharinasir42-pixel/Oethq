@@ -63,7 +63,7 @@ export function WebsiteCourseCatalogue() {
         <div className="crs-head">
           <span className="crs-eyebrow">Choose your course</span>
           <h2 id="crs-heading">Fix all four skills, or fix the <span className="crs-blue">one that&apos;s failing you.</span></h2>
-          <p className="crs-lede">Every course is taught on a scheduled cohort timetable and built in-house by OET examiners and applied linguistics professors. Open a course to see its plans.</p>
+          <p className="crs-lede">Four live classes a week on a timetable you set yourself, material built in-house by OET examiners and applied linguistics professors, and every Reading paper explained question by question afterwards. Open a course to see its plans.</p>
         </div>
 
         <div className="crs-grid">
@@ -72,14 +72,14 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--flag crs-stretch" href="/courses">
             <span className="crs-tag">&#9733; Flagship &middot; all four skills</span>
             <h3>OET Complete Material</h3>
-            <p className="crs-desc">Reading, Listening, Writing and Speaking in one system — cohort lectures, live daily drills, writing corrections and the Pass Predictor that tells you when to book the real exam.</p>
+            <p className="crs-desc">Reading, Listening, Writing and Speaking in one system — four live classes a week at times you choose, written explanations for every Reading paper, writing corrections, and the Pass Predictor that tells you when to book the real exam.</p>
             <div className="crs-skills">
               <span className="crs-chip">Reading</span><span className="crs-chip">Listening</span><span className="crs-chip">Writing</span><span className="crs-chip">Speaking</span>
             </div>
             <div className="crs-facts">
               <div className="crs-fact"><b>{completeTiers} tiers</b><span>{hasFreeTrial ? "Free trial included" : "Plans available"}</span></div>
-              <div className="crs-fact"><b>Up to 60d</b><span>Access range</span></div>
-              <div className="crs-fact"><b>Day 45</b><span>Library refreshes</span></div>
+              <div className="crs-fact"><b>4 days/wk</b><span>Live, at your times</span></div>
+              <div className="crs-fact"><b>Explained</b><span>Every Reading paper</span></div>
             </div>
             <div className="crs-foot">
               <div className="crs-price">
@@ -95,13 +95,13 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/reading">
             <span className="crs-tag">Single skill</span>
             <h3>OET Reading Material</h3>
-            <p className="crs-desc">For candidates whose only barrier is Reading. Part A speed and spelling, Part C opinion and attitude — every mock sat on the official OET exam interface.</p>
+            <p className="crs-desc">For candidates whose only barrier is Reading. Part A speed and spelling, Part C opinion and attitude — every mock sat on the official OET exam interface, and every paper explained question by question by Dr Nasir afterwards.</p>
             <div className="crs-skills">
-              <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Official interface</span>
+              <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Written explanations</span><span className="crs-chip">Official interface</span>
             </div>
             <div className="crs-facts">
               <div className="crs-fact"><b>Part A&ndash;C</b><span>Full strategy</span></div>
-              <div className="crs-fact"><b>4 plans</b><span>Foundation &rarr; Mega</span></div>
+              <div className="crs-fact"><b>42/42</b><span>Questions explained</span></div>
               <div className="crs-fact"><b>Official</b><span>Exam interface</span></div>
             </div>
             <div className="crs-foot">

@@ -1,0 +1,176 @@
+/* =====================================================================
+   "Every answer, explained" — the homepage showcase for the Reading
+   walkthrough. Scoped under `.xp-section`, classes prefixed `xp-*`.
+
+   The section animates a miniature of the real screen: the passage on the
+   left with the evidence sentence highlighting itself, the reasoning
+   assembling on the right. It runs once when scrolled into view, and it
+   stops completely for anyone who has asked for reduced motion.
+   ===================================================================== */
+
+.xp-section{
+  --ink:#050F22; --panel:#0B1B38; --raise:#102546;
+  --edge:rgba(255,255,255,.09); --edge-2:rgba(255,255,255,.17);
+  --chalk:#EAF1FC; --dim:#9AB0D2; --faint:#6B82A8;
+  --blue:#2E7CFF; --blue-2:#6BA5FF; --gold:#F5A524; --green:#17C77C;
+  --rose:#FF6B7F; --hl:#FFF1B8; --hl-line:#E8C64A;
+  position:relative;padding:92px 0 100px;overflow:hidden;
+  background:
+    radial-gradient(80% 60% at 15% 0%, rgba(46,124,255,.18), transparent 62%),
+    radial-gradient(70% 60% at 92% 20%, rgba(245,165,36,.10), transparent 60%),
+    var(--ink);
+  color:var(--chalk);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.xp-section *{box-sizing:border-box}
+.xp-section h2,.xp-section h3{font-family:'Archivo','Sora',sans-serif;font-weight:900;letter-spacing:-.038em;line-height:1.06;margin:0;text-wrap:balance}
+.xp-section p{margin:0}
+
+/* the faint grid that ties this section to "what's inside" above it */
+.xp-section::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:54px 54px;
+  mask-image:radial-gradient(72% 58% at 50% 0%,#000,transparent 76%);
+}
+
+.xp-wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 22px;position:relative}
+
+/* ---------------------------------------------------------------- head */
+.xp-head{max-width:760px;margin:0 auto 46px;text-align:center}
+.xp-pill{
+  display:inline-flex;align-items:center;gap:9px;padding:8px 15px;border-radius:999px;
+  border:1px solid rgba(245,165,36,.34);background:rgba(245,165,36,.11);color:var(--gold);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;font-size:10.5px;
+  letter-spacing:.19em;text-transform:uppercase;
+}
+.xp-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);animation:xp-beat 2.4s infinite}
+@keyframes xp-beat{0%{box-shadow:0 0 0 0 rgba(245,165,36,.5)}70%{box-shadow:0 0 0 8px rgba(245,165,36,0)}100%{box-shadow:0 0 0 0 rgba(245,165,36,0)}}
+.xp-head h2{font-size:clamp(31px,4.4vw,52px);margin:20px 0 16px}
+.xp-head h2 em{font-style:normal;background:linear-gradient(100deg,var(--gold),#FFD98A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.xp-head p{color:var(--dim);font-size:16.5px;max-width:60ch;margin:0 auto}
+.xp-head p b{color:var(--chalk);font-weight:600}
+
+/* ------------------------------------------------------------- the demo */
+.xp-demo{
+  border:1px solid var(--edge-2);border-radius:20px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  box-shadow:0 30px 80px rgba(0,0,0,.42);
+}
+.xp-bar{
+  display:flex;align-items:center;gap:11px;padding:11px 16px;
+  border-bottom:1px solid var(--edge);background:rgba(5,15,34,.55);
+}
+.xp-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.16);flex:0 0 auto}
+.xp-bartxt{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.xp-verdict{
+  margin-left:auto;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:999px;
+  background:rgba(255,107,127,.14);color:var(--rose);border:1px solid rgba(255,107,127,.3);white-space:nowrap;
+}
+
+.xp-split{display:grid;grid-template-columns:1fr 1fr;min-height:396px}
+
+/* left: the passage */
+.xp-src{padding:24px 26px;border-right:1px solid var(--edge);background:rgba(255,255,255,.015)}
+.xp-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue-2);margin-bottom:14px}
+.xp-src p{font-family:'Source Serif 4',Georgia,serif;font-size:14.5px;line-height:1.78;color:#C6D7EE;margin-bottom:13px}
+.xp-src p:last-child{margin-bottom:0}
+
+/* The highlight paints itself in, left to right. */
+.xp-mark{
+  position:relative;border-radius:3px;padding:1px 2px;color:#0B1B38;
+  background-image:linear-gradient(var(--hl),var(--hl));
+  background-repeat:no-repeat;background-size:0% 100%;
+  box-shadow:inset 0 -2px 0 rgba(232,198,74,0);
+  transition:color .45s ease .5s, box-shadow .5s ease .6s;
+}
+.xp-in .xp-mark{
+  animation:xp-paint .85s cubic-bezier(.4,0,.2,1) .55s forwards;
+  box-shadow:inset 0 -2px 0 var(--hl-line);
+}
+@keyframes xp-paint{to{background-size:100% 100%}}
+
+/* right: the reasoning, assembling block by block */
+.xp-exp{padding:24px 26px;display:flex;flex-direction:column;gap:16px;background:rgba(5,15,34,.35)}
+.xp-block{opacity:0;transform:translateY(10px)}
+.xp-in .xp-block{animation:xp-rise .6s cubic-bezier(.2,.7,.3,1) forwards}
+.xp-in .xp-block:nth-child(1){animation-delay:.15s}
+.xp-in .xp-block:nth-child(2){animation-delay:.95s}
+.xp-in .xp-block:nth-child(3){animation-delay:1.3s}
+.xp-in .xp-block:nth-child(4){animation-delay:1.65s}
+.xp-in .xp-block:nth-child(5){animation-delay:2s}
+@keyframes xp-rise{to{opacity:1;transform:none}}
+
+.xp-h4{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--blue-2);margin-bottom:7px}
+.xp-q{font-size:15px;font-weight:700;color:var(--chalk);line-height:1.45}
+.xp-ev{border:1px solid rgba(107,165,255,.28);background:rgba(46,124,255,.09);border-radius:11px;padding:11px 14px}
+.xp-ev q{font-family:'Source Serif 4',Georgia,serif;font-size:13.5px;line-height:1.6;color:#CFE1F8;quotes:none}
+.xp-bridge{display:flex;flex-wrap:wrap;gap:7px}
+.xp-br{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--edge-2);border-radius:9px;padding:6px 11px;font-size:12.5px;background:rgba(255,255,255,.03)}
+.xp-br b{color:var(--chalk);font-weight:700}
+.xp-br i{font-style:normal;color:var(--faint)}
+.xp-br u{text-decoration:none;color:var(--blue-2);font-weight:600}
+.xp-prose{font-size:13.8px;line-height:1.68;color:#B9CBE4}
+.xp-prose b{color:var(--chalk);font-weight:700}
+.xp-lesson{border:1px solid rgba(23,199,124,.3);background:rgba(23,199,124,.09);border-radius:11px;padding:11px 14px;font-size:13.5px;line-height:1.6;color:#BDEBD6}
+
+/* ------------------------------------------------------------- the facts */
+.xp-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+.xp-fact{
+  border:1px solid var(--edge);border-radius:15px;padding:19px 20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));
+  opacity:0;transform:translateY(14px);
+}
+.xp-in-facts .xp-fact{animation:xp-rise .55s cubic-bezier(.2,.7,.3,1) forwards}
+.xp-in-facts .xp-fact:nth-child(1){animation-delay:.05s}
+.xp-in-facts .xp-fact:nth-child(2){animation-delay:.14s}
+.xp-in-facts .xp-fact:nth-child(3){animation-delay:.23s}
+.xp-in-facts .xp-fact:nth-child(4){animation-delay:.32s}
+.xp-fact b{display:block;font-family:'Archivo','Sora',sans-serif;font-size:26px;font-weight:900;letter-spacing:-.03em;color:var(--chalk);line-height:1}
+.xp-fact span{display:block;margin-top:8px;font-size:13px;color:var(--dim);line-height:1.5}
+.xp-fact.is-gold b{color:var(--gold)}
+.xp-fact.is-green b{color:var(--green)}
+.xp-fact.is-blue b{color:var(--blue-2)}
+
+/* --------------------------------------------------------------- signed */
+.xp-sign{
+  margin-top:30px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+  text-align:center;color:var(--dim);font-size:14.5px;
+}
+.xp-sign b{color:var(--chalk);font-weight:700}
+.xp-sign .xp-rule{width:34px;height:1px;background:var(--edge-2)}
+
+/* ----------------------------------------------------------------- cta */
+.xp-cta-row{display:flex;justify-content:center;margin-top:26px}
+.xp-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 26px;border-radius:13px;
+  background:linear-gradient(100deg,var(--blue),#5A9BFF);color:#fff;
+  font-weight:800;font-size:15px;text-decoration:none;
+  box-shadow:0 12px 30px rgba(46,124,255,.32);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.xp-cta:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(46,124,255,.42)}
+.xp-cta span{font-size:17px}
+
+@media (max-width:940px){
+  .xp-split{grid-template-columns:1fr;min-height:0}
+  .xp-src{border-right:none;border-bottom:1px solid var(--edge)}
+  .xp-facts{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .xp-section{padding:64px 0 72px}
+  .xp-facts{grid-template-columns:1fr}
+  .xp-src,.xp-exp{padding:20px 18px}
+}
+
+/* Everything above is decoration. None of it is allowed to move for anyone
+   who has asked it not to, so the whole section renders in its final state. */
+@media (prefers-reduced-motion:reduce){
+  .xp-section *,
+  .xp-section *::before,
+  .xp-section *::after{animation:none!important;transition:none!important}
+  .xp-block,.xp-fact{opacity:1!important;transform:none!important}
+  .xp-mark{background-size:100% 100%!important;box-shadow:inset 0 -2px 0 var(--hl-line)!important;color:#0B1B38!important}
+}

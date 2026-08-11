@@ -18,6 +18,11 @@ const WHY_CARDS: WhyCard[] = [
         path: "M12 8v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z",
     },
     {
+        title: "Every Reading Answer Explained",
+        body: "Not an answer key. Submit any Reading test or past paper and Dr Nasir walks you through it question by question — the sentence the answer came from highlighted in the passage, and the exact phrase that broke the option you chose.",
+        path: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z",
+    },
+    {
         title: "Core Skill Development",
         body: "Skimming, scanning, inference, paraphrase-spotting, distractor elimination — trained as measurable skills with drills and benchmarks, not vague \"read more\" advice.",
         path: "M2 20h20M5 20V8.5L12 4l7 4.5V20M9 20v-6h6v6",
@@ -33,8 +38,8 @@ const WHY_CARDS: WhyCard[] = [
         path: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M9 13h6M9 17h6",
     },
     {
-        title: "Live Reading & Listening Sessions",
-        body: "Solve real papers live with instructors, question by question, so the method holds up under real exam time pressure — not just in theory.",
+        title: "Four Live Classes a Week, Your Hours",
+        body: "You choose four weekdays and set the time for each one, with two sessions on every class day. Real papers solved live with instructors, on a timetable built around your roster rather than against it.",
         path: "M23 7l-7 5 7 5V7ZM14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z",
     },
     {
