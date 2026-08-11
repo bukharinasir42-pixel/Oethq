@@ -1,5 +1,26 @@
 # Reading explanations — the file format
 
+## The short version: one file
+
+The simplest upload is a **single JSON carrying the paper, the answer key and
+the explanations together**. Drop it into the admin panel and all three go live
+in one action.
+
+```bash
+# build the combined files, one per paper
+npm run explanations:merge -- ./papers ./explanations ./out
+```
+
+Everything below describes authoring the two halves separately, which is the
+right way to *write* them, because a paper and its explanations change at very
+different rates. Merging is the packaging step before upload.
+
+An item that is still a draft is held back even inside a combined file, so a
+paper whose prose is half written can be uploaded without putting a blank
+explanation in front of a student.
+
+---
+
 Explanations travel in their **own file**, one per paper. The paper is never
 touched to add, correct or publish an explanation.
 
@@ -161,3 +182,55 @@ case" teaches nothing; pointing at the word `proves` teaches the habit.
 is medium confidence learns to discount every explanation on the page, including
 the ones that are certain, so that signal stays in the admin queue where it is
 actionable.
+
+---
+
+# Answer keys — what the marker accepts
+
+Short answers are marked leniently on **formatting** and strictly on **meaning**.
+A candidate who types `<0.3mL` has answered `<0.3 mL`, and marking that wrong is
+a mark taken off someone preparing for an exam who has no way to tell it was the
+grader rather than them.
+
+Accepted automatically, on every key, without listing them as terms:
+
+| The key says | The candidate types | Marked |
+|---|---|---|
+| `<0.3 mL` | `<0.3mL`, `0.3 ML`, `<0.3 ml` | correct |
+| `250-500 mL` | `250-500ml`, `250 to 500 mL`, `250–500 mL` | correct |
+| `>6.0 mmol` | `>6.0mmol/L`, `6.0 mmol/l` | correct |
+| `≥26.5 µmol` | `>=26.5 umol`, `26.5 micromol/L` | correct |
+| `15 to 30 minutes` | `15-30 mins`, `15–30 minutes` | correct |
+| `25-30%` | `25 to 30 percent` | correct |
+
+Still wrong, and deliberately so:
+
+| The key says | The candidate types | Marked |
+|---|---|---|
+| `<0.3 mL` | `>0.3 mL` | wrong — opposite comparator |
+| `<33%` | `33-50%` | wrong — the neighbouring category |
+| `250-500 mL` | `100-200 mL` | wrong |
+
+A comparator the key has and the candidate omits is accepted, since the question
+normally supplies the direction. Two comparators that **disagree** never are.
+
+Reading keeps its substring rule for phrases, so `nebulised ipratropium bromide`
+satisfies a key of `ipratropium bromide`. Listening still wants the whole answer.
+
+## Auditing the keys
+
+```bash
+npm run keys:check -- ./papers
+```
+
+Reports two things:
+
+- **errors** — a key that does not accept its own displayed answer. Every
+  candidate who copies what the review screen shows them would be marked wrong.
+- **warnings** — a realistic retyping the key would reject, and keys with only
+  one accepted wording where a synonym plausibly exists.
+
+Formatting is handled by the marker, so a warning here is a genuine content
+question: is there a second correct way to say this? `UTI` for `urinary tract
+infection`, `declines` for `deteriorates`. Those belong in `terms`; spacing and
+unit case do not.

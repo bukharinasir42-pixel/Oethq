@@ -58,14 +58,100 @@ function normalize(value: string): string {
     .replace(/^(a|an|the) /, "");
 }
 
+/**
+ * The same measurement, written the way a person actually types it.
+ *
+ * A candidate typing "<0.3mL" has answered "<0.3 mL". Under word-level
+ * normalisation they had not: stripping the full stop leaves a space behind, so
+ * the key becomes "0 3 ml" while the response becomes "0 3ml", and a correct
+ * answer is marked wrong for a missing space. The same went for "250-500ml",
+ * ">6.0mmol/L" and "≥26.5 µmol" typed as ">=26.5 umol".
+ *
+ * So a measurement is compared with every separator removed. Units are folded
+ * to one spelling first, and the connective in a range ("15 to 30" against
+ * "15-30") is dropped, since neither carries meaning here.
+ *
+ * Comparators are the exception and are kept, because "<0.3" and ">0.3" are
+ * opposite answers. They are checked separately, below.
+ */
+function compact(value: string): string {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/≥/g, ">=")
+    .replace(/≤/g, "<=")
+    .replace(/[µμ]/g, "u")
+    .replace(/\bmicro/g, "u")
+    .replace(/\bmillilitres?\b|\bmilliliters?\b|\bmls\b/g, "ml")
+    .replace(/\blitres?\b|\bliters?\b/g, "l")
+    .replace(/\bmillimoles?\b/g, "mmol")
+    .replace(/\bmoles?\b/g, "mol")
+    .replace(/\bgrams?\b|\bgrammes?\b/g, "g")
+    .replace(/\bminutes?\b|\bmins?\b/g, "min")
+    .replace(/\bhours?\b|\bhrs?\b/g, "h")
+    .replace(/\bseconds?\b|\bsecs?\b/g, "s")
+    .replace(/\bpercent(age)?\b/g, "%")
+    // Range and list connectives. "15 to 30 minutes" is "15-30 minutes".
+    .replace(/\b(to|and|or)\b/g, " ")
+    // Everything that is not a value, a unit or a comparator.
+    .replace(/[^a-z0-9%<>=]/g, "");
+}
+
+/** The comparator a measurement opens with, if any. */
+function comparatorOf(value: string): string {
+  const m = /^(>=|<=|>|<)/.exec(compact(value));
+  return m ? m[1] : "";
+}
+
+/**
+ * Do two measurements agree?
+ *
+ * Compared without their comparators, then the comparators are checked against
+ * each other. A response that omits one the key has is accepted, since the
+ * question usually supplies the direction. Two comparators that disagree are
+ * not: "<0.3" is not an answer to "≥0.3".
+ */
+function measurementsAgree(userVal: string, term: string, substring: boolean): boolean {
+  const uc = comparatorOf(userVal);
+  const tc = comparatorOf(term);
+  if (uc && tc && uc !== tc) return false;
+
+  const strip = (s: string) => compact(s).replace(/^(>=|<=|>|<)/, "");
+  const u = strip(userVal);
+  const t = strip(term);
+  if (!u || !t) return false;
+  return substring ? u.includes(t) : u === t;
+}
+
+/** A measurement rather than a phrase: anything carrying a figure. */
+function looksNumeric(value: string): boolean {
+  return /\d/.test(value);
+}
+
 /** Does a user response satisfy a fill-blank answer spec? */
 export function matchFillBlank(userVal: string, answer: OetFillAnswer, testType: "READING" | "LISTENING"): boolean {
   const u = normalize(userVal);
-  if (!u) return false;
-  const terms = (answer.terms || []).map(normalize).filter(Boolean);
-  if (terms.length === 0) return false;
-  const hit = (t: string) => (testType === "READING" ? u.includes(t) : u === t);
-  return answer.mode === "and" ? terms.every(hit) : terms.some(hit);
+  const rawTerms = (answer.terms || []).filter((t) => String(t || "").trim());
+  if (rawTerms.length === 0) return false;
+
+  const substring = testType === "READING";
+  const hit = (raw: string) => {
+    // A measurement is judged only as a measurement.
+    //
+    // The word-level path cannot be trusted with one: it deletes comparators,
+    // so "<0.3 mL" and ">0.3 mL" reduce to the same string and an opposite
+    // answer scores. It also strips the decimal point, so "33-50%" reduces to
+    // "33 50" and matches a key of "<33%" by substring. Both were marks given
+    // away, and neither is visible from the outside.
+    if (looksNumeric(raw) || looksNumeric(userVal)) {
+      return measurementsAgree(userVal, raw, substring);
+    }
+    // Phrases keep the original path, unchanged.
+    const t = normalize(raw);
+    return Boolean(u && t && (substring ? u.includes(t) : u === t));
+  };
+
+  return answer.mode === "and" ? rawTerms.every(hit) : rawTerms.some(hit);
 }
 
 /** Is a single question answered correctly? */

@@ -391,13 +391,23 @@ export class ExplanationsService {
   /**
    * Persist explanations that arrived inside a paper's JSON.
    *
-   * Published immediately: the owner wrote them. Existing rows are updated
-   * UNLESS a human has edited them here, which a re-import must not silently
-   * discard — that edit is the most considered version of the text that exists.
+   * One file carrying the paper, its key and its explanations is the simplest
+   * thing to upload, and it is the intended route: drop it in the admin panel
+   * and all three go live in one action.
+   *
+   * Published immediately, because the owner wrote them, EXCEPT where an item
+   * is still a draft. A merged file is often a paper whose evidence is located
+   * for all 42 items but whose prose is written for only some, and publishing
+   * the rest would put a blank explanation in front of a student.
+   *
+   * Existing rows are updated UNLESS a human has edited them here, which a
+   * re-import must not silently discard: that edit is the most considered
+   * version of the text that exists.
    */
-  async saveFromImport(testId: string, content: unknown): Promise<{ saved: number; skipped: number }> {
+  async saveFromImport(testId: string, content: unknown): Promise<{ saved: number; drafted: number; skipped: number }> {
     const questions = walkQuestions(content);
     let saved = 0;
+    let drafted = 0;
     let skipped = 0;
 
     for (const q of questions) {
@@ -416,11 +426,15 @@ export class ExplanationsService {
         continue;
       }
 
+      const declaredDraft =
+        String((q.explanation as Record<string, unknown>).status ?? "").toLowerCase() === "draft";
+      const publish = !declaredDraft && isWritten(parsed);
+
       const data = {
         part: q.part,
         ...columnsFor(parsed),
-        status: ExplanationStatus.APPROVED,
-        approvedAt: new Date(),
+        status: publish ? ExplanationStatus.APPROVED : ExplanationStatus.DRAFT,
+        approvedAt: publish ? new Date() : null,
         model: null,
         generatedAt: null
       };
@@ -429,9 +443,10 @@ export class ExplanationsService {
         create: { testId, questionNumber: q.n, ...data },
         update: data
       });
-      saved++;
+      if (publish) saved++;
+      else drafted++;
     }
-    return { saved, skipped };
+    return { saved, drafted, skipped };
   }
 
   /**
