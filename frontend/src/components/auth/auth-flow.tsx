@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch, clearToken, getPostAuthRedirect, persistAuthSession } from "@/lib/api";
 import { PROFESSIONS, HEARD_FROM } from "@/lib/profile-options";
+import { getVisitorKey } from "@/lib/attribution";
 
 type Mode = "login" | "register";
 type Step = "credentials" | "otp";
@@ -134,6 +135,11 @@ export function AuthFlow({ mode }: AuthFlowProps) {
               password,
               profession,
               heardFrom,
+              // What they TYPED is `heardFrom`. This is what was MEASURED: the
+              // browser's visitor id, which the server resolves to the channel
+              // that actually brought them. Sending both is the point — the two
+              // disagree often, and only one of them can be checked.
+              visitorKey: getVisitorKey(),
               ...(whatsapp.trim() ? { whatsapp: whatsapp.trim() } : {})
             }
           : { email: email.trim(), password };

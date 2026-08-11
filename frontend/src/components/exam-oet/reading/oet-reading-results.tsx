@@ -9,6 +9,8 @@ import type {
   OetFillBlankQuestion,
 } from "@/lib/oet-test-schema";
 import type { OetResultsProps } from "../oet-exam-types";
+import { fetchExplanationStatus, type ExplanationStatus } from "@/lib/explanations-api";
+import { OetReadingWalkthrough } from "./oet-reading-walkthrough";
 import "./oet-reading-exam.css";
 
 /* ------------------------------------------------------------------ scoring reference */
@@ -133,6 +135,26 @@ const HtmlChip = ({ cls, label, html }: { cls: string; label: string; html: stri
 
 export function OetReadingResults({ result, onRetake }: OetResultsProps) {
   const content = result.content as OetReadingImport;
+
+  /**
+   * Whether this paper has published explanations.
+   *
+   * Asked before showing the button rather than after clicking it: a large
+   * "Check explanation" call to action that opens onto "nothing here yet" is
+   * worse than no button, and papers are being backfilled gradually.
+   */
+  const [exStatus, setExStatus] = useState<ExplanationStatus | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    void fetchExplanationStatus(result.testId).then((s) => {
+      if (live) setExStatus(s);
+    });
+    return () => {
+      live = false;
+    };
+  }, [result.testId]);
 
   const raw = result.correct;
   const total = result.total;
@@ -309,6 +331,12 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
   };
 
   /* ---------------------------------------------------------------- render */
+  // Placed AFTER every hook: an early return above them changes the number of
+  // hooks React sees between renders, which it rejects outright.
+  if (reviewing) {
+    return <OetReadingWalkthrough result={result} onBack={() => setReviewing(false)} />;
+  }
+
   return (
     <div className="oet-reading">
       <section className="screen active" id="screenResults">
@@ -481,6 +509,57 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
 
             {partCReview}
 
+            {/* The way into the walkthrough.
+                Placed directly under the score, and given a pinging arrow,
+                because a student who has just been shown a number is at the one
+                moment they most want to know why. Missing this is missing the
+                part of the paper that teaches. */}
+            {exStatus?.available ? (
+              <div className="ex-cta">
+                <div className="ex-cta-body">
+                  <span className="ex-cta-eyebrow">Now the useful part</span>
+                  <h3>See all explanations</h3>
+                  <p>
+                    Walk through the paper question by question, with the text on the left and the
+                    reasoning on the right. The sentence that answers each question is highlighted
+                    for you.{" "}
+                    {result.total - result.correct > 0 ? (
+                      <>
+                        It starts with the{" "}
+                        <b>
+                          {result.total - result.correct} question
+                          {result.total - result.correct === 1 ? "" : "s"}
+                        </b>{" "}
+                        you did not get right.
+                      </>
+                    ) : (
+                      <>You got everything right, so it opens on question 1.</>
+                    )}
+                  </p>
+                  {exStatus.viewed ? (
+                    <span className="ex-cta-note">
+                      You have opened these before, so a retake from here is marked practice and left
+                      out of your progress.
+                    </span>
+                  ) : (
+                    <span className="ex-cta-note">
+                      Opening this shows you the answers. Any retake afterwards counts as practice and
+                      is kept out of your progress, so your real score stays honest.
+                    </span>
+                  )}
+                </div>
+                <div className="ex-cta-act">
+                  <span className="ex-ping" aria-hidden>
+                    →
+                  </span>
+                  <button className="ex-cta-btn" onClick={() => setReviewing(true)}>
+                    See all explanations
+                    <span aria-hidden>→</span>
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="results-cta">
               <button
                 className="btn btn-ghost"
@@ -488,7 +567,7 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
               >
                 Back to top
               </button>
-              <button className="btn btn-primary" onClick={onRetake}>
+              <button className="btn btn-ghost" onClick={onRetake}>
                 <RetryIcon />
                 Retake test
               </button>

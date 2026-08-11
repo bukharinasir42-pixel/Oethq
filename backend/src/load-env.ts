@@ -11,9 +11,12 @@ function loadEnvFiles() {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires -- optional local-only module
   let config: typeof import("dotenv").config;
   try {
+    // dotenv is a dev dependency and is absent in the deployed image, where the
+    // platform injects the environment instead. A static import would fail at
+    // load; this one is caught below and the function simply returns.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     ({ config } = require("dotenv") as typeof import("dotenv"));
   } catch {
     return;

@@ -33,13 +33,13 @@ enum PlanTier {
 // which is left untouched. Standalone courses are Products bought via ProductPurchase
 // and owned via additive Entitlements (a user can hold several at once).
 enum ProductCategory {
-  COMPLETE   // the existing Complete Course (Foundation/Precision/Elite) — links to existing plans
+  COMPLETE // the existing Complete Course (Foundation/Precision/Elite) — links to existing plans
   STANDALONE // Reading & Listening, Reading, Listening
-  ADDON      // Writing Corrections, Speaking Role Plays (currently coming-soon)
+  ADDON // Writing Corrections, Speaking Role Plays (currently coming-soon)
 }
 
 enum ProductStatus {
-  ACTIVE      // has a landing page and (if isPurchasable) a checkout flow
+  ACTIVE // has a landing page and (if isPurchasable) a checkout flow
   COMING_SOON // presentation-only, locked, never purchasable
 }
 
@@ -50,9 +50,9 @@ enum ProductPurchaseStatus {
 }
 
 enum EntitlementSource {
-  PRODUCT_PURCHASE      // bought a standalone product
+  PRODUCT_PURCHASE // bought a standalone product
   COMPLETE_SUBSCRIPTION // derived from an active Complete Course subscription
-  GRANT                 // manual/admin grant
+  GRANT // manual/admin grant
 }
 
 enum EntitlementStatus {
@@ -154,26 +154,36 @@ enum OetGrade {
 }
 
 model User {
-  id               String          @id @default(uuid())
-  name             String
-  email            String          @unique
-  whatsapp         String?
+  id                  String          @id @default(uuid())
+  name                String
+  email               String          @unique
+  whatsapp            String?
   // Required onboarding fields (collected at sign-up).
-  profession       String?
-  heardFrom        String?
+  profession          String?
+  /// What the student TYPED when asked how they heard about us. Kept, but it is
+  /// not attribution: people misremember, skip it, or write "internet".
+  heardFrom           String?
+  /// What was MEASURED: the first-touch channel of the browser that registered
+  /// this account, copied here at sign-up. Denormalised on purpose — the report
+  /// must keep working if the visitor row is ever pruned, and every revenue
+  /// query joins Purchase → User, not Purchase → User → Visitor.
+  signupChannel       TrafficChannel?
+  signupSource        String?
+  signupCampaign      String?
+  signupLandingPath   String?         @db.Text
   // Stable per-student writing/correction ID (assigned on first Writing submission).
-  writingCode      String?         @unique
-  passwordHash     String
-  role             Role            @default(CANDIDATE)
-  emailVerifiedAt  DateTime?
-  createdAt        DateTime        @default(now())
-  lastLogin        DateTime?
+  writingCode         String?         @unique
+  passwordHash        String
+  role                Role            @default(CANDIDATE)
+  emailVerifiedAt     DateTime?
+  createdAt           DateTime        @default(now())
+  lastLogin           DateTime?
   // Set once the student finishes the mandatory "how to use the course" intro video.
   onboardingWatchedAt DateTime?
   // Exam integrity: cumulative screenshot-attempt strikes; hard-suspend on 3rd.
-  screenshotStrikes Int            @default(0)
-  suspendedAt      DateTime?
-  suspendedReason  String?
+  screenshotStrikes   Int             @default(0)
+  suspendedAt         DateTime?
+  suspendedReason     String?
 
   subscriptions  Subscription[]
   testResults    TestResult[]
@@ -186,13 +196,17 @@ model User {
   productPurchases ProductPurchase[]
   entitlements     Entitlement[]
 
-  cohortSchedule   CohortSchedule?
-  cohortSessions   CohortSessionRecord[]
-  cohortDays       CohortDayProgress[]
-  cohortWarnings   CohortWarning[]
-  cohortReports    CohortWeeklyReport[]
+  cohortSchedule     CohortSchedule?
+  cohortSessions     CohortSessionRecord[]
+  cohortDays         CohortDayProgress[]
+  cohortWarnings     CohortWarning[]
+  cohortReports      CohortWeeklyReport[]
   cohortChatMessages CohortChatMessage[]
   sessions           UserSession[]
+
+  visitors          Visitor[]
+  chatConversations ChatConversation[]
+  explanationViews  ExplanationView[]
 }
 
 /// One signed-in device. The JWT carries this row's id, so a session can be
@@ -204,28 +218,28 @@ model User {
 /// intended trade-off: no fingerprinting, nothing invasive, and a shared clinic
 /// computer does not silently merge two students into one device.
 model UserSession {
-  id         String    @id @default(uuid())
-  userId     String
-  deviceId   String
+  id            String    @id @default(uuid())
+  userId        String
+  deviceId      String
   /// Hash of stable browser traits (platform, screen, timezone, renderer...).
   /// Clearing site data mints a new deviceId; the fingerprint lets that session
   /// be RE-LINKED to the same device instead of burning a second slot — and it
   /// makes the cap meaningfully harder to sidestep with a private window.
-  fingerprint String?
+  fingerprint   String?
   /// Best-effort human label ("Chrome on Windows") for the admin device list.
-  label      String?
-  userAgent  String?
-  ip         String?
+  label         String?
+  userAgent     String?
+  ip            String?
   /// ISO country + city, read from the CDN's geo headers at sign-in. Null when
   /// the deployment sits behind a proxy that does not inject them.
-  country    String?
-  city       String?
-  createdAt  DateTime  @default(now())
-  lastSeenAt DateTime  @default(now())
-  expiresAt  DateTime
+  country       String?
+  city          String?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
   /// Set when the session ends: signed out, evicted by the device cap, or
   /// revoked by an admin. Never deleted — the history is the sharing signal.
-  revokedAt  DateTime?
+  revokedAt     DateTime?
   revokedReason String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -238,84 +252,84 @@ model UserSession {
 }
 
 model Plan {
-  id             String         @id @default(uuid())
-  name           String         @unique
+  id             String   @id @default(uuid())
+  name           String   @unique
   tier           PlanTier
   description    String?
-  price          Decimal        @db.Decimal(10, 2)
-  currency       String         @default("USD")
+  price          Decimal  @db.Decimal(10, 2)
+  currency       String   @default("USD")
   readingLimit   Int
   listeningLimit Int
   pastPaperLimit Int
   // Writing correction allowance granted by this plan tier (admin-editable).
-  writingLimit   Int            @default(0)
-  durationDays   Int            @default(60)
-  isCustom       Boolean        @default(false)
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  writingLimit   Int      @default(0)
+  durationDays   Int      @default(60)
+  isCustom       Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  subscriptions  Subscription[]
-  purchases      Purchase[]
+  subscriptions Subscription[]
+  purchases     Purchase[]
 }
 
 model Subscription {
-  id                 String              @id @default(uuid())
+  id                 String             @id @default(uuid())
   userId             String
   planId             String
-  status             SubscriptionStatus  @default(TRIAL)
+  status             SubscriptionStatus @default(TRIAL)
   startDate          DateTime?
   endDate            DateTime?
   otpVerifiedAt      DateTime?
-  trialUsed          Boolean             @default(false)
+  trialUsed          Boolean            @default(false)
   welcomeEmailSentAt DateTime?
   customAccessUrl    String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
-  user               User                @relation(fields: [userId], references: [id])
-  plan               Plan                @relation(fields: [planId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
 
+  @@unique([userId, planId])
   @@index([userId])
   @@index([planId])
-  @@unique([userId, planId])
 }
 
 // Authoritative course catalogue (single source of truth for dropdown / homepage
 // catalogue / landing pages / checkout / entitlement mapping).
 model Product {
-  id               String          @id @default(uuid())
-  slug             String          @unique // reading-listening, reading, listening, writing-corrections, speaking-role-plays, complete
-  name             String
-  category         ProductCategory
-  status           ProductStatus   @default(COMING_SOON)
-  displayOrder     Int             @default(0)
-  shortDescription String?
-  landingRoute     String?         // /courses/reading etc. (null for coming-soon or "links to existing")
-  price            Decimal?        @db.Decimal(10, 2) // configurable; null until set / for coming-soon
-  currency         String          @default("USD")
-  durationDays     Int?            // configurable access window
-  includedSkills   String[]        // e.g. ["READING","LISTENING"]
+  id                 String          @id @default(uuid())
+  slug               String          @unique // reading-listening, reading, listening, writing-corrections, speaking-role-plays, complete
+  name               String
+  category           ProductCategory
+  status             ProductStatus   @default(COMING_SOON)
+  displayOrder       Int             @default(0)
+  shortDescription   String?
+  landingRoute       String? // /courses/reading etc. (null for coming-soon or "links to existing")
+  price              Decimal?        @db.Decimal(10, 2) // configurable; null until set / for coming-soon
+  currency           String          @default("USD")
+  durationDays       Int? // configurable access window
+  includedSkills     String[] // e.g. ["READING","LISTENING"]
   // Writing-correction letters this product grants (0 for non-writing products).
-  writingCorrections Int           @default(0)
-  includedModules  Json?           // structured inclusions (lectures/tests/mocks/pastpapers/reports)
-  entitlementKey   String          @unique // stable gating key, e.g. "reading_listening"
-  checkoutRef      String?         // stripe price id / internal ref (configurable)
-  featured         Boolean         @default(false)
-  isPurchasable    Boolean         @default(false) // HARD safeguard: coming-soon products are never purchasable
-  upgradeOfSlug    String?         // upgrade relationship to another product slug
+  writingCorrections Int             @default(0)
+  includedModules    Json? // structured inclusions (lectures/tests/mocks/pastpapers/reports)
+  entitlementKey     String          @unique // stable gating key, e.g. "reading_listening"
+  checkoutRef        String? // stripe price id / internal ref (configurable)
+  featured           Boolean         @default(false)
+  isPurchasable      Boolean         @default(false) // HARD safeguard: coming-soon products are never purchasable
+  upgradeOfSlug      String? // upgrade relationship to another product slug
   // Single-skill course tiers (Foundation/Momentum/Precision/Mega). 0 = not a tier.
-  tierRank         Int             @default(0) // 1=Foundation, 2=Momentum, 3=Precision, 4=Mega
-  mockTestLimit    Int             @default(0) // mock tests this tier grants (0 = n/a)
-  pastPaperLimit   Int             @default(0) // OET HQ past papers this tier grants
-  caseNoteLimit    Int             @default(0) // writing case-note tasks this tier grants
-  passPredictor    Boolean         @default(false) // Pass Predictor tracker unlocked at this tier
-  retiredAt        DateTime?       // set when a product is retired (hidden from the public catalogue)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  tierRank           Int             @default(0) // 1=Foundation, 2=Momentum, 3=Precision, 4=Mega
+  mockTestLimit      Int             @default(0) // mock tests this tier grants (0 = n/a)
+  pastPaperLimit     Int             @default(0) // OET HQ past papers this tier grants
+  caseNoteLimit      Int             @default(0) // writing case-note tasks this tier grants
+  passPredictor      Boolean         @default(false) // Pass Predictor tracker unlocked at this tier
+  retiredAt          DateTime? // set when a product is retired (hidden from the public catalogue)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
-  purchases        ProductPurchase[]
-  entitlements     Entitlement[]
+  purchases    ProductPurchase[]
+  entitlements Entitlement[]
 
   @@index([category, status])
   @@index([displayOrder])
@@ -339,8 +353,8 @@ model ProductPurchase {
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
 
-  user              User                  @relation(fields: [userId], references: [id])
-  product           Product               @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([productId])
@@ -349,17 +363,17 @@ model ProductPurchase {
 // Per-skill lecture library for the standalone courses. Owning a course that
 // includes the lecture's skill unlocks it; access is enforced server-side.
 model CourseLecture {
-  id            String   @id @default(uuid())
-  skill         Skill
-  title         String
-  description   String?
-  displayOrder  Int      @default(0)
-  bunnyVideoId  String?
-  videoUrl      String?
-  durationMin   Int?
-  isPublished   Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  skill        Skill
+  title        String
+  description  String?
+  displayOrder Int      @default(0)
+  bunnyVideoId String?
+  videoUrl     String?
+  durationMin  Int?
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([skill, isPublished, displayOrder])
 }
@@ -411,73 +425,75 @@ model PortalResource {
 // Unified per-user ownership. Additive: a user can hold many concurrently
 // (e.g. Complete Course + a standalone course). Never collapsed to one.
 model Entitlement {
-  id             String            @id @default(uuid())
-  userId         String
-  productId      String?           // set for standalone-product entitlements
-  planId         String?           // set for Complete Course (mirrors the active subscription's plan)
-  entitlementKey String            // denormalized stable key (product.entitlementKey or "complete")
-  source         EntitlementSource
-  status         EntitlementStatus @default(ACTIVE)
-  startDate      DateTime?
-  endDate        DateTime?
+  id                String            @id @default(uuid())
+  userId            String
+  productId         String? // set for standalone-product entitlements
+  planId            String? // set for Complete Course (mirrors the active subscription's plan)
+  entitlementKey    String // denormalized stable key (product.entitlementKey or "complete")
+  source            EntitlementSource
+  status            EntitlementStatus @default(ACTIVE)
+  startDate         DateTime?
+  endDate           DateTime?
   productPurchaseId String?
-  grantedAt      DateTime          @default(now())
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  grantedAt         DateTime          @default(now())
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  user           User              @relation(fields: [userId], references: [id])
-  product        Product?          @relation(fields: [productId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
 
   @@index([userId, status])
   @@index([entitlementKey])
 }
 
 model Test {
-  id             String         @id @default(uuid())
-  type           TestType
-  title          String
-  description    String?
-  instructions           String?
-  partASubInstructions   String?
-  partBSubInstructions   String?
-  partCSubInstructions   String?
-  partABookletHtml       String?
-  partBBookletHtml       String?
-  partBExtractBooklets   Json?
+  id                           String   @id @default(uuid())
+  type                         TestType
+  title                        String
+  description                  String?
+  instructions                 String?
+  partASubInstructions         String?
+  partBSubInstructions         String?
+  partCSubInstructions         String?
+  partABookletHtml             String?
+  partBBookletHtml             String?
+  partBExtractBooklets         Json?
   partAExtractQuestionHeadings Json?
-  partAQuestionHeadingGroups Json?
+  partAQuestionHeadingGroups   Json?
   partCExtractQuestionHeadings Json?
-  partCBookletHtml       String?
-  partCExtractBooklets   Json?
-  totalQuestions Int
-  timerDuration  Int
-  partATimer     Int?
-  partBCTimer    Int?
+  partCBookletHtml             String?
+  partCExtractBooklets         Json?
+  totalQuestions               Int
+  timerDuration                Int
+  partATimer                   Int?
+  partBCTimer                  Int?
   /// One-paste OET import document (canonical schema). When present, this test is
   /// rendered + scored from this JSON (official OET grading) instead of Question rows.
-  contentJson          Json?
-  contentSchemaVersion Int?
-  audioAssetId         String?
-  bookletAssetId       String?
-  partBBookletAssetId  String?
-  partCBookletAssetId  String?
-  isPublished          Boolean        @default(false)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  contentJson                  Json?
+  contentSchemaVersion         Int?
+  audioAssetId                 String?
+  bookletAssetId               String?
+  partBBookletAssetId          String?
+  partCBookletAssetId          String?
+  isPublished                  Boolean  @default(false)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
 
-  questions         Question[]
-  listeningTracks   ListeningAudioTrack[]
-  attempts          TestAttempt[]
-  results           TestResult[]
-  readingTasks              DailyTask[]  @relation("ReadingTaskTest")
-  listeningTasks            DailyTask[]  @relation("ListeningTaskTest")
-  pastPaperTasks            DailyTask[]  @relation("PastPaperTaskTest")
-  pastPaperListeningBundles PastPaper[]  @relation("PastPaperListening")
-  pastPaperReadingBundles   PastPaper[]  @relation("PastPaperReading")
-  audioAsset           StorageObject? @relation("TestAudioAsset", fields: [audioAssetId], references: [id])
-  bookletAsset         StorageObject? @relation("TestBookletAsset", fields: [bookletAssetId], references: [id])
-  partBBookletAsset    StorageObject? @relation("TestPartBBookletAsset", fields: [partBBookletAssetId], references: [id])
-  partCBookletAsset    StorageObject? @relation("TestPartCBookletAsset", fields: [partCBookletAssetId], references: [id])
+  questions                 Question[]
+  listeningTracks           ListeningAudioTrack[]
+  attempts                  TestAttempt[]
+  results                   TestResult[]
+  readingTasks              DailyTask[]           @relation("ReadingTaskTest")
+  listeningTasks            DailyTask[]           @relation("ListeningTaskTest")
+  pastPaperTasks            DailyTask[]           @relation("PastPaperTaskTest")
+  pastPaperListeningBundles PastPaper[]           @relation("PastPaperListening")
+  pastPaperReadingBundles   PastPaper[]           @relation("PastPaperReading")
+  audioAsset                StorageObject?        @relation("TestAudioAsset", fields: [audioAssetId], references: [id])
+  bookletAsset              StorageObject?        @relation("TestBookletAsset", fields: [bookletAssetId], references: [id])
+  partBBookletAsset         StorageObject?        @relation("TestPartBBookletAsset", fields: [partBBookletAssetId], references: [id])
+  partCBookletAsset         StorageObject?        @relation("TestPartCBookletAsset", fields: [partCBookletAssetId], references: [id])
+  testExplanations          TestExplanation[]
+  explanationViews          ExplanationView[]
 }
 
 /// Legacy per-extract tracks for Listening. New tests use `Test.audioAssetId` as one session audio file.
@@ -497,28 +513,28 @@ model ListeningAudioTrack {
 }
 
 model Question {
-  id             String          @id @default(uuid())
-  testId         String
-  sequence       Int
-  part           QuestionPart
-  extractId      String?
-  type           QuestionType
-  content        String
-  options        Json?
-  correctAnswer  String
-  explanation    String?
-  points         Int             @default(1)
-  createdAt      DateTime        @default(now())
+  id            String       @id @default(uuid())
+  testId        String
+  sequence      Int
+  part          QuestionPart
+  extractId     String?
+  type          QuestionType
+  content       String
+  options       Json?
+  correctAnswer String
+  explanation   String?
+  points        Int          @default(1)
+  createdAt     DateTime     @default(now())
 
   test           Test            @relation(fields: [testId], references: [id])
   attemptAnswers AttemptAnswer[]
 
-  @@index([testId])
   @@unique([testId, sequence])
+  @@index([testId])
 }
 
 model TestResult {
-  id              String     @id @default(uuid())
+  id              String    @id @default(uuid())
   userId          String
   testId          String
   latestAttemptId String?
@@ -528,18 +544,18 @@ model TestResult {
   partCScore      Int?
   bandLabel       BandLabel
   passProbability Float
-  scaledScore     Int?       // official OET 0–500 (imported tests)
-  oetGrade        OetGrade?  // official OET grade A–E (imported tests)
+  scaledScore     Int? // official OET 0–500 (imported tests)
+  oetGrade        OetGrade? // official OET grade A–E (imported tests)
   completedAt     DateTime
-  attemptsCount   Int        @default(1)
-  createdAt       DateTime   @default(now())
+  attemptsCount   Int       @default(1)
+  createdAt       DateTime  @default(now())
 
-  user            User       @relation(fields: [userId], references: [id])
-  test            Test       @relation(fields: [testId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  test Test @relation(fields: [testId], references: [id])
 
+  @@unique([userId, testId])
   @@index([userId])
   @@index([testId])
-  @@unique([userId, testId])
 }
 
 /// A past paper bundles one Listening test and one Reading test for full-exam practice.
@@ -562,8 +578,8 @@ model PastPaper {
 }
 
 model DailyTask {
-  id                      String         @id @default(uuid())
-  dayNumber               Int            @unique
+  id                      String   @id @default(uuid())
+  dayNumber               Int      @unique
   title                   String
   summary                 String?
   lectureTitle            String
@@ -573,7 +589,7 @@ model DailyTask {
   lectureBunnyVideoId     String?
   articleTitle            String
   articleUrl              String
-  articleContent            String?        @db.Text
+  articleContent          String?  @db.Text
   articleAssetId          String?
   articleThumbnailAssetId String?
   articleBunnyVideoId     String?
@@ -586,66 +602,66 @@ model DailyTask {
   pastPaperUrl            String?
   pastPaperAssetId        String?
   cheatSheetAssetId       String?
-  isPublished             Boolean        @default(true)
-  createdAt               DateTime       @default(now())
-  updatedAt               DateTime       @updatedAt
+  isPublished             Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  assignedReadingTest     Test?          @relation("ReadingTaskTest", fields: [assignedReadingTestId], references: [id])
-  assignedListeningTest   Test?          @relation("ListeningTaskTest", fields: [assignedListeningTestId], references: [id])
-  assignedPastPaper       PastPaper?     @relation("PastPaperAssignment", fields: [assignedPastPaperId], references: [id])
-  assignedPastPaperTest   Test?          @relation("PastPaperTaskTest", fields: [assignedPastPaperTestId], references: [id])
-  lectureAsset            StorageObject? @relation("DailyTaskLectureAsset", fields: [lectureAssetId], references: [id])
-  lectureThumbnailAsset   StorageObject? @relation("DailyTaskLectureThumbnailAsset", fields: [lectureThumbnailAssetId], references: [id])
-  articleAsset            StorageObject? @relation("DailyTaskArticleAsset", fields: [articleAssetId], references: [id])
-  articleThumbnailAsset   StorageObject? @relation("DailyTaskArticleThumbnailAsset", fields: [articleThumbnailAssetId], references: [id])
-  articlePdfAsset         StorageObject? @relation("DailyTaskArticlePdfAsset", fields: [articlePdfAssetId], references: [id])
-  pastPaperAsset          StorageObject? @relation("DailyTaskPastPaperAsset", fields: [pastPaperAssetId], references: [id])
-  cheatSheetAsset         StorageObject? @relation("DailyTaskCheatSheetAsset", fields: [cheatSheetAssetId], references: [id])
+  assignedReadingTest   Test?          @relation("ReadingTaskTest", fields: [assignedReadingTestId], references: [id])
+  assignedListeningTest Test?          @relation("ListeningTaskTest", fields: [assignedListeningTestId], references: [id])
+  assignedPastPaper     PastPaper?     @relation("PastPaperAssignment", fields: [assignedPastPaperId], references: [id])
+  assignedPastPaperTest Test?          @relation("PastPaperTaskTest", fields: [assignedPastPaperTestId], references: [id])
+  lectureAsset          StorageObject? @relation("DailyTaskLectureAsset", fields: [lectureAssetId], references: [id])
+  lectureThumbnailAsset StorageObject? @relation("DailyTaskLectureThumbnailAsset", fields: [lectureThumbnailAssetId], references: [id])
+  articleAsset          StorageObject? @relation("DailyTaskArticleAsset", fields: [articleAssetId], references: [id])
+  articleThumbnailAsset StorageObject? @relation("DailyTaskArticleThumbnailAsset", fields: [articleThumbnailAssetId], references: [id])
+  articlePdfAsset       StorageObject? @relation("DailyTaskArticlePdfAsset", fields: [articlePdfAssetId], references: [id])
+  pastPaperAsset        StorageObject? @relation("DailyTaskPastPaperAsset", fields: [pastPaperAssetId], references: [id])
+  cheatSheetAsset       StorageObject? @relation("DailyTaskCheatSheetAsset", fields: [cheatSheetAssetId], references: [id])
 }
 
 model Blog {
-  id           String         @id @default(uuid())
+  id           String     @id @default(uuid())
   title        String
-  description  String         @db.Text
-  content      String?        @db.Text
-  blogType     BlogType       @default(READING)
+  description  String     @db.Text
+  content      String?    @db.Text
+  blogType     BlogType   @default(READING)
   imageAssetId String?
-  status       BlogStatus     @default(DRAFT)
+  status       BlogStatus @default(DRAFT)
   publishedAt  DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([status, publishedAt])
 }
 
 model Purchase {
-  id              String         @id @default(uuid())
-  userId          String
-  planId          String
-  amount          Decimal        @db.Decimal(10, 2)
-  currency        String         @default("USD")
-  status          PurchaseStatus @default(PENDING)
-  provider        String?
-  reference       String?
-  checkoutSessionId String?      @unique
-  activationToken String?        @unique
-  activationUrl   String?
-  retryCount      Int            @default(0)
-  failureReason   String?
-  receiptUrl      String?
-  receiptData     Json?
-  webhookEventId  String?
-  webhookPayload  Json?
+  id                String         @id @default(uuid())
+  userId            String
+  planId            String
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String         @default("USD")
+  status            PurchaseStatus @default(PENDING)
+  provider          String?
+  reference         String?
+  checkoutSessionId String?        @unique
+  activationToken   String?        @unique
+  activationUrl     String?
+  retryCount        Int            @default(0)
+  failureReason     String?
+  receiptUrl        String?
+  receiptData       Json?
+  webhookEventId    String?
+  webhookPayload    Json?
   webhookReceivedAt DateTime?
-  completedAt     DateTime?
-  emailSentAt     DateTime?
+  completedAt       DateTime?
+  emailSentAt       DateTime?
   /// True when the buyer upgraded from an active/trial STARTER plan (same subscription row rewritten).
-  upgradedFromTrial Boolean      @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  upgradedFromTrial Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  user            User           @relation(fields: [userId], references: [id])
-  plan            Plan           @relation(fields: [planId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
 
   @@index([userId])
   @@index([planId])
@@ -653,7 +669,7 @@ model Purchase {
 }
 
 model AuditLog {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   actorUserId String?
   actorEmail  String?
   action      String
@@ -663,9 +679,9 @@ model AuditLog {
   ipAddress   String?
   userAgent   String?
   metadata    Json?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
-  actorUser   User?     @relation(fields: [actorUserId], references: [id])
+  actorUser User? @relation(fields: [actorUserId], references: [id])
 
   @@index([actorUserId])
   @@index([action, createdAt])
@@ -673,55 +689,55 @@ model AuditLog {
 }
 
 model OTPCode {
-  id         String      @id @default(uuid())
+  id         String     @id @default(uuid())
   userId     String
   code       String
   purpose    OTPPurpose
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime    @default(now())
+  createdAt  DateTime   @default(now())
 
-  user       User        @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([code, purpose])
 }
 
 model StorageObject {
-  id             String      @id @default(uuid())
-  kind           AssetKind
-  bucket         String
-  objectKey      String      @unique
-  title          String
-  contentType    String
-  sizeBytes      Int
-  uploadedById   String?
-  createdAt      DateTime    @default(now())
+  id           String    @id @default(uuid())
+  kind         AssetKind
+  bucket       String
+  objectKey    String    @unique
+  title        String
+  contentType  String
+  sizeBytes    Int
+  uploadedById String?
+  createdAt    DateTime  @default(now())
 
-  uploadedBy     User?       @relation(fields: [uploadedById], references: [id])
-  testAudioFor          Test[] @relation("TestAudioAsset")
-  testBookletFor        Test[] @relation("TestBookletAsset")
-  testPartBBookletFor   Test[] @relation("TestPartBBookletAsset")
-  testPartCBookletFor   Test[] @relation("TestPartCBookletAsset")
-  listeningTrackUses ListeningAudioTrack[]
-  lectureTasks       DailyTask[]              @relation("DailyTaskLectureAsset")
-  lectureThumbnailTasks DailyTask[]           @relation("DailyTaskLectureThumbnailAsset")
-  articleTasks   DailyTask[] @relation("DailyTaskArticleAsset")
-  articleThumbnailTasks DailyTask[] @relation("DailyTaskArticleThumbnailAsset")
-  articlePdfTasks DailyTask[] @relation("DailyTaskArticlePdfAsset")
-  pastPaperTasks DailyTask[] @relation("DailyTaskPastPaperAsset")
-  cheatSheetTasks DailyTask[] @relation("DailyTaskCheatSheetAsset")
-  howToIntroductionVideo HowToIntroduction? @relation("HowToIntroductionVideoAsset")
-  howToIntroductionThumbnail HowToIntroduction? @relation("HowToIntroductionThumbnailAsset")
-  websiteHomeHeroVideo WebsiteHomeContent? @relation("WebsiteHomeHeroVideoAsset")
+  uploadedBy                 User?                 @relation(fields: [uploadedById], references: [id])
+  testAudioFor               Test[]                @relation("TestAudioAsset")
+  testBookletFor             Test[]                @relation("TestBookletAsset")
+  testPartBBookletFor        Test[]                @relation("TestPartBBookletAsset")
+  testPartCBookletFor        Test[]                @relation("TestPartCBookletAsset")
+  listeningTrackUses         ListeningAudioTrack[]
+  lectureTasks               DailyTask[]           @relation("DailyTaskLectureAsset")
+  lectureThumbnailTasks      DailyTask[]           @relation("DailyTaskLectureThumbnailAsset")
+  articleTasks               DailyTask[]           @relation("DailyTaskArticleAsset")
+  articleThumbnailTasks      DailyTask[]           @relation("DailyTaskArticleThumbnailAsset")
+  articlePdfTasks            DailyTask[]           @relation("DailyTaskArticlePdfAsset")
+  pastPaperTasks             DailyTask[]           @relation("DailyTaskPastPaperAsset")
+  cheatSheetTasks            DailyTask[]           @relation("DailyTaskCheatSheetAsset")
+  howToIntroductionVideo     HowToIntroduction?    @relation("HowToIntroductionVideoAsset")
+  howToIntroductionThumbnail HowToIntroduction?    @relation("HowToIntroductionThumbnailAsset")
+  websiteHomeHeroVideo       WebsiteHomeContent?   @relation("WebsiteHomeHeroVideoAsset")
 }
 
 model WebsiteHomeContent {
-  id             String         @id @default("default")
-  heroVideoAssetId String?      @unique
-  heroVideoAsset StorageObject? @relation("WebsiteHomeHeroVideoAsset", fields: [heroVideoAssetId], references: [id], onDelete: SetNull)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id               String         @id @default("default")
+  heroVideoAssetId String?        @unique
+  heroVideoAsset   StorageObject? @relation("WebsiteHomeHeroVideoAsset", fields: [heroVideoAssetId], references: [id], onDelete: SetNull)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model HowToIntroduction {
@@ -736,40 +752,46 @@ model HowToIntroduction {
 }
 
 model TestAttempt {
-  id                    String         @id @default(uuid())
-  userId                String
-  testId                String
-  status                AttemptStatus  @default(IN_PROGRESS)
-  section               AttemptSection
-  startedAt             DateTime       @default(now())
-  expiresAt             DateTime
-  sectionExpiresAt      DateTime?
-  submittedAt           DateTime?
-  autoSubmittedAt       DateTime?
-  currentQuestionIndex  Int            @default(0)
-  questionCountAnswered Int            @default(0)
-  timeRemainingSeconds  Int?
-  audioPositionSeconds  Int            @default(0)
-  audioUnlockedAt       DateTime?
-  audioCompleted        Boolean        @default(false)
-  currentListeningTrackIndex Int       @default(0)
+  id                            String         @id @default(uuid())
+  userId                        String
+  testId                        String
+  status                        AttemptStatus  @default(IN_PROGRESS)
+  section                       AttemptSection
+  startedAt                     DateTime       @default(now())
+  expiresAt                     DateTime
+  sectionExpiresAt              DateTime?
+  submittedAt                   DateTime?
+  autoSubmittedAt               DateTime?
+  currentQuestionIndex          Int            @default(0)
+  questionCountAnswered         Int            @default(0)
+  timeRemainingSeconds          Int?
+  audioPositionSeconds          Int            @default(0)
+  audioUnlockedAt               DateTime?
+  audioCompleted                Boolean        @default(false)
+  currentListeningTrackIndex    Int            @default(0)
   listeningFinalCountdownEndsAt DateTime?
-  countdownStartedAt    DateTime?
-  answersJson           Json?
-  score                 Int?
-  partAScore            Int?
-  partBScore            Int?
-  partCScore            Int?
-  bandLabel             BandLabel?
-  passProbability       Float?
-  scaledScore           Int?           // official OET 0–500 (imported tests)
-  oetGrade              OetGrade?      // official OET grade A–E (imported tests)
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  countdownStartedAt            DateTime?
+  answersJson                   Json?
+  score                         Int?
+  partAScore                    Int?
+  partBScore                    Int?
+  partCScore                    Int?
+  bandLabel                     BandLabel?
+  passProbability               Float?
+  scaledScore                   Int? // official OET 0–500 (imported tests)
+  oetGrade                      OetGrade? // official OET grade A–E (imported tests)
+  /// True when this attempt was started AFTER the student had already opened the
+  /// explanations for this paper. They are welcome to re-sit it as often as they
+  /// like, but a score earned with the answer key already read is not evidence
+  /// of anything — and the Pass Predictor is load-bearing in the 90% claim, so
+  /// it must never be fed one.
+  isPractice                    Boolean        @default(false)
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
 
-  user                  User           @relation(fields: [userId], references: [id])
-  test                  Test           @relation(fields: [testId], references: [id])
-  answers               AttemptAnswer[]
+  user    User            @relation(fields: [userId], references: [id])
+  test    Test            @relation(fields: [testId], references: [id])
+  answers AttemptAnswer[]
 
   @@index([userId])
   @@index([testId])
@@ -777,16 +799,16 @@ model TestAttempt {
 }
 
 model AttemptAnswer {
-  id         String      @id @default(uuid())
+  id         String   @id @default(uuid())
   attemptId  String
   questionId String
   response   String
   isCorrect  Boolean?
-  answeredAt DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  answeredAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  attempt    TestAttempt @relation(fields: [attemptId], references: [id])
-  question   Question    @relation(fields: [questionId], references: [id])
+  attempt  TestAttempt @relation(fields: [attemptId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
 
   @@unique([attemptId, questionId])
   @@index([questionId])
@@ -794,8 +816,8 @@ model AttemptAnswer {
 
 // ==================== COHORT LAYER ====================
 enum CohortSessionSlot {
-  LECTURE      // Class 1 — Daily Lecture  (DailyTask.lecture*)
-  CORE_SKILLS  // Class 2 — Core Skills Session (DailyTask.article*)
+  LECTURE // Class 1 — Daily Lecture  (DailyTask.lecture*)
+  CORE_SKILLS // Class 2 — Core Skills Session (DailyTask.article*)
 }
 
 enum CohortAttendance {
@@ -827,91 +849,95 @@ enum CohortScheduleMode {
 }
 
 model CohortSchedule {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  country       String
-  timezone      String   // IANA, e.g. Asia/Karachi — validated server-side
-  class1Time    String   // "HH:mm" local time for Daily Lecture (LEGACY_SIX_DAY only)
-  class2Time    String   // "HH:mm" local time for Core Skills Session (LEGACY_SIX_DAY only)
+  id             String             @id @default(uuid())
+  userId         String             @unique
+  country        String
+  timezone       String // IANA, e.g. Asia/Karachi — validated server-side
+  class1Time     String // "HH:mm" local time for Daily Lecture (LEGACY_SIX_DAY only)
+  class2Time     String // "HH:mm" local time for Core Skills Session (LEGACY_SIX_DAY only)
   /// Local date of programme day `startDayNumber` (stored midnight UTC of that
   /// date) — the anchor the whole calendar is counted from. It starts as the
   /// date of Day 1 and is re-anchored to the future whenever a student changes
   /// their class days, which is what keeps already-taught days where they are.
-  startDate     DateTime
-  startDayNumber Int     @default(1)
-  totalDays     Int      @default(40)
-  restWeekday   Int      @default(0) // 0=Sunday (LEGACY_SIX_DAY only)
-  mode          CohortScheduleMode @default(PICK_FOUR)
-  lockedAt      DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  startDate      DateTime
+  startDayNumber Int                @default(1)
+  totalDays      Int                @default(40)
+  restWeekday    Int                @default(0) // 0=Sunday (LEGACY_SIX_DAY only)
+  mode           CohortScheduleMode @default(PICK_FOUR)
+  lockedAt       DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id])
-  changes       CohortScheduleChange[]
-  classDays     CohortClassDay[]
+  user      User                   @relation(fields: [userId], references: [id])
+  changes   CohortScheduleChange[]
+  classDays CohortClassDay[]
 }
 
 /// One chosen class weekday and its two class times. Exactly four rows per
 /// PICK_FOUR schedule; none for LEGACY_SIX_DAY.
 model CohortClassDay {
-  id          String   @id @default(uuid())
-  scheduleId  String
-  weekday     Int      // 0=Sunday … 6=Saturday
-  class1Time  String   // "HH:mm" local — Daily Lecture
-  class2Time  String   // "HH:mm" local — Core Skills Session
+  id         String @id @default(uuid())
+  scheduleId String
+  weekday    Int // 0=Sunday … 6=Saturday
+  class1Time String // "HH:mm" local — Daily Lecture
+  class2Time String // "HH:mm" local — Core Skills Session
 
-  schedule    CohortSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  schedule CohortSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
   @@unique([scheduleId, weekday])
   @@index([scheduleId])
 }
 
 model CohortScheduleChange {
-  id          String   @id @default(uuid())
-  scheduleId  String
-  field       String   // class1Time | class2Time | timezone
-  oldValue    String
-  newValue    String
-  changedAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  scheduleId String
+  field      String // class1Time | class2Time | timezone
+  oldValue   String
+  newValue   String
+  changedAt  DateTime @default(now())
 
-  schedule    CohortSchedule @relation(fields: [scheduleId], references: [id])
+  schedule CohortSchedule @relation(fields: [scheduleId], references: [id])
+
   @@index([scheduleId])
 }
 
 model CohortSessionRecord {
-  id                 String            @id @default(uuid())
-  userId             String
-  dayNumber          Int               // FK-by-value to DailyTask.dayNumber
-  slot               CohortSessionSlot
-  scheduledAt        DateTime          // canonical UTC instant of session start
-  attendance         CohortAttendance  @default(UPCOMING)
-  firstJoinedAt      DateTime?
-  lastActivityAt     DateTime?
-  activeWatchSec     Int               @default(0) // during the live window
-  recordingWatchSec  Int               @default(0) // catch-up viewing
-  lastPositionSec    Int               @default(0)
-  furthestPositionSec Int              @default(0)
-  completedAt        DateTime?         // content completion (separate from attendance)
-  reminderSentAt     DateTime?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  id                  String            @id @default(uuid())
+  userId              String
+  dayNumber           Int // FK-by-value to DailyTask.dayNumber
+  slot                CohortSessionSlot
+  scheduledAt         DateTime // canonical UTC instant of session start
+  attendance          CohortAttendance  @default(UPCOMING)
+  firstJoinedAt       DateTime?
+  lastActivityAt      DateTime?
+  activeWatchSec      Int               @default(0) // during the live window
+  recordingWatchSec   Int               @default(0) // catch-up viewing
+  lastPositionSec     Int               @default(0)
+  furthestPositionSec Int               @default(0)
+  completedAt         DateTime? // content completion (separate from attendance)
+  reminderSentAt      DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
-  user               User              @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
   @@unique([userId, dayNumber, slot])
   @@index([userId, scheduledAt])
   @@index([scheduledAt]) // reminder job scan
 }
 
 model CohortDayProgress {
-  id             String          @id @default(uuid())
-  userId         String
-  dayNumber      Int
-  status         CohortDayStatus @default(UPCOMING)
-  completionPct  Int             @default(0)
-  completedAt    DateTime?
-  completedLate  Boolean         @default(false)
-  updatedAt      DateTime        @updatedAt
+  id            String          @id @default(uuid())
+  userId        String
+  dayNumber     Int
+  status        CohortDayStatus @default(UPCOMING)
+  completionPct Int             @default(0)
+  completedAt   DateTime?
+  completedLate Boolean         @default(false)
+  updatedAt     DateTime        @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
   @@unique([userId, dayNumber])
   @@index([userId, status])
 }
@@ -919,7 +945,7 @@ model CohortDayProgress {
 model CohortNotificationLog {
   id                String    @id @default(uuid())
   userId            String
-  type              String    // session_reminder | missed_session | pending_work | weekly_report | warning
+  type              String // session_reminder | missed_session | pending_work | weekly_report | warning
   refKey            String    @unique // idempotency: e.g. "reminder:<sessionRecordId>"
   scheduledFor      DateTime?
   sentAt            DateTime?
@@ -936,42 +962,45 @@ model CohortNotificationLog {
 model CohortWarning {
   id             String    @id @default(uuid())
   userId         String
-  type           String    // reminder | warning | strong_warning
+  type           String // reminder | warning | strong_warning
   reason         String
-  relatedDates   String    // e.g. "2026-07-17,2026-07-18,2026-07-19"
+  relatedDates   String // e.g. "2026-07-17,2026-07-18,2026-07-19"
   issuedAt       DateTime  @default(now())
   acknowledgedAt DateTime?
   resolvedAt     DateTime?
   status         String    @default("open") // open | acknowledged | resolved
 
-  user           User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
   @@index([userId, status])
 }
 
 model CohortWeeklyReport {
-  id           String   @id @default(uuid())
-  userId       String
-  periodStart  DateTime // Monday 00:00 in student's timezone, stored UTC
-  periodEnd    DateTime
-  data         Json     // frozen snapshot — never recalculated
-  emailedAt    DateTime?
-  createdAt    DateTime @default(now())
+  id          String    @id @default(uuid())
+  userId      String
+  periodStart DateTime // Monday 00:00 in student's timezone, stored UTC
+  periodEnd   DateTime
+  data        Json // frozen snapshot — never recalculated
+  emailedAt   DateTime?
+  createdAt   DateTime  @default(now())
 
-  user         User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
   @@unique([userId, periodStart])
 }
 
 model CohortChatMessage {
-  id          String            @id @default(uuid())
-  userId      String
-  dayNumber   Int               // FK-by-value to DailyTask.dayNumber — one thread per session
-  slot        CohortSessionSlot
-  authorName  String            // snapshot of display name at send time
-  role        Role              @default(CANDIDATE) // drives instructor/admin badge styling
-  text        String            @db.Text
-  createdAt   DateTime          @default(now())
+  id         String            @id @default(uuid())
+  userId     String
+  dayNumber  Int // FK-by-value to DailyTask.dayNumber — one thread per session
+  slot       CohortSessionSlot
+  authorName String // snapshot of display name at send time
+  role       Role              @default(CANDIDATE) // drives instructor/admin badge styling
+  text       String            @db.Text
+  createdAt  DateTime          @default(now())
 
-  user        User              @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
   @@index([dayNumber, slot, createdAt])
   @@index([userId])
 }
@@ -1124,4 +1153,365 @@ model ReadingArticle {
   updatedAt    DateTime @updatedAt
 
   @@index([isActive, displayOrder])
+}
+
+// ============================================================================
+// Traffic attribution — where a visitor came from, carried through to revenue
+// ============================================================================
+
+/// The bucket a visit is classified into. Deliberately a closed set: the whole
+/// point is a report you can read at a glance, and free-text sources ("t.co",
+/// "l.facebook.com", "lm.facebook.com") are all the same answer to the only
+/// question that matters — which channel produced this student.
+enum TrafficChannel {
+  DIRECT // typed the URL, a bookmark, or a referrer we cannot see
+  ORGANIC_SEARCH // Google/Bing/DuckDuckGo with no paid click id
+  PAID_SEARCH // Google Ads — gclid, or utm_medium=cpc/ppc/paid
+  YOUTUBE // youtube.com / youtu.be, or utm_source=youtube
+  FACEBOOK // facebook.com and its link shims, or fbclid
+  INSTAGRAM
+  TIKTOK
+  WHATSAPP
+  TELEGRAM
+  LINKEDIN
+  TWITTER // twitter.com / x.com / t.co
+  PAID_SOCIAL // a social source carrying a paid medium
+  EMAIL // utm_medium=email, or a webmail referrer
+  REFERRAL // any other site linking in
+  ADMIN // account created by an admin, never a real visit
+  OTHER
+}
+
+/// One anonymous browser. Created on first page view, before any sign-up, and
+/// linked to the User if that browser later registers — which is what makes the
+/// funnel (channel → signup → money) joinable at all.
+///
+/// FIRST touch is kept separate from LAST touch and is never overwritten. They
+/// answer different questions: first touch is "which channel found this person",
+/// last touch is "what they clicked the day they bought". Reporting on only one
+/// of them is how a YouTube channel that creates every customer gets credited to
+/// "direct" because they came back later by typing the URL.
+model Visitor {
+  id         String @id @default(uuid())
+  /// Random id minted in the browser and kept in localStorage. Not a fingerprint
+  /// and not tied to a person — clearing site data simply starts a new visitor.
+  visitorKey String @unique
+
+  firstChannel     TrafficChannel
+  firstSource      String?
+  firstMedium      String?
+  firstCampaign    String?
+  firstTerm        String?
+  firstContent     String?
+  firstReferrer    String?        @db.Text
+  firstLandingPath String?        @db.Text
+  firstClickId     String?
+  firstSeenAt      DateTime       @default(now())
+
+  lastChannel     TrafficChannel
+  lastSource      String?
+  lastMedium      String?
+  lastCampaign    String?
+  lastReferrer    String?        @db.Text
+  lastLandingPath String?        @db.Text
+  lastSeenAt      DateTime       @default(now())
+
+  /// Page views counted for this browser. Bumped at most once per visit ping.
+  pageViews Int @default(1)
+  /// Distinct sessions (a gap of 30 minutes or more starts a new one).
+  sessions  Int @default(1)
+
+  country   String?
+  userAgent String? @db.Text
+
+  /// Set the moment this browser registers an account.
+  userId      String?
+  convertedAt DateTime?
+
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  conversations ChatConversation[]
+
+  @@index([firstChannel])
+  @@index([lastChannel])
+  @@index([userId])
+  @@index([firstSeenAt])
+}
+
+// ============================================================================
+// Assistant — the site chatbot, its transcript, and its knowledge base
+// ============================================================================
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+/// One thread. Anonymous visitors get one keyed to their visitor row; signed-in
+/// students get one keyed to the user. The channel fields are COPIED here at
+/// creation rather than joined at read time, so "what does YouTube traffic ask
+/// about" still answers correctly after a visitor clears their storage.
+model ChatConversation {
+  id        String  @id @default(uuid())
+  visitorId String?
+  userId    String?
+
+  channel     TrafficChannel?
+  source      String?
+  campaign    String?
+  landingPath String?         @db.Text
+
+  /// First user message, trimmed — the label in the admin list.
+  title         String?
+  messageCount  Int       @default(0)
+  startedAt     DateTime  @default(now())
+  lastMessageAt DateTime  @default(now())
+  /// Set when the assistant told the student to contact a human, or the student
+  /// asked for one. The admin list surfaces these first: they are the questions
+  /// the knowledge base could not answer.
+  handoffAt     DateTime?
+
+  /// How many times the assistant has asked this visitor for a contact number.
+  /// The sales script allows two attempts and no more, and the count has to
+  /// survive between messages or every turn would look like the first.
+  leadAskedCount Int       @default(0)
+  leadCapturedAt DateTime?
+
+  visitor  Visitor?      @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages ChatMessage[]
+  lead     ChatLead?
+
+  @@index([userId])
+  @@index([visitorId])
+  @@index([channel])
+  @@index([lastMessageAt])
+  @@index([handoffAt])
+}
+
+model ChatMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           ChatRole
+  content        String   @db.Text
+
+  /// Ids of the knowledge chunks sent as context for this answer. Without this
+  /// a wrong answer cannot be traced back to the passage that caused it.
+  citedChunkIds String[] @default([])
+
+  inputTokens     Int?
+  outputTokens    Int?
+  cacheReadTokens Int?
+  latencyMs       Int?
+  /// Set when the model refused or the call failed, so the admin list can show
+  /// the failures instead of silently storing an apology as if it were an answer.
+  errorCode       String?
+
+  /// Images the student attached to this message, as storage-agnostic data URLs
+  /// are NOT kept — only how many, and their media types. The pixels are sent to
+  /// the model and discarded: a score report is a medical-adjacent document and
+  /// there is no reason for this application to become its archive.
+  attachmentCount Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+/// A batch of ingested material — one WhatsApp export, one set of transcripts,
+/// one FAQ sheet. Kept as a unit so a bad import can be archived wholesale
+/// instead of hunting individual passages.
+model KnowledgeSource {
+  id         String   @id @default(uuid())
+  name       String
+  /// Free-form label shown in admin: chat_export, transcript, faq, page…
+  kind       String   @default("document")
+  isActive   Boolean  @default(true)
+  chunkCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+
+  @@index([isActive])
+}
+
+/// One retrievable passage.
+///
+/// `searchVector` is a real tsvector column, written by the ingest with
+/// `to_tsvector`, and searched with Postgres full-text ranking. Declared here as
+/// `Unsupported` so Prisma knows the column exists and never reports drift, but
+/// no Prisma query ever reads it — retrieval is raw SQL.
+model KnowledgeChunk {
+  id       String  @id @default(uuid())
+  sourceId String
+  ordinal  Int
+  /// Short label ("Fees — instalment plan"). Weighted above the body in search.
+  heading  String?
+  content  String  @db.Text
+
+  searchVector Unsupported("tsvector")?
+
+  createdAt DateTime @default(now())
+
+  source KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId, ordinal])
+  @@index([searchVector], type: Gin)
+}
+
+/// A visitor who gave their contact number to the assistant.
+///
+/// One per conversation: the sales script asks at most twice, and a second
+/// number in the same thread is a correction, not a second lead.
+model ChatLead {
+  id             String          @id @default(uuid())
+  conversationId String          @unique
+  whatsapp       String
+  name           String?
+  profession     String?
+  /// Free text as the visitor said it ("next month", "12 October"), not a date:
+  /// parsing it into a timestamp would invent a precision they did not give.
+  examDate       String?
+  /// Copied at capture so the report survives visitor churn.
+  channel        TrafficChannel?
+  source         String?
+  /// Set by an admin once someone has actually followed up.
+  contactedAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([channel])
+  @@index([contactedAt])
+}
+
+// ============================================================================
+// Reading answer explanations — why the answer is the answer
+// ============================================================================
+
+enum ExplanationStatus {
+  /// Drafted, not yet checked by a human. NEVER shown to a student.
+  DRAFT
+  /// Approved by an admin. Visible to students who have submitted the paper.
+  APPROVED
+}
+
+/// One question's explanation, for a Reading test or a Reading past paper.
+///
+/// Stored per (test, question number) rather than inside the test's contentJson
+/// on purpose. contentJson is the paper as imported and is replaced wholesale
+/// when a paper is re-imported; explanations are editorial work that must
+/// survive that. Keying on the question number also means an explanation
+/// written for question 14 stays attached to question 14.
+model TestExplanation {
+  id             String        @id @default(uuid())
+  testId         String
+  questionNumber Int
+  /// Which part the question sits in, so the review screen can group them.
+  part           QuestionPart?
+
+  /// The exact sentence(s) from the passage that the answer comes from, quoted
+  /// verbatim so the review screen can locate and highlight them in the text.
+  /// Kept as the primary quote; `evidenceQuotes` carries the full set.
+  evidence       String  @db.Text
+  /// Part A only: which of the four texts (A–D) the evidence is in.
+  evidenceLetter String?
+  /// Every located quote, in reading order:
+  /// [{ "loc": "Text B" | "¶3" | "Email", "quote": "…" }]
+  ///
+  /// An answer is often carried by two sentences in different paragraphs, and
+  /// forcing them into one string would either paraphrase (breaking the
+  /// highlight) or quote a span that includes text the answer does not rest on.
+  /// A quote may contain an ellipsis; each side is located and marked separately.
+  evidenceQuotes Json?
+  /// Why that evidence proves the answer — the actual teaching.
+  reasoning      String  @db.Text
+  /// The paraphrase mapping, rendered as chips: [{ "stem": "held back", "text": "withheld" }]
+  ///
+  /// Separated out of the prose deliberately. The single most common failure at
+  /// this level is not finding the sentence, it is not recognising that the
+  /// sentence found IS the stem in other words. Shown as a mapping, that is one
+  /// glance; buried in a paragraph, it is another thing to read.
+  bridge         Json?
+  /// Per-option verdicts for an MCQ:
+  /// [{ "key": "A", "verdict": "correct" | "distractor" | "partial",
+  ///    "fails": "the exact phrase that breaks", "trap": "…", "why": "…" }]
+  /// A PARTIAL distractor is the dangerous one: true in the passage, but it does
+  /// not answer the question that was asked. Naming that difference is most of
+  /// the value of an explanation at this level.
+  options        Json?
+  /// Short-answer items have no options, so the near misses are enumerated
+  /// instead: [{ "wrote": "oxygen-driven nebuliser", "why": "…" }]
+  commonWrong    Json?
+  /// What the question is testing — "paraphrase", "opinion vs fact", "scanning".
+  skillTag       String?
+  /// The reading mode and skill in his words, shown as a line rather than a
+  /// chip: "Expeditious reading, scanning for a paraphrased rule".
+  skillLabel     String? @db.Text
+  /// A display name for the question type when the ten-way enum is too coarse
+  /// to be useful to a student ("Locating a stated instruction").
+  typeLabel      String?
+  /// Why this item was tempting, at item level rather than option level.
+  trapNote       String? @db.Text
+  /// Anything that does not belong in the teaching: an accepted variant, a
+  /// disputed key, a note about marking.
+  note           String? @db.Text
+  /// How settled the explanation is: high, medium, low. Editorial, shown in the
+  /// admin queue so a doubtful item can be found again. Never shown to students,
+  /// who would reasonably discount every explanation on the page.
+  confidence     String?
+
+  /// The stem restated with the operative word stressed. Answering what is
+  /// asked rather than what is written is the central corrective of the method.
+  stemFocus      String? @db.Text
+  /// One of the ten question types: fact, main_idea, purpose, inference,
+  /// reference, vocabulary, tone, comparison, cause_effect, detail.
+  questionType   String?
+  /// Declared difficulty index: C1 easy, C2 moderate, C3 hard.
+  difficulty     String?
+  /// "If the question had asked X, option D would have been correct." The
+  /// device that shows a distractor is not nonsense, it answers another question.
+  counterfactual String? @db.Text
+  /// The transferable rule. Rendered last — the item teaches the rule.
+  lesson         String? @db.Text
+
+  status       ExplanationStatus @default(DRAFT)
+  /// Which model drafted it, so a bad batch can be traced and re-run.
+  model        String?
+  generatedAt  DateTime?
+  approvedAt   DateTime?
+  approvedById String?
+  /// Set when an admin edited the text by hand, so a regenerate does not
+  /// silently overwrite human work.
+  editedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, questionNumber])
+  @@index([testId, status])
+}
+
+/// Records that a student has opened the explanations for a paper.
+///
+/// The moment this exists, every LATER attempt at that paper is practice. Kept
+/// as its own row rather than a flag on the attempt because the student may
+/// never re-sit it, and because it is the act of looking that matters, not the
+/// attempt it happened during.
+model ExplanationView {
+  id       String   @id @default(uuid())
+  userId   String
+  testId   String
+  viewedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
+  @@index([testId])
 }

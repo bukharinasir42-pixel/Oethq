@@ -9,7 +9,7 @@ import { ResendActivationOtpDto } from "../../modules/auth/dto/resend-activation
 import { ActivateSubscriptionDto } from "../../modules/auth/dto/activate-subscription.dto";
 import { VerifyOtpDto } from "../../modules/auth/dto/verify-otp.dto";
 import type { AppContainer } from "../container";
-import { asyncHandler, rateLimitMiddleware, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
+import { asyncHandler, rateLimitMiddleware, requireAuth, type AuthedRequest } from "../middleware";
 import { auditContextFromRequest } from "../request-audit";
 import { PROFESSIONS } from "../../common/professions";
 import { validateDto } from "../validation";
@@ -23,6 +23,14 @@ export function createAuthRouter(c: AppContainer) {
     asyncHandler(async (req, res) => {
       const dto = await validateDto(RegisterDto, req.body);
       const out = await c.authService.register(dto, auditContextFromRequest(req));
+      // Attribution is attached AFTER the account exists and outside the
+      // registration transaction: knowing which channel produced a student is
+      // worth having, and never worth failing a sign-up over.
+      const visitorKey = typeof req.body?.visitorKey === "string" ? req.body.visitorKey : null;
+      if (visitorKey) {
+        const created = await c.prisma.user.findUnique({ where: { email: dto.email }, select: { id: true } });
+        if (created) await c.attributionService.attachSignup(visitorKey, created.id);
+      }
       res.json(out);
     })
   );

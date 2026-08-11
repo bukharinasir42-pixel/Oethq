@@ -32,7 +32,17 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "03", accent: "#00B8D9", title: "Live skimming & scanning drills", kicker: "Reading Part A speed",
+    n: "03", accent: "#F5A524", title: "Written explanations for every Reading paper", kicker: "Not an answer key. The reasoning, by Dr Nasir",
+    icon: <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /><path d="M9 7h7M9 11h5" /></svg>,
+    body: (<>
+      <p>An answer key tells you that you were wrong. It never tells you <b>why the sentence you chose was the wrong sentence</b>, which is the only thing that changes your next attempt.</p>
+      <p>Submit any Reading test or past paper and the whole paper opens up, question by question: the exact sentence the answer came from <b>highlighted in the passage</b>, the paraphrase you were meant to spot, every option analysed, and the phrase in the tempting one that breaks it.</p>
+      <p>Written by Dr Nasir for each test and each past paper, in plain English, so it reads the same at the end of a night shift as it does on a day off.</p>
+      <div className="wi-mini"><span>All 42 questions</span><span>Evidence highlighted</span><span>Every option</span><span>Reading &amp; past papers</span></div>
+    </>)
+  },
+  {
+    n: "04", accent: "#00B8D9", title: "Live skimming & scanning drills", kicker: "Reading Part A speed",
     icon: <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /><path d="M8 11h6M11 8v6" /></svg>,
     body: (<>
       <p>Reading Part A gives you fifteen minutes for twenty questions across four texts. Comprehension is not the problem — <b>location speed</b> is.</p>
@@ -41,7 +51,7 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "04", accent: "#7C5CFF", title: "Daily live articles from official OET sources", kicker: "The same wells the exam draws from",
+    n: "05", accent: "#7C5CFF", title: "Daily live articles from official OET sources", kicker: "The same wells the exam draws from",
     icon: <svg viewBox="0 0 24 24"><path d="M4 4h13a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H5a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1Z" /><path d="M7 8h7M7 12h7M7 16h4" /></svg>,
     body: (<>
       <p>Reading Part C extracts are not written from nothing — they are adapted from a known set of professional and academic sources.</p>
@@ -50,7 +60,7 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "05", accent: "#F26B3A", title: "Daily listening podcasts", kicker: "Listening Part C, before the exam",
+    n: "06", accent: "#F26B3A", title: "Daily listening podcasts", kicker: "Listening Part C, before the exam",
     icon: <svg viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 0-7 7v4" /><path d="M19 14v-4a7 7 0 0 0-7-7" /><rect x="3" y="13" width="4" height="7" rx="2" /><rect x="17" y="13" width="4" height="7" rx="2" /><path d="M19 20a3 3 0 0 1-3 3h-3" /></svg>,
     body: (<>
       <p>Listening Part C is presentation audio — a speaker with an opinion, an attitude and a structure you have to follow in one pass.</p>
@@ -59,7 +69,7 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "06", accent: "#E5484D", title: "Reading & Listening cheat sheets", kicker: "Hacks you apply inside the exam",
+    n: "07", accent: "#E5484D", title: "Reading & Listening cheat sheets", kicker: "Hacks you apply inside the exam",
     icon: <svg viewBox="0 0 24 24"><path d="m15.5 3.5 5 5L9 20H4v-5Z" /><path d="M13.5 5.5 18 10" /><path d="M3 3.5 4.5 5 6 3.5 4.5 2Z" /></svg>,
     body: (<>
       <p>These are not summary notes. They are <b>decision rules you apply live, mid-paper</b> — what to do when two options both look right, when to abandon a question, how to handle a distractor you have seen before.</p>
@@ -68,7 +78,7 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "07", accent: "#00A3A3", title: "OET Writing corrections", kicker: "Marked to all six official criteria",
+    n: "08", accent: "#00A3A3", title: "OET Writing corrections", kicker: "Marked to all six official criteria",
     icon: <svg viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
     body: (<>
       <p>Your referral letters come back marked <b>line by line against the six official OET Writing criteria</b> — Purpose, Content, Conciseness &amp; Clarity, Genre &amp; Style, Organisation &amp; Layout and Language. The same system the examiners use.</p>
@@ -77,16 +87,17 @@ const ITEMS: Item[] = [
     </>)
   },
   {
-    n: "08", accent: "#4C8DFF", title: "Scheduled fixed classes", kicker: "You pick the day, the time and the class",
+    n: "09", accent: "#4C8DFF", title: "Four live classes a week, at your times", kicker: "You choose the days. You choose the hours.",
     icon: <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /><path d="m10 15 2 2 3-3" /></svg>,
     body: (<>
-      <p>On signing up you choose your start date, your class time and which sessions you want to sit.</p>
-      <p>A fixed timetable is the difference between studying and intending to study. Shift workers can build the schedule around their roster instead of the other way round.</p>
-      <div className="wi-mini"><span>Pick your date</span><span>Pick your time</span><span>Pick your classes</span></div>
+      <p>You pick <b>four weekdays</b>, and you set the time for each one separately. Every class day carries two sessions: the daily lecture and the core skills session.</p>
+      <p>Not a timetable you have to fit your life around. A night shift on Tuesday and a clinic on Friday do not cost you the week, because you never put a class there.</p>
+      <p>A fixed schedule you chose yourself is the difference between studying and intending to study.</p>
+      <div className="wi-mini"><span>4 days a week</span><span>2 sessions a day</span><span>Your hours, per day</span><span>Your start date</span></div>
     </>)
   },
   {
-    n: "09", accent: "#F5A524", title: "OET Score Guarantee", kicker: "Two conditions. One outcome.",
+    n: "10", accent: "#F5A524", title: "OET Score Guarantee", kicker: "Two conditions. One outcome.",
     icon: <svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.2 8.3 8 9 4.8-.7 8-4.5 8-9V6Z" /><path d="m9 12 2 2 4-4" /></svg>,
     body: (<>
       <p>Meet both conditions before you sit the real exam and you clear it 90% of the time:</p>
@@ -132,7 +143,7 @@ export function WebsiteWhatsInside() {
       <div className="wi-wrap" ref={rootRef}>
         <div className="wi-head">
           <span className="wi-pill wi-lbl">What&apos;s inside OET HQ</span>
-          <h2>Nine things you get. <em>All nine matter.</em></h2>
+          <h2>Ten things you get. <em>All ten matter.</em></h2>
           <p>Tap any line to see exactly what it means and why it moves your score.</p>
         </div>
 
@@ -157,7 +168,7 @@ export function WebsiteWhatsInside() {
         </div>
 
         <div className={"wi-foot" + (revealed.has("foot") ? " wi-in" : "")} data-reveal="foot">
-          <p><b>All nine are inside the OET Complete Material.</b>
+          <p><b>All ten are inside the OET Complete Material.</b>
             <span>Single-skill courses carry the ones that apply to that skill.</span></p>
           <Link className="wi-btn" href="/#courses">See the courses <span aria-hidden>→</span></Link>
         </div>

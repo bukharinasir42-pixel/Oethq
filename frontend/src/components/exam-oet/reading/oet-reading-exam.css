@@ -479,3 +479,168 @@
   .oet-reading .qwrap{max-width:1080px}
 }
 @media (prefers-reduced-motion:reduce){.oet-reading *{animation:none!important;transition:none!important}}
+
+/* ---------------------------------------------------------------------------
+   Part A structure — headings, lists and callouts.
+
+   Part A is a scanning task. The structure of the source document is the thing
+   the student scans, so it is reproduced rather than flattened into prose.
+   Spacing here is deliberately generous: these texts are read under time
+   pressure, and the eye needs anchors to jump between.
+--------------------------------------------------------------------------- */
+
+/* A sub-heading inside a text ("Contraindications", "Dosage"). Sits tight to
+   the block it introduces and loose from the one before, so it reads as a lid
+   on what follows rather than a floating label. */
+.oet-reading .pa-sub{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:11.5px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--navy);
+  margin:18px 0 6px;
+  padding-bottom:5px;
+  border-bottom:1px solid var(--line);
+}
+.oet-reading .pa-sub:first-child{margin-top:4px}
+
+.oet-reading .pa-list{
+  margin:8px 0 12px;
+  padding-left:0;
+  list-style:none;
+}
+.oet-reading .pa-list li{
+  position:relative;
+  padding-left:20px;
+  margin:0 0 7px;
+  line-height:1.62;
+}
+.oet-reading .pa-list li:last-child{margin-bottom:0}
+/* A square marker rather than a round bullet: it reads as a clinical document
+   rather than a blog post, and it aligns optically with the text baseline. */
+.oet-reading .pa-list li::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:.62em;
+  width:5px;
+  height:5px;
+  border-radius:1px;
+  background:var(--navy);
+  opacity:.55;
+}
+.oet-reading .pa-list.ord{counter-reset:pa-ol}
+.oet-reading .pa-list.ord li{padding-left:26px;counter-increment:pa-ol}
+.oet-reading .pa-list.ord li::before{
+  content:counter(pa-ol) ".";
+  left:2px;
+  top:0;
+  width:auto;height:auto;
+  border-radius:0;
+  background:none;
+  opacity:1;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;
+  font-weight:800;
+  color:var(--navy);
+}
+/* Nested lists happen in protocols. Indent, and drop the marker weight. */
+.oet-reading .pa-list .pa-list{margin:6px 0 0}
+.oet-reading .pa-list .pa-list li::before{opacity:.32}
+
+/* A boxed callout — a warning or a "do not exceed" panel. */
+.oet-reading .pa-note{
+  margin:14px 0;
+  padding:11px 13px;
+  border:1px solid var(--line-strong);
+  border-left:3px solid var(--navy);
+  border-radius:9px;
+  background:var(--wash);
+}
+.oet-reading .pa-note-label{
+  display:block;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--navy);
+  margin-bottom:4px;
+}
+.oet-reading .pa-note-body{line-height:1.6}
+.oet-reading .pa-note-body p:last-child{margin-bottom:0}
+
+/* Paragraph rhythm. The default was tight enough that a four-paragraph text
+   read as one wall; this separates them without pushing content off screen. */
+.oet-reading .abcd-block p{margin:0 0 11px;line-height:1.66}
+.oet-reading .abcd-block p:last-child{margin-bottom:0}
+
+/* ---------------------------------------------------------------------------
+   "Check the explanations" — the next action after a score.
+
+   Deliberately a band rather than a third button in the row below. A score on
+   its own tells a candidate they failed; the explanations are the part that
+   changes the next attempt, so it is given the weight of the primary action.
+--------------------------------------------------------------------------- */
+.results-shell .ex-cta{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  margin:22px 0 6px;padding:20px 22px;border-radius:16px;
+  background:linear-gradient(135deg,#0B2E4F 0%,#12508A 100%);
+  color:#fff;box-shadow:0 14px 34px rgba(11,46,79,.24);
+}
+.results-shell .ex-cta-body{flex:1;min-width:260px}
+.results-shell .ex-cta-eyebrow{
+  display:block;font:800 10px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:.11em;
+  text-transform:uppercase;opacity:.72;margin-bottom:7px;
+}
+.results-shell .ex-cta h3{margin:0 0 7px;font:700 20px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff}
+.results-shell .ex-cta p{margin:0;font:400 13.5px/1.6 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.9);max-width:62ch}
+.results-shell .ex-cta-note{
+  display:block;margin-top:10px;font:500 11.5px/1.5 'Plus Jakarta Sans',sans-serif;
+  color:rgba(255,255,255,.72);
+}
+.results-shell .ex-cta-btn{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:10px;
+  background:#fff;color:#0B2E4F;border:0;border-radius:12px;
+  padding:15px 24px;font:800 15px/1 'Plus Jakarta Sans',sans-serif;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .12s ease;
+}
+.results-shell .ex-cta-btn:hover{transform:translateY(-1px)}
+.results-shell .ex-cta-btn span{font-size:17px}
+
+/* The pointer to the walkthrough.
+   A green arrow nudging toward the button, and a ring breathing around it. A
+   student who has just read a score is the one person on the site most likely
+   to stop reading, and this is the thing they must not scroll past. The motion
+   is small and it stops entirely for anyone who has asked it to. */
+.results-shell .ex-cta-act{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.results-shell .ex-ping{
+  font:800 26px/1 'Plus Jakarta Sans',sans-serif;color:#3DDC91;
+  animation:ex-nudge 1.5s ease-in-out infinite;
+}
+.results-shell .ex-cta-btn{position:relative}
+.results-shell .ex-cta-btn::after{
+  content:"";position:absolute;inset:-4px;border-radius:16px;
+  border:2px solid #3DDC91;opacity:0;animation:ex-ring 2.2s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes ex-nudge{
+  0%,100%{transform:translateX(0);opacity:.65}
+  50%{transform:translateX(6px);opacity:1}
+}
+@keyframes ex-ring{
+  0%{transform:scale(1);opacity:.85}
+  70%{transform:scale(1.12);opacity:0}
+  100%{opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .results-shell .ex-ping{animation:none;opacity:1}
+  .results-shell .ex-cta-btn::after{animation:none;opacity:.55}
+}
+
+@media (max-width:640px){
+  .results-shell .ex-cta{padding:17px 16px;gap:14px}
+  .results-shell .ex-cta-act{width:100%}
+  .results-shell .ex-cta-btn{width:100%;justify-content:center}
+}

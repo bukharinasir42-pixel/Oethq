@@ -23,6 +23,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OetReadingExam } from "@/components/exam-oet/reading/oet-reading-exam";
+import { clearStoredHighlights } from "@/components/exam-oet/reading/exam-highlighting";
 import { OetListeningExam } from "@/components/exam-oet/listening/oet-listening-exam";
 import { OetReadingResults } from "@/components/exam-oet/reading/oet-reading-results";
 import { OetListeningResults } from "@/components/exam-oet/listening/oet-listening-results";
@@ -131,6 +132,7 @@ export function OetExamRunner({ testId, playable }: { testId: string; playable: 
       try {
         const res = await oetTestsApi.submit(attemptId, answers, false);
         clearBackup(attemptId);
+        clearStoredHighlights(testId); // the marking has served its purpose
         setResult(res);
         setPhase("results");
         window.scrollTo({ top: 0 });
@@ -141,7 +143,7 @@ export function OetExamRunner({ testId, playable }: { testId: string; playable: 
         setPhase("exam");
       }
     },
-    [attemptId]
+    [attemptId, testId]
   );
 
   const handleSubmit = useCallback(
@@ -225,6 +227,7 @@ export function OetExamRunner({ testId, playable }: { testId: string; playable: 
           onAnswersChange={handleAnswersChange}
           onSubmit={handleSubmit}
           submitting={submitting}
+          highlightKey={testId}
         />
       ) : (
         <OetListeningExam

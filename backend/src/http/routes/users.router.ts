@@ -64,6 +64,10 @@ export function createUsersRouter(c: AppContainer) {
     asyncHandler(async (req, res) => {
       const dto = await validateDto(CreateCustomUserDto, req.body);
       const out = await c.usersService.createCustomUser(dto, auditContextFromRequest(req));
+      // Stamp the account so the acquisition report never credits a channel for
+      // a student who was created by hand. Left unstamped they land in "Other"
+      // and quietly inflate whichever bucket the dashboard sorts them into.
+      if (out?.user?.id) await c.attributionService.markAdminCreated(out.user.id);
       res.json(out);
     })
   );

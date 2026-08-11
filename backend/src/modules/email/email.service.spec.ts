@@ -70,10 +70,23 @@ describe("EmailService provider fallback", () => {
     expect(ee).toHaveBeenCalledTimes(1);
   });
 
-  it("logs a preview (no send) when no provider is configured", async () => {
+  /**
+   * This asserted a preview result the service cannot produce with this
+   * configuration, and had failed since the repository was imported: the
+   * preview shape belongs to the Ethereal branch, which needs SMTP_MODE, and
+   * the test sets only SMTP_FROM.
+   *
+   * The behaviour it should assert is the one the service deliberately has,
+   * and says so in its own error: with nothing configured it refuses rather
+   * than reporting a send that never happened. Silently returning "preview"
+   * there would let a broken deployment look healthy while no OTP ever
+   * arrives, which is the failure this throw exists to prevent.
+   */
+  it("refuses to send, rather than pretending, when no provider is configured", async () => {
     const svc = new EmailService(config({ ...FROM }));
-    const r = await svc.sendOtpEmail("a@b.com", "123456", "LOGIN");
-    expect(r).toMatchObject({ delivered: false, preview: true });
+    await expect(svc.sendOtpEmail("a@b.com", "123456", "LOGIN")).rejects.toThrow(
+      "No SMTP providers configured"
+    );
     expect(createTransport).not.toHaveBeenCalled();
   });
 });
