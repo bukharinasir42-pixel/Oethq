@@ -7,7 +7,13 @@ import type {
   OetTextBlock
 } from "@/lib/oet-test-schema";
 import type { OetResult } from "@/lib/oet-tests-api";
-import { fetchExplanations, type Explanation } from "@/lib/explanations-api";
+import {
+  DIFFICULTY_LABEL,
+  fetchExplanations,
+  QUESTION_TYPE_LABEL,
+  TRAP_LABEL,
+  type Explanation
+} from "@/lib/explanations-api";
 
 /**
  * oet-reading-review.tsx — the paper, explained, side by side.
@@ -437,7 +443,26 @@ export function OetReadingReview({
 
                 {isActive && ex ? (
                   <div className="rv-ex">
-                    {ex.skillTag ? <span className="rv-skill">{ex.skillTag}</span> : null}
+                    {/* Chips first: what kind of question this was and how hard
+                        it was. A candidate who dropped a C1 mark needs to know
+                        it was an affordable one, plainly. */}
+                    <div className="rv-chips">
+                      {ex.questionType ? (
+                        <span className="rv-skill">{QUESTION_TYPE_LABEL[ex.questionType] ?? ex.questionType}</span>
+                      ) : ex.skillTag ? (
+                        <span className="rv-skill">{ex.skillTag}</span>
+                      ) : null}
+                      {ex.difficulty ? (
+                        <span className={`rv-diff ${ex.difficulty.toLowerCase()}`}>
+                          {DIFFICULTY_LABEL[ex.difficulty]}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* The stem, restated with the operative word stressed.
+                        Answering what is asked rather than what is written is
+                        the whole discipline, so it leads. */}
+                    {ex.stemFocus ? <p className="rv-stem">{ex.stemFocus}</p> : null}
 
                     <div className="rv-ev">
                       <span className="rv-ev-label">
@@ -469,6 +494,9 @@ export function OetReadingReview({
                                     : verdict.verdict === "partial"
                                       ? "Partial distractor"
                                       : "Distractor"}
+                                  {verdict.trap && verdict.verdict !== "correct" ? (
+                                    <span className="rv-trap">{TRAP_LABEL[verdict.trap]}</span>
+                                  ) : null}
                                 </span>
                                 <span className="rv-opt-why">{verdict.why}</span>
                               </span>
@@ -476,6 +504,24 @@ export function OetReadingReview({
                           );
                         })}
                       </ul>
+                    ) : null}
+
+                    {/* The counterfactual: what question this distractor WOULD
+                        have answered. It shows the option was not nonsense. */}
+                    {ex.counterfactual ? (
+                      <p className="rv-counter">
+                        <span className="rv-counter-label">Had the question asked something else</span>
+                        {ex.counterfactual}
+                      </p>
+                    ) : null}
+
+                    {/* The transferable rule, last. The item teaches the rule;
+                        the rule does not introduce the item. */}
+                    {ex.lesson ? (
+                      <p className="rv-lesson">
+                        <span className="rv-lesson-label">Take this forward</span>
+                        {ex.lesson}
+                      </p>
                     ) : null}
                   </div>
                 ) : null}
@@ -542,7 +588,18 @@ const REVIEW_CSS = `
 .rv-ans.given{background:#F1F4F8;color:#5A6E85}
 
 .rv-ex{margin-top:12px;padding-top:12px;border-top:1px dashed var(--rv-line)}
-.rv-skill{display:inline-block;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--rv-brand);background:#EAF2FA;border-radius:999px;padding:5px 9px;margin-bottom:10px}
+.rv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.rv-skill{display:inline-block;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--rv-brand);background:#EAF2FA;border-radius:999px;padding:5px 9px}
+.rv-diff{display:inline-block;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 9px}
+.rv-diff.c1{background:#E7F6ED;color:#0B7A43}
+.rv-diff.c2{background:#FEF6E7;color:#8A6A16}
+.rv-diff.c3{background:#FCEBE9;color:#A32A1D}
+.rv-stem{margin:0 0 10px;font:600 12.5px/1.55 system-ui,sans-serif;color:#16283D}
+.rv-trap{display:inline-block;margin-left:7px;font:700 9px/1 system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;background:rgba(0,0,0,.06);border-radius:4px;padding:3px 6px;color:#4A5E75}
+.rv-counter{margin:11px 0 0;padding:10px 12px;border-radius:9px;background:#F3F7FB;border:1px solid #DCE6F1;font:400 12.3px/1.6 system-ui,sans-serif;color:#33465F}
+.rv-counter-label{display:block;font:800 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--rv-brand);margin-bottom:5px}
+.rv-lesson{margin:9px 0 0;padding:10px 12px;border-radius:9px;background:#0B2E4F;color:#fff;font:500 12.5px/1.6 system-ui,sans-serif}
+.rv-lesson-label{display:block;font:800 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-bottom:5px}
 .rv-ev{background:#FFFBF0;border:1px solid #F4E3BC;border-left:3px solid #E8B93B;border-radius:9px;padding:10px 12px;margin-bottom:10px}
 .rv-ev-label{display:block;font:800 9.5px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8A6A16;margin-bottom:6px}
 .rv-ev blockquote{margin:0;font:italic 13px/1.6 Georgia,serif;color:#3A2F14}

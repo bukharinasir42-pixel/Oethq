@@ -105,10 +105,52 @@ export type OetQuestion = OetLetterMatchQuestion | OetFillBlankQuestion | OetMcq
  */
 export type OetOptionVerdict = "correct" | "distractor" | "partial";
 
+/**
+ * The named trap an option is running, from the Dr Nasir distractor taxonomy.
+ *
+ * Naming it is not decoration. The method is that a candidate should learn to
+ * recognise the SHAPE of a trap, not just that they got one item wrong — so the
+ * explanation tells them what they were likely to have done, by name.
+ */
+export type OetDistractorType =
+  | "wrong_referent"        // D1  agency reversed, or property on the wrong noun
+  | "adjacent_entity"       // D2  right sentence, neighbouring entity
+  | "partial_support"       // D3  one component supported, another not asserted
+  | "superseded"            // D4  later contrast signal overturns it
+  | "true_not_asked"        // D5  true, but not the function the stem asked for
+  | "lexical_lure"          // D6  echoes a salient word you definitely saw
+  | "unstated_state"        // D7  adds realise / believe / is discussed
+  | "absolute_language"     // D8  only / all / always / never over-claims
+  | "unlicensed_ranking"    // D9  a comparison the text never makes
+  | "sufficiency_overclaim" // D10 treats one intervention as the whole story
+  | "function_mismatch"     // D11 a rhetorical act the passage never performs
+  | "speaker_attribution"   // D12 said, but by the wrong participant
+  | "over_inference"        // D13 a candidate-built multi-step theory
+  | "direct_information"    // D14 a directly-stated fact on an inference item
+  | "near_miss_form";       // D15 right topic, wrong category / form / spelling
+
 export type OetOptionExplanation = {
   verdict: OetOptionVerdict;
+  /** Which trap, when the option is wrong. Omitted for the correct option. */
+  trap?: OetDistractorType;
   why: string;
 };
+
+/** The ten Reading Part C question types. */
+export type OetQuestionType =
+  | "fact"
+  | "main_idea"
+  | "purpose"
+  | "inference"
+  | "reference"
+  | "vocabulary"
+  | "tone"
+  | "comparison"
+  | "cause_effect"
+  | "detail";
+
+/** C1 easy, C2 moderate, C3 hard — the declared difficulty index. */
+export type OetDifficulty = "C1" | "C2" | "C3";
 
 /**
  * The explanation for one question, authored alongside the paper.
@@ -123,9 +165,41 @@ export type OetExplanation = {
   evidence: string;
   /** Part A only: which of the four texts (A–D) the evidence sits in. */
   evidenceLetter?: "A" | "B" | "C" | "D";
-  /** Why that evidence proves the answer. The actual teaching. */
+  /**
+   * Why that evidence gives the answer.
+   *
+   * Deliberately SHORT. In the source method the correct answer's reasoning is
+   * brief and the length lives in the distractor analysis, because the
+   * difficulty is rarely in comprehending the passage — it is in reading the
+   * options properly.
+   */
   reasoning: string;
-  /** What the question tests: "paraphrase", "opinion vs fact", "scanning". */
+  /**
+   * The stem restated with the operative word stressed, e.g.
+   * "What do we learn about SCHIZOPHRENIA — not epilepsy — in paragraph 2?"
+   * Answering what is asked rather than what is written is the single most
+   * repeated corrective in the method, and this is where it lands.
+   */
+  stemFocus?: string;
+  /** Which of the ten question types this is. */
+  questionType?: OetQuestionType;
+  /** C1 / C2 / C3, and whether the mark was an affordable one to drop. */
+  difficulty?: OetDifficulty;
+  /**
+   * Counterfactual stem rewriting: "If the question had asked what we learn
+   * about epilepsy, option D would have been correct."
+   *
+   * The most powerful device in the method for isolating what a distractor
+   * actually answers — it shows the option is not nonsense, it is an answer to
+   * a different question.
+   */
+  counterfactual?: string;
+  /**
+   * The transferable rule. Rendered LAST, deliberately: the item teaches the
+   * rule, the rule does not introduce the item.
+   */
+  lesson?: string;
+  /** Free-text tag, kept for papers authored before questionType existed. */
   skillTag?: string;
   /** Keyed by option letter. MCQ only. */
   options?: Record<string, OetOptionExplanation>;

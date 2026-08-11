@@ -24,9 +24,29 @@ export type ParsedExplanation = {
   evidence: string;
   evidenceLetter?: string | null;
   reasoning: string;
+  stemFocus?: string | null;
+  questionType?: string | null;
+  difficulty?: string | null;
+  counterfactual?: string | null;
+  lesson?: string | null;
   skillTag?: string | null;
-  options?: Record<string, { verdict: OptionVerdict; why: string }> | null;
+  options?: Record<string, { verdict: OptionVerdict; trap?: string; why: string }> | null;
 };
+
+/** The named distractor taxonomy. Anything outside it is dropped, not guessed. */
+const TRAPS = new Set([
+  "wrong_referent", "adjacent_entity", "partial_support", "superseded", "true_not_asked",
+  "lexical_lure", "unstated_state", "absolute_language", "unlicensed_ranking",
+  "sufficiency_overclaim", "function_mismatch", "speaker_attribution", "over_inference",
+  "direct_information", "near_miss_form"
+]);
+
+const QUESTION_TYPES = new Set([
+  "fact", "main_idea", "purpose", "inference", "reference",
+  "vocabulary", "tone", "comparison", "cause_effect", "detail"
+]);
+
+const DIFFICULTIES = new Set(["C1", "C2", "C3"]);
 
 const VERDICTS = new Set<OptionVerdict>(["correct", "distractor", "partial"]);
 
@@ -53,7 +73,7 @@ export function parseExplanation(raw: unknown): ParsedExplanation | null {
   if (!evidence || !reasoning) return null;
 
   const letter = clean(o.evidenceLetter, 1);
-  const options: Record<string, { verdict: OptionVerdict; why: string }> = {};
+  const options: Record<string, { verdict: OptionVerdict; trap?: string; why: string }> = {};
   if (o.options && typeof o.options === "object") {
     for (const [key, value] of Object.entries(o.options as Record<string, unknown>)) {
       if (!value || typeof value !== "object") continue;
@@ -61,14 +81,26 @@ export function parseExplanation(raw: unknown): ParsedExplanation | null {
       const verdict = clean(v.verdict, 20)?.toLowerCase() as OptionVerdict | undefined;
       const why = clean(v.why, 2000);
       if (!verdict || !VERDICTS.has(verdict) || !why) continue;
-      options[key.trim().toUpperCase().slice(0, 2)] = { verdict, why };
+      // An unrecognised trap name is dropped rather than stored. The taxonomy is
+      // the teaching, and a made-up category would teach the wrong shape.
+      const trapRaw = clean(v.trap, 40)?.toLowerCase().replace(/[\s-]+/g, "_");
+      const trap = trapRaw && TRAPS.has(trapRaw) ? trapRaw : undefined;
+      options[key.trim().toUpperCase().slice(0, 2)] = { verdict, ...(trap ? { trap } : {}), why };
     }
   }
+
+  const qt = clean(o.questionType, 30)?.toLowerCase().replace(/[\s-]+/g, "_");
+  const diff = clean(o.difficulty, 4)?.toUpperCase();
 
   return {
     evidence,
     evidenceLetter: letter && /^[A-D]$/i.test(letter) ? letter.toUpperCase() : null,
     reasoning,
+    stemFocus: clean(o.stemFocus, 500),
+    questionType: qt && QUESTION_TYPES.has(qt) ? qt : null,
+    difficulty: diff && DIFFICULTIES.has(diff) ? diff : null,
+    counterfactual: clean(o.counterfactual, 1000),
+    lesson: clean(o.lesson, 1000),
     skillTag: clean(o.skillTag, 60),
     options: Object.keys(options).length > 0 ? options : null
   };
@@ -126,6 +158,11 @@ export class ExplanationsService {
         evidence: parsed.evidence,
         evidenceLetter: parsed.evidenceLetter ?? null,
         reasoning: parsed.reasoning,
+        stemFocus: parsed.stemFocus ?? null,
+        questionType: parsed.questionType ?? null,
+        difficulty: parsed.difficulty ?? null,
+        counterfactual: parsed.counterfactual ?? null,
+        lesson: parsed.lesson ?? null,
         skillTag: parsed.skillTag ?? null,
         options: (parsed.options ?? Prisma.DbNull) as Prisma.InputJsonValue,
         status: ExplanationStatus.APPROVED,
@@ -155,8 +192,14 @@ export class ExplanationsService {
       evidence: r.evidence,
       evidenceLetter: r.evidenceLetter,
       reasoning: r.reasoning,
+      stemFocus: r.stemFocus,
+      questionType: r.questionType,
+      difficulty: r.difficulty,
+      counterfactual: r.counterfactual,
+      lesson: r.lesson,
       skillTag: r.skillTag,
-      options: (r.options as Record<string, { verdict: OptionVerdict; why: string }> | null) ?? null
+      options:
+        (r.options as Record<string, { verdict: OptionVerdict; trap?: string; why: string }> | null) ?? null
     }));
   }
 

@@ -1429,6 +1429,20 @@ model TestExplanation {
   /// What the question is testing — "paraphrase", "opinion vs fact", "scanning".
   skillTag       String?
 
+  /// The stem restated with the operative word stressed. Answering what is
+  /// asked rather than what is written is the central corrective of the method.
+  stemFocus      String? @db.Text
+  /// One of the ten question types: fact, main_idea, purpose, inference,
+  /// reference, vocabulary, tone, comparison, cause_effect, detail.
+  questionType   String?
+  /// Declared difficulty index: C1 easy, C2 moderate, C3 hard.
+  difficulty     String?
+  /// "If the question had asked X, option D would have been correct." The
+  /// device that shows a distractor is not nonsense, it answers another question.
+  counterfactual String? @db.Text
+  /// The transferable rule. Rendered last — the item teaches the rule.
+  lesson         String? @db.Text
+
   status       ExplanationStatus @default(DRAFT)
   /// Which model drafted it, so a bad batch can be traced and re-run.
   model        String?
