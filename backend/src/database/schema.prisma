@@ -1415,19 +1415,54 @@ model TestExplanation {
 
   /// The exact sentence(s) from the passage that the answer comes from, quoted
   /// verbatim so the review screen can locate and highlight them in the text.
+  /// Kept as the primary quote; `evidenceQuotes` carries the full set.
   evidence       String  @db.Text
   /// Part A only: which of the four texts (A–D) the evidence is in.
   evidenceLetter String?
+  /// Every located quote, in reading order:
+  /// [{ "loc": "Text B" | "¶3" | "Email", "quote": "…" }]
+  ///
+  /// An answer is often carried by two sentences in different paragraphs, and
+  /// forcing them into one string would either paraphrase (breaking the
+  /// highlight) or quote a span that includes text the answer does not rest on.
+  /// A quote may contain an ellipsis; each side is located and marked separately.
+  evidenceQuotes Json?
   /// Why that evidence proves the answer — the actual teaching.
   reasoning      String  @db.Text
+  /// The paraphrase mapping, rendered as chips: [{ "stem": "held back", "text": "withheld" }]
+  ///
+  /// Separated out of the prose deliberately. The single most common failure at
+  /// this level is not finding the sentence, it is not recognising that the
+  /// sentence found IS the stem in other words. Shown as a mapping, that is one
+  /// glance; buried in a paragraph, it is another thing to read.
+  bridge         Json?
   /// Per-option verdicts for an MCQ:
-  /// [{ "key": "A", "verdict": "correct" | "distractor" | "partial", "why": "…" }]
+  /// [{ "key": "A", "verdict": "correct" | "distractor" | "partial",
+  ///    "fails": "the exact phrase that breaks", "trap": "…", "why": "…" }]
   /// A PARTIAL distractor is the dangerous one: true in the passage, but it does
   /// not answer the question that was asked. Naming that difference is most of
   /// the value of an explanation at this level.
   options        Json?
+  /// Short-answer items have no options, so the near misses are enumerated
+  /// instead: [{ "wrote": "oxygen-driven nebuliser", "why": "…" }]
+  commonWrong    Json?
   /// What the question is testing — "paraphrase", "opinion vs fact", "scanning".
   skillTag       String?
+  /// The reading mode and skill in his words, shown as a line rather than a
+  /// chip: "Expeditious reading, scanning for a paraphrased rule".
+  skillLabel     String? @db.Text
+  /// A display name for the question type when the ten-way enum is too coarse
+  /// to be useful to a student ("Locating a stated instruction").
+  typeLabel      String?
+  /// Why this item was tempting, at item level rather than option level.
+  trapNote       String? @db.Text
+  /// Anything that does not belong in the teaching: an accepted variant, a
+  /// disputed key, a note about marking.
+  note           String? @db.Text
+  /// How settled the explanation is: high, medium, low. Editorial, shown in the
+  /// admin queue so a doubtful item can be found again. Never shown to students,
+  /// who would reasonably discount every explanation on the page.
+  confidence     String?
 
   /// The stem restated with the operative word stressed. Answering what is
   /// asked rather than what is written is the central corrective of the method.

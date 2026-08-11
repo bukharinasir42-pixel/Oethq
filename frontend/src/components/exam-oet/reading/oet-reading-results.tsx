@@ -10,7 +10,7 @@ import type {
 } from "@/lib/oet-test-schema";
 import type { OetResultsProps } from "../oet-exam-types";
 import { fetchExplanationStatus, type ExplanationStatus } from "@/lib/explanations-api";
-import { OetReadingReview } from "./oet-reading-review";
+import { OetReadingWalkthrough } from "./oet-reading-walkthrough";
 import "./oet-reading-exam.css";
 
 /* ------------------------------------------------------------------ scoring reference */
@@ -334,7 +334,7 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
   // Placed AFTER every hook: an early return above them changes the number of
   // hooks React sees between renders, which it rejects outright.
   if (reviewing) {
-    return <OetReadingReview result={result} onBack={() => setReviewing(false)} />;
+    return <OetReadingWalkthrough result={result} onBack={() => setReviewing(false)} />;
   }
 
   return (
@@ -509,15 +509,32 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
 
             {partCReview}
 
+            {/* The way into the walkthrough.
+                Placed directly under the score, and given a pinging arrow,
+                because a student who has just been shown a number is at the one
+                moment they most want to know why. Missing this is missing the
+                part of the paper that teaches. */}
             {exStatus?.available ? (
               <div className="ex-cta">
                 <div className="ex-cta-body">
                   <span className="ex-cta-eyebrow">Now the useful part</span>
-                  <h3>Check the explanations</h3>
+                  <h3>See all explanations</h3>
                   <p>
-                    Go through the paper question by question and see the exact sentence each answer
-                    came from, why it is the answer, and which options were partial distractors —
-                    true in the text, but not what the question asked.
+                    Walk through the paper question by question, with the text on the left and the
+                    reasoning on the right. The sentence that answers each question is highlighted
+                    for you.{" "}
+                    {result.total - result.correct > 0 ? (
+                      <>
+                        It starts with the{" "}
+                        <b>
+                          {result.total - result.correct} question
+                          {result.total - result.correct === 1 ? "" : "s"}
+                        </b>{" "}
+                        you did not get right.
+                      </>
+                    ) : (
+                      <>You got everything right, so it opens on question 1.</>
+                    )}
                   </p>
                   {exStatus.viewed ? (
                     <span className="ex-cta-note">
@@ -531,10 +548,15 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
                     </span>
                   )}
                 </div>
-                <button className="ex-cta-btn" onClick={() => setReviewing(true)}>
-                  Check explanation
-                  <span aria-hidden>→</span>
-                </button>
+                <div className="ex-cta-act">
+                  <span className="ex-ping" aria-hidden>
+                    →
+                  </span>
+                  <button className="ex-cta-btn" onClick={() => setReviewing(true)}>
+                    See all explanations
+                    <span aria-hidden>→</span>
+                  </button>
+                </div>
               </div>
             ) : null}
 

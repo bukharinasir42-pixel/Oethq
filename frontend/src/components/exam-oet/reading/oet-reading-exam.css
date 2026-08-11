@@ -609,7 +609,38 @@
 .results-shell .ex-cta-btn:hover{transform:translateY(-1px)}
 .results-shell .ex-cta-btn span{font-size:17px}
 
+/* The pointer to the walkthrough.
+   A green arrow nudging toward the button, and a ring breathing around it. A
+   student who has just read a score is the one person on the site most likely
+   to stop reading, and this is the thing they must not scroll past. The motion
+   is small and it stops entirely for anyone who has asked it to. */
+.results-shell .ex-cta-act{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.results-shell .ex-ping{
+  font:800 26px/1 'Plus Jakarta Sans',sans-serif;color:#3DDC91;
+  animation:ex-nudge 1.5s ease-in-out infinite;
+}
+.results-shell .ex-cta-btn{position:relative}
+.results-shell .ex-cta-btn::after{
+  content:"";position:absolute;inset:-4px;border-radius:16px;
+  border:2px solid #3DDC91;opacity:0;animation:ex-ring 2.2s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes ex-nudge{
+  0%,100%{transform:translateX(0);opacity:.65}
+  50%{transform:translateX(6px);opacity:1}
+}
+@keyframes ex-ring{
+  0%{transform:scale(1);opacity:.85}
+  70%{transform:scale(1.12);opacity:0}
+  100%{opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .results-shell .ex-ping{animation:none;opacity:1}
+  .results-shell .ex-cta-btn::after{animation:none;opacity:.55}
+}
+
 @media (max-width:640px){
   .results-shell .ex-cta{padding:17px 16px;gap:14px}
+  .results-shell .ex-cta-act{width:100%}
   .results-shell .ex-cta-btn{width:100%;justify-content:center}
 }

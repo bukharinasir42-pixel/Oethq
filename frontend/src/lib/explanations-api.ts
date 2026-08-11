@@ -6,41 +6,103 @@ export type DistractorType =
   | "wrong_referent" | "adjacent_entity" | "partial_support" | "superseded"
   | "true_not_asked" | "lexical_lure" | "unstated_state" | "absolute_language"
   | "unlicensed_ranking" | "sufficiency_overclaim" | "function_mismatch"
-  | "speaker_attribution" | "over_inference" | "direct_information" | "near_miss_form";
+  | "speaker_attribution" | "over_inference" | "direct_information"
+  | "near_miss_form" | "not_stated";
+
+/** One located quote. `loc` labels it for the student: "Text B", "¶3", "Email". */
+export type EvidenceQuote = { loc: string | null; quote: string };
+
+/** One row of the paraphrase mapping: the stem's wording, and the text's. */
+export type BridgePair = { stem: string; text: string };
+
+/** A near miss a short-answer item attracts, and why it scores nothing. */
+export type CommonWrong = { wrote: string; why: string };
+
+export type ExplanationOption = {
+  verdict: OptionVerdict;
+  trap?: DistractorType;
+  /** The exact phrase in the option that breaks. Quoted back at the student. */
+  fails?: string;
+  why: string;
+};
 
 export type Explanation = {
   questionNumber: number;
   part: "A" | "B" | "C" | null;
+  /** The primary quote. `evidenceQuotes` is what the screen renders. */
   evidence: string;
   evidenceLetter: string | null;
+  evidenceQuotes: EvidenceQuote[];
   reasoning: string;
+  bridge: BridgePair[] | null;
+  commonWrong: CommonWrong[] | null;
   stemFocus: string | null;
   questionType: string | null;
+  /** A readable name for the question type where the enum is too coarse. */
+  typeLabel: string | null;
   difficulty: "C1" | "C2" | "C3" | null;
   counterfactual: string | null;
   lesson: string | null;
   skillTag: string | null;
-  options: Record<string, { verdict: OptionVerdict; trap?: DistractorType; why: string }> | null;
+  skillLabel: string | null;
+  trapNote: string | null;
+  note: string | null;
+  options: Record<string, ExplanationOption> | null;
 };
 
-/** What a student is told the trap was. His terms where he has one. */
+/**
+ * What a student is told the trap was, in plain words.
+ *
+ * These are deliberately not the technical names. The audience is a nurse or a
+ * doctor reading in a second language after a twelve-hour shift, and a category
+ * they have to decode first is a category that teaches nothing. The technical
+ * name stays in the data, where the analytics need it; only the display changes.
+ */
 export const TRAP_LABEL: Record<DistractorType, string> = {
-  wrong_referent: "Reversed referent",
-  adjacent_entity: "Neighbouring entity",
-  partial_support: "Half supported",
-  superseded: "Superseded later",
-  true_not_asked: "True, but not asked",
-  lexical_lure: "Word you recognised",
-  unstated_state: "Unstated awareness",
-  absolute_language: "Absolute language",
-  unlicensed_ranking: "Ranking not in the text",
-  sufficiency_overclaim: "Overclaims sufficiency",
-  function_mismatch: "Wrong rhetorical act",
-  speaker_attribution: "Wrong speaker",
-  over_inference: "Built theory",
-  direct_information: "Directly stated, not derived",
-  near_miss_form: "Right topic, wrong form"
+  wrong_referent: "It swaps who does what",
+  adjacent_entity: "It talks about the wrong thing",
+  partial_support: "Half right, half wrong",
+  superseded: "The text changes this later",
+  true_not_asked: "True, but not the question",
+  lexical_lure: "A word you saw, used to trick you",
+  unstated_state: "The text never says anyone thought or knew this",
+  absolute_language: "Words that are too strong",
+  unlicensed_ranking: "It compares things the text never compares",
+  sufficiency_overclaim: "It says one thing is enough, but more is needed",
+  function_mismatch: "The text does not do this",
+  speaker_attribution: "The wrong person said it",
+  over_inference: "It goes too far from what the text says",
+  direct_information: "Stated outright, when you had to work it out",
+  near_miss_form: "The right area, but the wrong word",
+  not_stated: "Not in the text at all"
 };
+
+/**
+ * Section headings in the walkthrough. Plain English, one place to change them.
+ */
+export const WALKTHROUGH_LABELS = {
+  skill: "What this question is testing",
+  stem: "What the question is really asking",
+  evidence: "Proof in the text",
+  bridge: "Same meaning, different words",
+  reasoning: "Why this answer is right",
+  options: "Why the other answers are wrong",
+  commonWrong: "Answers that do not get the mark",
+  trap: "The trap",
+  counterfactual: "If the question had asked something else",
+  lesson: "Remember this next time",
+  fails: "The part that is wrong:",
+  highlighted: "highlighted on the left",
+  quotedHere: "quoted here",
+  hint: "The sentence with the answer is highlighted in yellow below.",
+  hintMissed: "The sentence is quoted on the right. It could not be found automatically in this text.",
+  youWrote: "You wrote",
+  yourAnswer: "You picked",
+  accepted: "Right answer",
+  correct: "Right answer",
+  youChose: "you picked this",
+  notAnswered: "Not answered"
+} as const;
 
 export const QUESTION_TYPE_LABEL: Record<string, string> = {
   fact: "Fact based",

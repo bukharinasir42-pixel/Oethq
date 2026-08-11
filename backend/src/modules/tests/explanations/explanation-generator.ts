@@ -22,7 +22,10 @@ import { parseExplanation, type ParsedExplanation } from "./explanations.service
  *    everything a distractor, so it is told the difference explicitly.
  */
 
-const MODEL = process.env.ANTHROPIC_EXPLANATION_MODEL?.trim() || "claude-opus-5";
+/** The default drafting model. Overridable per deployment. */
+export const DEFAULT_EXPLANATION_MODEL = "claude-opus-5";
+
+const MODEL = process.env.ANTHROPIC_EXPLANATION_MODEL?.trim() || DEFAULT_EXPLANATION_MODEL;
 
 /** One paper's worth of questions is too much for a single call to do well. */
 const BATCH_SIZE = 6;

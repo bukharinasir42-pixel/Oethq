@@ -26,7 +26,8 @@
     "prisma:seed-cohort-demo": "ts-node --transpile-only -r tsconfig-paths/register ./src/database/seed-cohort-demo.ts",
     "prisma:seed-products": "ts-node --transpile-only -r tsconfig-paths/register ./src/database/seed-products.ts",
     "chat:ingest": "ts-node --transpile-only -r tsconfig-paths/register scripts/ingest-knowledge.ts",
-    "paper:check": "ts-node --transpile-only -r tsconfig-paths/register scripts/check-paper.ts"
+    "paper:check": "ts-node --transpile-only -r tsconfig-paths/register scripts/check-paper.ts",
+    "explanations:import": "ts-node --transpile-only -r tsconfig-paths/register scripts/import-explanations.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

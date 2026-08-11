@@ -13,7 +13,8 @@ import { AttemptStatus, Prisma } from "@prisma/client";
 import { Router } from "express";
 import type { AppContainer } from "../container";
 import { asyncHandler, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
-import type { GeneratorQuestion } from "../../modules/tests/explanations/explanation-generator";
+import { DEFAULT_EXPLANATION_MODEL, type GeneratorQuestion } from "../../modules/tests/explanations/explanation-generator";
+import { columnsFor } from "../../modules/tests/explanations/explanations.service";
 
 /** Flatten a reading paper into what the generator needs: question + its text. */
 type GenQ = GeneratorQuestion & { part: "A" | "B" | "C" };
@@ -172,6 +173,35 @@ export function createExplanationsRouter(c: AppContainer): Router {
     })
   );
 
+  /**
+   * Attach an explanations file to a paper.
+   *
+   * Separate from the paper import on purpose. The papers carry structure that
+   * took real work to get right, and an editorial change to an explanation must
+   * not require re-importing the paper that carries it.
+   */
+  r.post(
+    "/admin/oet-tests/:id/explanations/import",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      const test = await svc.assertReading(req.params.id);
+      const out = await svc.saveFromFile(test.id, req.body);
+      if (out.total === 0) {
+        res.status(400).json({ message: "No usable items in that file. Expecting { items: { A1: {...} } }." });
+        return;
+      }
+      await c.auditService.record({
+        actorUserId: (req as AuthedRequest).user.id,
+        action: "explanations.import",
+        entityType: "Test",
+        entityId: test.id,
+        metadata: out
+      });
+      res.json({ testId: test.id, title: test.title, ...out });
+    })
+  );
+
   r.get(
     "/admin/oet-tests/:id/explanations",
     auth,
@@ -222,32 +252,14 @@ export function createExplanationsRouter(c: AppContainer): Router {
             testId: test.id,
             questionNumber: d.n,
             part: all.find((q) => q.n === d.n)?.part,
-            evidence: d.evidence,
-            evidenceLetter: d.evidenceLetter ?? null,
-            reasoning: d.reasoning,
-            stemFocus: d.stemFocus ?? null,
-            questionType: d.questionType ?? null,
-            difficulty: d.difficulty ?? null,
-            counterfactual: d.counterfactual ?? null,
-            lesson: d.lesson ?? null,
-            skillTag: d.skillTag ?? null,
-            options: d.options ?? undefined,
-            model: process.env.ANTHROPIC_EXPLANATION_MODEL || "claude-opus-5",
+            ...columnsFor(d),
+            model: process.env.ANTHROPIC_EXPLANATION_MODEL || DEFAULT_EXPLANATION_MODEL,
             generatedAt: new Date()
           },
           update: {
             part: all.find((q) => q.n === d.n)?.part,
-            evidence: d.evidence,
-            evidenceLetter: d.evidenceLetter ?? null,
-            reasoning: d.reasoning,
-            stemFocus: d.stemFocus ?? null,
-            questionType: d.questionType ?? null,
-            difficulty: d.difficulty ?? null,
-            counterfactual: d.counterfactual ?? null,
-            lesson: d.lesson ?? null,
-            skillTag: d.skillTag ?? null,
-            options: d.options ?? undefined,
-            model: process.env.ANTHROPIC_EXPLANATION_MODEL || "claude-opus-5",
+            ...columnsFor(d),
+            model: process.env.ANTHROPIC_EXPLANATION_MODEL || DEFAULT_EXPLANATION_MODEL,
             generatedAt: new Date(),
             status: "DRAFT",
             approvedAt: null,

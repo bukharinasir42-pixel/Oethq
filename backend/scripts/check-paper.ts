@@ -20,8 +20,17 @@ const TRAPS = new Set([
   "wrong_referent", "adjacent_entity", "partial_support", "superseded", "true_not_asked",
   "lexical_lure", "unstated_state", "absolute_language", "unlicensed_ranking",
   "sufficiency_overclaim", "function_mismatch", "speaker_attribution", "over_inference",
-  "direct_information", "near_miss_form"
+  "direct_information", "near_miss_form", "not_stated"
 ]);
+
+/** Short names the authoring tool uses for the same traps. */
+const TRAP_ALIASES = new Set([
+  "referent", "adjacent", "partial", "notasked", "not_asked", "lure", "state",
+  "absolute", "ranking", "completeness", "function", "speaker", "absent",
+  "overinfer", "form", "direct"
+]);
+
+const CONFIDENCES = new Set(["high", "medium", "low"]);
 
 const QUESTION_TYPES = new Set([
   "fact", "main_idea", "purpose", "inference", "reference",
@@ -55,6 +64,35 @@ function loose(s: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+}
+
+function asArray(v: unknown): unknown[] {
+  return Array.isArray(v) ? v : [];
+}
+
+/** The quotes, from either the string shape or the array of located quotes. */
+function evidenceQuotes(raw: unknown): string[] {
+  if (typeof raw === "string") return raw.trim() ? [raw.trim()] : [];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((e) => (typeof e === "string" ? e : String((e as Record<string, unknown>)?.quote ?? "")))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * One quote, split on its ellipses.
+ *
+ * A quote may skip a clause: "the effect remains measurable … even in low-ratio
+ * units". Each side is located separately in the passage, so each side is what
+ * has to match. Short offcuts are ignored, because a two-word fragment matches
+ * somewhere by accident and tells you nothing.
+ */
+function fragments(quote: string): string[] {
+  return quote
+    .split(/…|\.\.\./)
+    .map((f) => f.trim().replace(/^[,;:.\-\s]+|[,;:\-\s]+$/g, ""))
+    .filter((f) => f.length >= 14);
 }
 
 function blockText(b: Record<string, unknown>): string {
@@ -120,19 +158,55 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
     explained++;
     const at = `Q${q.n} (Part ${q.part})`;
 
-    const evidence = typeof ex.evidence === "string" ? ex.evidence.trim() : "";
+    const quotes = evidenceQuotes(ex.evidence);
     const reasoning = typeof ex.reasoning === "string" ? ex.reasoning.trim() : "";
 
-    if (!evidence) issues.push({ level: "error", where: at, what: "no evidence — the explanation will be dropped on import" });
+    if (quotes.length === 0) issues.push({ level: "error", where: at, what: "no evidence — the explanation will be dropped on import" });
     if (!reasoning) issues.push({ level: "error", where: at, what: "no reasoning — the explanation will be dropped on import" });
 
-    // The one that actually breaks the feature.
-    if (evidence && !loose(q.passage).includes(loose(evidence))) {
-      issues.push({
-        level: "error",
-        where: at,
-        what: `evidence is not word-for-word in the passage, so the highlight will not land: "${evidence.slice(0, 70)}…"`
-      });
+    // The one that actually breaks the feature. Each quote is checked, and an
+    // ellipsis inside a quote splits it: the screen locates and marks each side
+    // separately, so each side has to be findable on its own.
+    const hay = loose(q.passage);
+    for (const quote of quotes) {
+      for (const frag of fragments(quote)) {
+        if (!hay.includes(loose(frag))) {
+          issues.push({
+            level: "error",
+            where: at,
+            what: `evidence is not word-for-word in the passage, so the highlight will not land: "${frag.slice(0, 70)}…"`
+          });
+        }
+      }
+    }
+
+    for (const pair of asArray(ex.bridge)) {
+      const b = pair as Record<string, unknown>;
+      if (!String(b.stem ?? "").trim() || !String(b.text ?? "").trim()) {
+        issues.push({ level: "warn", where: at, what: "a paraphrase mapping row is missing its stem or its text side" });
+        continue;
+      }
+      // The right-hand side is the text's own wording, so it should be in the
+      // text. A mapping that points at a phrase which is not there is teaching
+      // the student a paraphrase the examiner never wrote.
+      if (!hay.includes(loose(String(b.text)))) {
+        issues.push({
+          level: "warn",
+          where: at,
+          what: `paraphrase mapping points at "${String(b.text).slice(0, 50)}", which is not in the passage`
+        });
+      }
+    }
+
+    for (const cw of asArray(ex.commonWrong)) {
+      const c = cw as Record<string, unknown>;
+      if (!String(c.wrote ?? "").trim() || !String(c.why ?? "").trim()) {
+        issues.push({ level: "warn", where: at, what: "a near-miss answer is missing what was written or why it fails" });
+      }
+    }
+
+    if (typeof ex.confidence === "string" && !CONFIDENCES.has(ex.confidence.toLowerCase())) {
+      issues.push({ level: "warn", where: at, what: `confidence "${ex.confidence}" is not high, medium or low — it will be dropped` });
     }
 
     if (typeof ex.difficulty === "string" && !DIFFICULTIES.has(ex.difficulty)) {
@@ -149,7 +223,9 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
       }
     }
 
-    const opts = ex.options as Record<string, { verdict?: string; trap?: string; why?: string }> | undefined;
+    const opts = ex.options as
+      | Record<string, { verdict?: string; trap?: string; tag?: string; fails?: string; why?: string }>
+      | undefined;
     if (q.options) {
       if (!opts) {
         issues.push({ level: "warn", where: at, what: "multiple choice with no option verdicts" });
@@ -166,11 +242,25 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
           if (!v.why?.trim()) {
             issues.push({ level: "error", where: at, what: `option ${key} has no reason` });
           }
-          if (v.trap && !TRAPS.has(v.trap)) {
-            issues.push({ level: "warn", where: at, what: `option ${key} trap "${v.trap}" is not in the taxonomy — it will be dropped` });
+          const trap = v.trap ?? v.tag;
+          if (trap && !TRAPS.has(trap) && !TRAP_ALIASES.has(trap)) {
+            issues.push({ level: "warn", where: at, what: `option ${key} trap "${trap}" is not in the taxonomy — it will be dropped` });
           }
-          if (v.verdict !== "correct" && !v.trap) {
+          if (v.verdict !== "correct" && !trap) {
             issues.push({ level: "warn", where: at, what: `option ${key} is wrong but the trap is not named` });
+          }
+          // The failing component is what turns "this option is wrong" into
+          // teaching. Its absence is the difference between an explanation and
+          // an assertion, so it is called out rather than left to the reader.
+          if (v.verdict !== "correct" && !v.fails?.trim()) {
+            issues.push({ level: "warn", where: at, what: `option ${key} is wrong but the failing phrase is not quoted` });
+          }
+          if (v.fails?.trim() && q.options[key] && !loose(q.options[key]).includes(loose(v.fails))) {
+            issues.push({
+              level: "warn",
+              where: at,
+              what: `option ${key} fails on "${v.fails.slice(0, 50)}", which is not in option ${key}`
+            });
           }
         }
         const correct = Object.values(opts).filter((v) => v.verdict === "correct").length;
