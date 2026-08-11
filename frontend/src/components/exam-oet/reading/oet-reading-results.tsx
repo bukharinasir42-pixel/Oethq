@@ -9,6 +9,8 @@ import type {
   OetFillBlankQuestion,
 } from "@/lib/oet-test-schema";
 import type { OetResultsProps } from "../oet-exam-types";
+import { fetchExplanationStatus, type ExplanationStatus } from "@/lib/explanations-api";
+import { OetReadingReview } from "./oet-reading-review";
 import "./oet-reading-exam.css";
 
 /* ------------------------------------------------------------------ scoring reference */
@@ -133,6 +135,26 @@ const HtmlChip = ({ cls, label, html }: { cls: string; label: string; html: stri
 
 export function OetReadingResults({ result, onRetake }: OetResultsProps) {
   const content = result.content as OetReadingImport;
+
+  /**
+   * Whether this paper has published explanations.
+   *
+   * Asked before showing the button rather than after clicking it: a large
+   * "Check explanation" call to action that opens onto "nothing here yet" is
+   * worse than no button, and papers are being backfilled gradually.
+   */
+  const [exStatus, setExStatus] = useState<ExplanationStatus | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    void fetchExplanationStatus(result.testId).then((s) => {
+      if (live) setExStatus(s);
+    });
+    return () => {
+      live = false;
+    };
+  }, [result.testId]);
 
   const raw = result.correct;
   const total = result.total;
@@ -309,6 +331,12 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
   };
 
   /* ---------------------------------------------------------------- render */
+  // Placed AFTER every hook: an early return above them changes the number of
+  // hooks React sees between renders, which it rejects outright.
+  if (reviewing) {
+    return <OetReadingReview result={result} onBack={() => setReviewing(false)} />;
+  }
+
   return (
     <div className="oet-reading">
       <section className="screen active" id="screenResults">
@@ -481,6 +509,35 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
 
             {partCReview}
 
+            {exStatus?.available ? (
+              <div className="ex-cta">
+                <div className="ex-cta-body">
+                  <span className="ex-cta-eyebrow">Now the useful part</span>
+                  <h3>Check the explanations</h3>
+                  <p>
+                    Go through the paper question by question and see the exact sentence each answer
+                    came from, why it is the answer, and which options were partial distractors —
+                    true in the text, but not what the question asked.
+                  </p>
+                  {exStatus.viewed ? (
+                    <span className="ex-cta-note">
+                      You have opened these before, so a retake from here is marked practice and left
+                      out of your progress.
+                    </span>
+                  ) : (
+                    <span className="ex-cta-note">
+                      Opening this shows you the answers. Any retake afterwards counts as practice and
+                      is kept out of your progress, so your real score stays honest.
+                    </span>
+                  )}
+                </div>
+                <button className="ex-cta-btn" onClick={() => setReviewing(true)}>
+                  Check explanation
+                  <span aria-hidden>→</span>
+                </button>
+              </div>
+            ) : null}
+
             <div className="results-cta">
               <button
                 className="btn btn-ghost"
@@ -488,7 +545,7 @@ export function OetReadingResults({ result, onRetake }: OetResultsProps) {
               >
                 Back to top
               </button>
-              <button className="btn btn-primary" onClick={onRetake}>
+              <button className="btn btn-ghost" onClick={onRetake}>
                 <RetryIcon />
                 Retake test
               </button>

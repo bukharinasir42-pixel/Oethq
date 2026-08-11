@@ -336,6 +336,13 @@ export class OetImportService {
     }
     const now = new Date();
     const expiresAt = new Date(now.getTime() + test.timerDuration * 60 * 1000);
+    // A student who has already read the explanations for this paper knows the
+    // answers. They are welcome to re-sit it, but the score is not evidence of
+    // anything and must not reach progress or the Pass Predictor.
+    const seenAnswers = await this.prisma.explanationView.findUnique({
+      where: { userId_testId: { userId, testId } },
+      select: { id: true }
+    });
     const attempt = await this.prisma.testAttempt.create({
       data: {
         userId,
@@ -344,10 +351,11 @@ export class OetImportService {
         section: AttemptSection.COMPLETE,
         startedAt: now,
         expiresAt,
-        answersJson: {}
+        answersJson: {},
+        isPractice: Boolean(seenAnswers)
       }
     });
-    return { attemptId: attempt.id, expiresAt, answers: {} };
+    return { attemptId: attempt.id, expiresAt, answers: {}, isPractice: Boolean(seenAnswers) };
   }
 
   async saveProgress(attemptId: string, userId: string, answers: Record<string, string>) {

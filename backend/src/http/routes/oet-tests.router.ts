@@ -21,8 +21,16 @@ export function createOetTestsRouter(c: AppContainer): Router {
 
   r.post("/oet-tests/import", auth, admin, asyncHandler(async (req, res) => {
     const { json, testId } = req.body ?? {};
-    const out = await svc.importTest(json ?? req.body, typeof testId === "string" ? testId : undefined);
-    res.status(201).json(out);
+    const payload = json ?? req.body;
+    const out = await svc.importTest(payload, typeof testId === "string" ? testId : undefined);
+    // Explanations authored inside the paper's own JSON are published with it.
+    // Reported back so a paper that was expected to carry them and did not is
+    // visible at import time, not discovered by a student weeks later.
+    let explanations: { saved: number; skipped: number } | undefined;
+    if (out?.type === "READING" && out?.id) {
+      explanations = await c.explanationsService.saveFromImport(out.id, payload);
+    }
+    res.status(201).json(explanations ? { ...out, explanations } : out);
   }));
 
   r.get("/oet-tests/:id/admin", auth, admin, asyncHandler(async (req, res) => {

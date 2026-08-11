@@ -35,6 +35,8 @@ import { UsersService } from "../modules/users/users.service";
 import { AttributionService } from "../modules/attribution/attribution.service";
 import { KnowledgeService } from "../modules/chat/knowledge.service";
 import { ChatService } from "../modules/chat/chat.service";
+import { ExplanationsService } from "../modules/tests/explanations/explanations.service";
+import { ExplanationGenerator } from "../modules/tests/explanations/explanation-generator";
 
 export type AppContainer = {
   config: typeof appConfig;
@@ -73,6 +75,8 @@ export type AppContainer = {
   attributionService: AttributionService;
   knowledgeService: KnowledgeService;
   chatService: ChatService;
+  explanationsService: ExplanationsService;
+  explanationGenerator: ExplanationGenerator;
 };
 
 export function createAppContainer(): AppContainer {
@@ -129,6 +133,8 @@ export function createAppContainer(): AppContainer {
   const attributionService = new AttributionService(prisma);
   const knowledgeService = new KnowledgeService(prisma);
   const chatService = new ChatService(prisma, knowledgeService, attributionService);
+  const explanationsService = new ExplanationsService(prisma);
+  const explanationGenerator = new ExplanationGenerator();
 
   return {
     config: appConfig,
@@ -164,6 +170,8 @@ export function createAppContainer(): AppContainer {
     attributionService,
     knowledgeService,
     chatService,
+    explanationsService,
+    explanationGenerator,
     blogsService,
     howToIntroductionService,
     websiteHomeService

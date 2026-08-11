@@ -575,3 +575,41 @@
    read as one wall; this separates them without pushing content off screen. */
 .oet-reading .abcd-block p{margin:0 0 11px;line-height:1.66}
 .oet-reading .abcd-block p:last-child{margin-bottom:0}
+
+/* ---------------------------------------------------------------------------
+   "Check the explanations" — the next action after a score.
+
+   Deliberately a band rather than a third button in the row below. A score on
+   its own tells a candidate they failed; the explanations are the part that
+   changes the next attempt, so it is given the weight of the primary action.
+--------------------------------------------------------------------------- */
+.results-shell .ex-cta{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  margin:22px 0 6px;padding:20px 22px;border-radius:16px;
+  background:linear-gradient(135deg,#0B2E4F 0%,#12508A 100%);
+  color:#fff;box-shadow:0 14px 34px rgba(11,46,79,.24);
+}
+.results-shell .ex-cta-body{flex:1;min-width:260px}
+.results-shell .ex-cta-eyebrow{
+  display:block;font:800 10px/1 'Plus Jakarta Sans',sans-serif;letter-spacing:.11em;
+  text-transform:uppercase;opacity:.72;margin-bottom:7px;
+}
+.results-shell .ex-cta h3{margin:0 0 7px;font:700 20px/1.25 'Plus Jakarta Sans',sans-serif;color:#fff}
+.results-shell .ex-cta p{margin:0;font:400 13.5px/1.6 'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,.9);max-width:62ch}
+.results-shell .ex-cta-note{
+  display:block;margin-top:10px;font:500 11.5px/1.5 'Plus Jakarta Sans',sans-serif;
+  color:rgba(255,255,255,.72);
+}
+.results-shell .ex-cta-btn{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:10px;
+  background:#fff;color:#0B2E4F;border:0;border-radius:12px;
+  padding:15px 24px;font:800 15px/1 'Plus Jakarta Sans',sans-serif;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .12s ease;
+}
+.results-shell .ex-cta-btn:hover{transform:translateY(-1px)}
+.results-shell .ex-cta-btn span{font-size:17px}
+
+@media (max-width:640px){
+  .results-shell .ex-cta{padding:17px 16px;gap:14px}
+  .results-shell .ex-cta-btn{width:100%;justify-content:center}
+}
