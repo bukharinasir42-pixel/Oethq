@@ -16,13 +16,22 @@ export type RetrievedChunk = {
  * a query of "how do I" that survives to `to_tsquery` matches every passage in
  * the corpus and ranks them all identically.
  */
+/** Term rarity only changes on ingest; recomputed then, and hourly as a backstop. */
+const DF_TTL_MS = 60 * 60 * 1000;
+
 const STOP = new Set([
   "the", "and", "for", "are", "but", "not", "you", "your", "with", "this", "that", "have", "has",
   "was", "were", "can", "could", "would", "should", "will", "from", "what", "when", "where", "who",
   "how", "why", "does", "did", "get", "got", "any", "all", "about", "into", "than", "then", "them",
   "there", "their", "been", "being", "just", "like", "more", "most", "some", "such", "only", "own",
   "same", "too", "very", "want", "need", "please", "tell", "know", "let", "hi", "hello", "hey",
-  "thanks", "thank", "sir", "maam", "mam", "ok", "okay", "yes", "yeah", "yep", "nope"
+  "thanks", "thank", "sir", "maam", "mam", "ok", "okay", "yes", "yeah", "yep", "nope",
+  // Hollow verbs and fillers. These survive IDF weighting because they are not
+  // quite common enough to be discounted, while carrying no meaning at all:
+  // "give me tips", "do you give refunds" and "give the whole test again" are
+  // three unrelated questions that a density score happily groups together.
+  "give", "gives", "given", "giving", "make", "makes", "made", "put", "also", "even",
+  "sure", "really", "actually", "already", "still", "many", "much", "one", "way", "thing", "things"
 ]);
 
 /** Query terms, cleaned so nothing reaches `to_tsquery` that could break it. */
@@ -44,24 +53,98 @@ export class KnowledgeService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * How many active chunks contain each term, and the corpus size.
+   *
+   * Cached because it only changes on ingest, and it is asked on every single
+   * question. Each lookup is a GIN index probe, so even cold it is cheap.
+   */
+  private dfCache: { at: number; total: number; df: Map<string, number> } | null = null;
+
+  private async documentFrequencies(terms: string[]): Promise<{ total: number; df: Map<string, number> }> {
+    const fresh = this.dfCache && Date.now() - this.dfCache.at < DF_TTL_MS;
+    const cache = fresh ? this.dfCache! : { at: Date.now(), total: -1, df: new Map<string, number>() };
+
+    if (cache.total < 0) {
+      const [{ n }] = await this.prisma.$queryRaw<Array<{ n: bigint }>>`
+        SELECT COUNT(*)::bigint AS n
+        FROM "KnowledgeChunk" c JOIN "KnowledgeSource" s ON s.id = c."sourceId"
+        WHERE s."isActive"`;
+      cache.total = Number(n);
+    }
+
+    const missing = terms.filter((t) => !cache.df.has(t));
+    if (missing.length > 0) {
+      const rows = await this.prisma.$queryRaw<Array<{ term: string; n: bigint }>>`
+        SELECT t.term, (
+          SELECT COUNT(*)::bigint
+          FROM "KnowledgeChunk" c JOIN "KnowledgeSource" s ON s.id = c."sourceId"
+          WHERE s."isActive" AND c."searchVector" @@ to_tsquery('english', t.term)
+        ) AS n
+        FROM unnest(${missing}::text[]) AS t(term)`;
+      for (const r of rows) cache.df.set(r.term, Number(r.n));
+    }
+
+    this.dfCache = cache;
+    return { total: cache.total, df: cache.df };
+  }
+
+  /**
    * Rank the corpus against a question.
    *
-   * Two queries in one pass, because they fail in opposite directions:
+   * Three signals, in order of weight.
    *
-   *  - `websearch_to_tsquery` is AND-ish. Precise, and returns nothing at all
-   *    for a normal spoken question ("how much is the reading course for
-   *    nurses") because no single passage contains every word.
-   *  - an OR query over the significant terms always returns something, but a
-   *    passage matching one common word outranks nothing.
+   * 1. **IDF-weighted term matches — the one that decides the answer.** Postgres
+   *    `ts_rank_cd` measures how densely the query terms appear, but it has no
+   *    notion of which term *mattered*: it cannot tell that "refund" is
+   *    decisive and "fail" is in a tenth of the corpus. On a small corpus that
+   *    is invisible. On two thousand entries it is the difference between the
+   *    right answer and a wrong one — asked "do you give a refund if I fail",
+   *    density ranking put six passages about failing exams above the passage
+   *    that actually answers it, because they matched the common word more
+   *    often. Each term is therefore weighted by how rare it is, the same idea
+   *    BM25 uses.
    *
-   * So: match on OR, rank on OR, and add a flat bonus to anything that ALSO
-   * satisfies the strict query. Precision when it is available, recall always.
+   * 2. **A strict-match bonus.** A passage that satisfies `websearch_to_tsquery`
+   *    contains *every* word of the question, which is a strong signal when it
+   *    happens and silent when it does not.
+   *
+   * 3. **`ts_rank_cd` itself**, scaled down to a tie-breaker. It honours the
+   *    heading weighting applied at ingest, so between two passages that match
+   *    equally, the one whose HEADING matched wins — and a heading here is the
+   *    customer's own question.
+   *
+   * Matching is still OR, so a normally-phrased question always retrieves
+   * something. Only the ordering changed.
    */
   async search(question: string, limit = 6): Promise<RetrievedChunk[]> {
     const terms = queryTerms(question);
     if (terms.length === 0) return [];
-    const orQuery = terms.join(" | ");
     const take = Math.min(Math.max(limit, 1), 20);
+    const orQuery = terms.join(" | ");
+
+    const { total, df } = await this.documentFrequencies(terms);
+
+    // BM25's IDF. The +0.5 smoothing keeps a term that appears in every chunk
+    // from going negative, and a term appearing in none from dividing by zero.
+    const weighted = terms
+      .map((term) => {
+        const n = df.get(term) ?? 0;
+        const idf = Math.log(1 + (total - n + 0.5) / (n + 0.5));
+        return { term, idf };
+      })
+      // A term in more than half the corpus carries almost no information and
+      // its tiny weight only adds noise to the sum.
+      .filter((t) => t.idf > 0.2);
+
+    if (weighted.length === 0) return [];
+
+    const idfSum = Prisma.join(
+      weighted.map(
+        (t) =>
+          Prisma.sql`(CASE WHEN c."searchVector" @@ to_tsquery('english', ${t.term}) THEN ${t.idf}::float8 ELSE 0::float8 END)`
+      ),
+      " + "
+    );
 
     return this.prisma.$queryRaw<RetrievedChunk[]>`
       WITH q AS (
@@ -72,8 +155,9 @@ export class KnowledgeService {
              c.heading,
              c.content,
              s.name AS "sourceName",
-             (CASE WHEN c."searchVector" @@ q.aq THEN 2.0 ELSE 0.0 END)
-               + ts_rank_cd(c."searchVector", q.oq)::float8 AS rank
+             (${idfSum})
+               + (CASE WHEN c."searchVector" @@ q.aq THEN 2.0::float8 ELSE 0::float8 END)
+               + (ts_rank_cd(c."searchVector", q.oq)::float8 * 2.0) AS rank
       FROM "KnowledgeChunk" c
       JOIN "KnowledgeSource" s ON s.id = c."sourceId"
       CROSS JOIN q
@@ -81,6 +165,11 @@ export class KnowledgeService {
         AND (c."searchVector" @@ q.oq OR c."searchVector" @@ q.aq)
       ORDER BY rank DESC, c."ordinal" ASC
       LIMIT ${take}`;
+  }
+
+  /** Ingest changes what is rare, so the weights must be recomputed. */
+  private invalidateStats() {
+    this.dfCache = null;
   }
 
   /**
@@ -119,7 +208,10 @@ export class KnowledgeService {
         VALUES ${Prisma.join(values)}`;
 
       return { sourceId: source.id, name: source.name, chunkCount: chunks.length };
-    }, { timeout: 120_000 });
+    }, { timeout: 120_000 }).then((out) => {
+      this.invalidateStats();
+      return out;
+    });
   }
 
   async listSources() {
@@ -129,11 +221,14 @@ export class KnowledgeService {
   }
 
   async setSourceActive(id: string, isActive: boolean) {
-    return this.prisma.knowledgeSource.update({ where: { id }, data: { isActive } });
+    const out = await this.prisma.knowledgeSource.update({ where: { id }, data: { isActive } });
+    this.invalidateStats();
+    return out;
   }
 
   async deleteSource(id: string) {
     await this.prisma.knowledgeSource.delete({ where: { id } });
+    this.invalidateStats();
     return { ok: true };
   }
 

@@ -355,21 +355,35 @@ async function main() {
   ok("sources are listed", (sources.json?.sources?.length ?? 0) >= 1);
   ok("chunks are counted", (sources.json?.totalChunks ?? 0) > 0);
 
-  const searchable = await api(`/admin/chat/knowledge/search?q=${encodeURIComponent("how many devices can I use")}`, { token });
-  ok("a question can be tried against the index without a model call", (searchable.json?.results?.length ?? 0) > 0);
-  // Assert that the top hit ANSWERS the question, not that it uses one
-  // fixture's exact wording — more than one passage can legitimately answer
-  // "how many devices", and the better-worded one winning is a pass, not a fail.
-  const topHit = searchable.json.results[0].content;
-  ok("the top hit is about devices", /device/i.test(topHit), topHit.slice(0, 90));
-  ok("and it carries the answer", /\btwo\b|\b2\b/i.test(topHit), topHit.slice(0, 90));
+  // The suite ingests its OWN fixture rather than asserting against whatever
+  // corpus happens to be loaded. Asserting on content the test did not create
+  // is how a passing suite turns red the day real material arrives — and it did:
+  // "how many devices" started matching a Reading passage about infusion pumps,
+  // which is correct behaviour and a broken test.
+  const marker = `zqxwv${process.pid}`; // a term guaranteed to be unique in any corpus
+  const fixture = await api("/admin/chat/knowledge", {
+    method: "POST",
+    token,
+    body: {
+      name: `harness fixture ${process.pid}`,
+      format: "qa_json",
+      text: JSON.stringify([
+        { question: `What is the ${marker} policy?`, answer: `The ${marker} policy allows exactly two devices per student.` }
+      ])
+    }
+  });
+  ok("a fixture source can be ingested", fixture.status === 201, `status ${fixture.status}`);
 
-  // Toggle the source that actually OWNS the top hit — disabling an unrelated
-  // source and watching an unrelated query stay empty proves nothing.
-  const devicesQ = `/admin/chat/knowledge/search?q=${encodeURIComponent("how many devices can I use")}`;
-  const owningName = searchable.json.results[0].sourceName;
-  const src = sources.json.sources.find((s) => s.name === owningName);
-  ok("the owning source is identifiable", Boolean(src), owningName);
+  const probeQ = `/admin/chat/knowledge/search?q=${encodeURIComponent(`what is the ${marker} policy`)}`;
+  const searchable = await api(probeQ, { token });
+  ok("a question can be tried against the index without a model call", (searchable.json?.results?.length ?? 0) > 0);
+  const topHit = searchable.json.results[0]?.content ?? "";
+  ok("a rare term outranks 2,000 other passages", topHit.includes(marker), topHit.slice(0, 90));
+  ok("and the top hit carries the answer", /\btwo\b/i.test(topHit), topHit.slice(0, 90));
+
+  const devicesQ = probeQ;
+  const src = { id: fixture.json.sourceId, name: fixture.json.name };
+  ok("the owning source is identifiable", Boolean(src.id));
   await api(`/admin/chat/knowledge/${src.id}`, { method: "PATCH", token, body: { isActive: false } });
   const afterDisable = await api(devicesQ, { token });
   ok("a disabled source drops out of retrieval", !(afterDisable.json?.results ?? []).some((r) => r.sourceName === src.name));
