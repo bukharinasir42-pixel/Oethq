@@ -11,7 +11,6 @@ import { OethqNav } from "./oethq-nav";
 import { WebsiteStruggleFormDialog } from "./website-struggle-form-dialog";
 import { WebsiteCourseCatalogue } from "./website-course-catalogue";
 import { WebsiteWhatsInside } from "./website-whats-inside";
-import { OethqExplanations } from "./oethq-explanations";
 import { CompleteCourseLanding } from "./complete-course-landing";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -155,11 +154,6 @@ export default function WebsiteHomePage() {
                 <WebsiteCourseCatalogue />
 
                 <WebsiteWhatsInside />
-
-                {/* The explanation walkthrough. Its own section rather than a
-                    line in a feature list: it is the thing no other academy
-                    has, and it is easier to show than to describe. */}
-                <OethqExplanations />
 
                 {/* Homepage "clearance" slot now shows the Complete Material plan
                     cards + comparison table (the /courses landing), embedded. */}

@@ -14,6 +14,12 @@ import type { PlanDto } from "@/lib/types";
 import "./oethq-courses-section.css";
 
 const usd = (n: number) => `US$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+
+/** The Listening card's waveform, as percentages of the strip height. */
+const WAVE = [
+  22, 38, 55, 34, 68, 84, 61, 44, 72, 92, 70, 48, 30, 52, 78, 96, 74, 55,
+  36, 62, 88, 66, 42, 28, 50, 76, 58, 40, 66, 86, 54, 33, 46, 26
+];
 const Arrow = () => (<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
 
 export function WebsiteCourseCatalogue() {
@@ -72,9 +78,35 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--flag crs-stretch" href="/courses">
             <span className="crs-tag">&#9733; Flagship &middot; all four skills</span>
             <h3>OET Complete Material</h3>
-            <p className="crs-desc">Reading, Listening, Writing and Speaking in one system — four live classes a week at times you choose, written explanations for every Reading paper, writing corrections, and the Pass Predictor that tells you when to book the real exam.</p>
+            <p className="crs-desc">All four skills in one system. <b>Four live classes a week</b> on days and at times you set yourself, every Reading paper <b>explained question by question</b> afterwards, human writing corrections, and the Pass Predictor that tells you when to book the real exam.</p>
             <div className="crs-skills">
               <span className="crs-chip">Reading</span><span className="crs-chip">Listening</span><span className="crs-chip">Writing</span><span className="crs-chip">Speaking</span>
+            </div>
+
+            {/* The right half of this card was empty. Two of the things the
+                plan actually buys, shown rather than listed, in space the
+                card was already occupying. */}
+            <div className="crs-flagpanel" aria-hidden="true">
+              <div className="crs-fp-card">
+                <span className="crs-fp-label">Your week</span>
+                <div className="crs-week">
+                  <span className="crs-day">M</span>
+                  <span className="crs-day on">T</span>
+                  <span className="crs-day on">W</span>
+                  <span className="crs-day">T</span>
+                  <span className="crs-day on">F</span>
+                  <span className="crs-day on">S</span>
+                  <span className="crs-day">S</span>
+                </div>
+                <span className="crs-fp-note">Four days you pick, two sessions each, at your hours</span>
+              </div>
+              <div className="crs-fp-card">
+                <span className="crs-fp-label">After every Reading paper</span>
+                <p className="crs-fp-line">
+                  <mark className="crs-demo-mark">treatment should begin immediately</mark>
+                </p>
+                <span className="crs-fp-note">The sentence the answer came from, marked for you</span>
+              </div>
             </div>
             <div className="crs-facts">
               <div className="crs-fact"><b>{completeTiers} tiers</b><span>{hasFreeTrial ? "Free trial included" : "Plans available"}</span></div>
@@ -95,9 +127,21 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/reading">
             <span className="crs-tag">Single skill</span>
             <h3>OET Reading Material</h3>
-            <p className="crs-desc">For candidates whose only barrier is Reading. Part A speed and spelling, Part C opinion and attitude — every mock sat on the official OET exam interface, and every paper explained question by question by Dr Nasir afterwards.</p>
+            <p className="crs-desc">For candidates whose only barrier is Reading. Part A speed, Part C attitude, sat on the official exam interface — then <b>every answer explained by Dr Nasir</b>, with the sentence it came from marked in the passage.</p>
+
+            {/* The feature, running, rather than the claim that it exists. The
+                sentence marks itself on a slow loop, which is precisely what a
+                student sees on the review screen after they submit. */}
+            <div className="crs-demo" aria-hidden="true">
+              <p className="crs-demo-line">
+                Where a reliable peak flow reading cannot be obtained,{" "}
+                <mark className="crs-demo-mark">treatment should begin immediately</mark>
+              </p>
+              <span className="crs-demo-cap">The sentence your answer came from, highlighted for you</span>
+            </div>
+
             <div className="crs-skills">
-              <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Written explanations</span><span className="crs-chip">Official interface</span>
+              <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Written explanations</span>
             </div>
             <div className="crs-facts">
               <div className="crs-fact"><b>Part A&ndash;C</b><span>Full strategy</span></div>
@@ -117,7 +161,21 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/listening">
             <span className="crs-tag">Single skill</span>
             <h3>OET Listening Material</h3>
-            <p className="crs-desc">For candidates whose only barrier is Listening. Part A note-taking and spelling, Part C speaker attitude — every mock played once, on the official OET interface.</p>
+            <p className="crs-desc">For candidates whose only barrier is Listening. Part A note-taking and spelling, Part C speaker attitude — every mock played <b>once</b>, on the official OET interface, exactly as it runs on the day.</p>
+            {/* The same slot as Reading's, carrying the fact that is true here.
+                Listening has no written explanations and does not claim any. */}
+            <div className="crs-demo crs-demo--wave" aria-hidden="true">
+              <div className="crs-wave">
+                {WAVE.map((h, i) => (
+                  <i
+                    key={i}
+                    style={{ height: `${h}%`, animationDelay: `${(i * 0.085).toFixed(3)}s` }}
+                  />
+                ))}
+              </div>
+              <span className="crs-demo-cap">Played once. No rewind, exactly as the exam runs</span>
+            </div>
+
             <div className="crs-skills">
               <span className="crs-chip">Part A drills</span><span className="crs-chip">Part C drills</span><span className="crs-chip">Single-play audio</span>
             </div>
@@ -139,7 +197,7 @@ export function WebsiteCourseCatalogue() {
           <Link className="crs-course crs-course--solo crs-stretch" href="/courses/writing">
             <span className="crs-tag">Single skill</span>
             <h3>OET Writing Corrections</h3>
-            <p className="crs-desc">For candidates whose only barrier is the referral letter. Marked line by line against all six official OET Writing criteria — by a human, not a model.</p>
+            <p className="crs-desc">For candidates whose only barrier is the referral letter. Marked line by line against all six official OET Writing criteria, with your current score and your projected Grade B score — by a human, not a model.</p>
             <div className="crs-skills">
               <span className="crs-chip">6 official criteria</span><span className="crs-chip">Human marked</span><span className="crs-chip">Case notes</span>
             </div>
