@@ -9,7 +9,7 @@
  *            POST   /admin/explanations/:explanationId/approve
  *            DELETE /admin/explanations/:explanationId
  */
-import { AttemptStatus } from "@prisma/client";
+import { AttemptStatus, Prisma } from "@prisma/client";
 import { Router } from "express";
 import type { AppContainer } from "../container";
 import { asyncHandler, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
@@ -131,6 +131,27 @@ export function createExplanationsRouter(c: AppContainer): Router {
   );
 
   // ---- Admin ----
+
+  /**
+   * Reading papers that can carry explanations.
+   *
+   * Only imported papers appear: an explanation is anchored to a question number
+   * inside contentJson, so a legacy test built in the old question editor has
+   * nothing to anchor to.
+   */
+  r.get(
+    "/admin/oet-tests/reading",
+    auth,
+    admin,
+    asyncHandler(async (_req, res) => {
+      const rows = await c.prisma.test.findMany({
+        where: { type: "READING", contentJson: { not: Prisma.DbNull } },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, type: true, isPublished: true, totalQuestions: true }
+      });
+      res.json(rows);
+    })
+  );
 
   r.get(
     "/admin/oet-tests/:id/explanations",

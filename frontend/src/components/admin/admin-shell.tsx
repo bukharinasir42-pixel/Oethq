@@ -23,7 +23,8 @@ import {
   Users,
   Video, MonitorSmartphone,
   MessageCircle,
-  Radar
+  Radar,
+  Lightbulb
 } from "lucide-react";
 import { WorkspaceShellFrame } from "@/components/layout/workspace-shell-frame";
 import type { UserProfile } from "@/lib/types";
@@ -51,7 +52,8 @@ const links = [
   { href: "/admin/device-audit", label: "Device Audit", icon: MonitorSmartphone },
   { href: "/admin/progress", label: "Progress", icon: Activity },
   { href: "/admin/traffic", label: "Traffic", icon: Radar },
-  { href: "/admin/assistant", label: "Assistant", icon: MessageCircle }
+  { href: "/admin/assistant", label: "Assistant", icon: MessageCircle },
+  { href: "/admin/explanations", label: "Answer Explanations", icon: Lightbulb }
 ];
 
 type AdminShellProps = {
