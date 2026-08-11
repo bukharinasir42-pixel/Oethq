@@ -9,7 +9,7 @@ import { ResendActivationOtpDto } from "../../modules/auth/dto/resend-activation
 import { ActivateSubscriptionDto } from "../../modules/auth/dto/activate-subscription.dto";
 import { VerifyOtpDto } from "../../modules/auth/dto/verify-otp.dto";
 import type { AppContainer } from "../container";
-import { asyncHandler, rateLimitMiddleware, requireAdmin, requireAuth, type AuthedRequest } from "../middleware";
+import { asyncHandler, rateLimitMiddleware, requireAuth, type AuthedRequest } from "../middleware";
 import { auditContextFromRequest } from "../request-audit";
 import { PROFESSIONS } from "../../common/professions";
 import { validateDto } from "../validation";
