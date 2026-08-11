@@ -12,6 +12,7 @@
  *   mode "or" = any term; mode "and" = every term.
  */
 import { OetGrade } from "@prisma/client";
+import { canonicalPhrase } from "./answer-variants";
 import {
   collectQuestions,
   type OetFillAnswer,
@@ -91,6 +92,15 @@ function compact(value: string): string {
     .replace(/\bhours?\b|\bhrs?\b/g, "h")
     .replace(/\bseconds?\b|\bsecs?\b/g, "s")
     .replace(/\bpercent(age)?\b/g, "%")
+    // A comparator written as words. "greater than 6.0 mmol" is ">6.0 mmol",
+    // and a candidate is as likely to type one as the other. Longest first, so
+    // "no more than" is not read as "more than".
+    .replace(/\bno (more|greater) than\b|\bup to\b|\bat most\b/g, "<=")
+    .replace(/\bno (less|fewer) than\b|\bat least\b|\bor more\b|\bminimum of\b/g, ">=")
+    .replace(/\b(more|greater|higher|larger) than\b|\bover\b|\bexceeding\b|\babove\b/g, ">")
+    .replace(/\b(less|fewer|lower|smaller) than\b|\bunder\b|\bbelow\b/g, "<")
+    // An approximation carries no threshold, so it carries no meaning here.
+    .replace(/\b(approximately|approx|about|around|roughly|nearly)\b/g, " ")
     // Range and list connectives. "15 to 30 minutes" is "15-30 minutes".
     .replace(/\b(to|and|or)\b/g, " ")
     // Everything that is not a value, a unit or a comparator.
@@ -128,6 +138,25 @@ function looksNumeric(value: string): boolean {
   return /\d/.test(value);
 }
 
+/**
+ * Does the response contain the answer as a run of whole words?
+ *
+ * Reading has always tolerated extra words around the answer, so "nebulised
+ * ipratropium bromide" satisfies a key of "ipratropium bromide". It should not
+ * tolerate extra LETTERS: a raw substring test also lets "urease" satisfy a key
+ * of "urea", and "urease" is a different thing. Matching whole words keeps the
+ * tolerance that was intended and drops the accident that came with it.
+ */
+function containsWordRun(response: string, term: string): boolean {
+  const hay = response.split(" ").filter(Boolean);
+  const needle = term.split(" ").filter(Boolean);
+  if (needle.length === 0 || needle.length > hay.length) return false;
+  for (let i = 0; i <= hay.length - needle.length; i++) {
+    if (needle.every((w, j) => hay[i + j] === w)) return true;
+  }
+  return false;
+}
+
 /** Does a user response satisfy a fill-blank answer spec? */
 export function matchFillBlank(userVal: string, answer: OetFillAnswer, testType: "READING" | "LISTENING"): boolean {
   const u = normalize(userVal);
@@ -146,9 +175,15 @@ export function matchFillBlank(userVal: string, answer: OetFillAnswer, testType:
     if (looksNumeric(raw) || looksNumeric(userVal)) {
       return measurementsAgree(userVal, raw, substring);
     }
-    // Phrases keep the original path, unchanged.
+    // Phrases: the original path first, then the same comparison with regional
+    // spelling, international drug names and word form folded together, so a
+    // nurse who learned "norepinephrine" or typed "leg" for "legs" is not
+    // marked down for where they trained.
     const t = normalize(raw);
-    return Boolean(u && t && (substring ? u.includes(t) : u === t));
+    if (u && t && (substring ? containsWordRun(u, t) : u === t)) return true;
+    const cu = canonicalPhrase(u);
+    const ct = canonicalPhrase(t);
+    return Boolean(cu && ct && (substring ? containsWordRun(cu, ct) : cu === ct));
   };
 
   return answer.mode === "and" ? rawTerms.every(hit) : rawTerms.some(hit);

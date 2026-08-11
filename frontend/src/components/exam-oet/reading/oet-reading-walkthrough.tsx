@@ -153,6 +153,11 @@ function markFragment(root: HTMLElement, fragment: string): boolean {
     else if (ch === "“" || ch === "”") ch = '"';
     else if (ch === "–" || ch === "—") ch = "-";
     else if (isSpace) ch = " ";
+    // A space beside a dash is an artefact of how the passage was flattened,
+    // never a difference in meaning. Dropping it here, and in the checker, is
+    // what keeps "12- 16 hours" locatable in a passage that reads "12-16".
+    if (ch === " " && hay.endsWith("-")) continue;
+    if (ch === "-" && hay.endsWith(" ")) { hay = hay.slice(0, -1); map.pop(); }
     hay += ch.toLowerCase();
     map.push(i);
   }

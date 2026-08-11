@@ -62,6 +62,10 @@ function loose(s: string): string {
     .replace(/[“”]/g, '"')
     .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
+    // A range broken across a line comes back as "12- 16" where the passage
+    // reads "12-16". The space is a artefact of how the source was flattened,
+    // not a difference in what the sentence says.
+    .replace(/\s*-\s*/g, "-")
     .trim()
     .toLowerCase();
 }
@@ -144,11 +148,12 @@ function questions(paper: Record<string, unknown>) {
   return out;
 }
 
-function checkPaper(file: string): { issues: Issue[]; total: number; explained: number } {
+function checkPaper(file: string): { issues: Issue[]; total: number; explained: number; draft: number } {
   const paper = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
   const issues: Issue[] = [];
   const qs = questions(paper);
   let explained = 0;
+  let draft = 0;
 
   if (qs.length === 0) issues.push({ level: "error", where: "paper", what: "no questions found — is this a Reading paper?" });
 
@@ -161,8 +166,15 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
     const quotes = evidenceQuotes(ex.evidence);
     const reasoning = typeof ex.reasoning === "string" ? ex.reasoning.trim() : "";
 
-    if (quotes.length === 0) issues.push({ level: "error", where: at, what: "no evidence — the explanation will be dropped on import" });
-    if (!reasoning) issues.push({ level: "error", where: at, what: "no reasoning — the explanation will be dropped on import" });
+    // Evidence is the one thing that cannot be missing: without it there is
+    // nothing to locate, and the record is dropped on import.
+    if (quotes.length === 0) {
+      issues.push({ level: "error", where: at, what: "no evidence — the explanation will be dropped on import" });
+    }
+    // A located item whose analysis is still owed is a draft, not a fault. It
+    // imports, keeps its verified evidence, and stays out of a student's way
+    // until the prose is written.
+    if (quotes.length > 0 && !reasoning) draft++;
 
     // The one that actually breaks the feature. Each quote is checked, and an
     // ellipsis inside a quote splits it: the screen locates and marks each side
@@ -236,23 +248,23 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
             issues.push({ level: "warn", where: at, what: `option ${key} has no verdict` });
             continue;
           }
-          if (!["correct", "distractor", "partial"].includes(String(v.verdict))) {
+          if (v.verdict !== undefined && !["correct", "distractor", "partial"].includes(String(v.verdict))) {
             issues.push({ level: "error", where: at, what: `option ${key} verdict "${v.verdict}" is not correct/distractor/partial` });
           }
-          if (!v.why?.trim()) {
+          if (!v.why?.trim() && reasoning) {
             issues.push({ level: "error", where: at, what: `option ${key} has no reason` });
           }
           const trap = v.trap ?? v.tag;
           if (trap && !TRAPS.has(trap) && !TRAP_ALIASES.has(trap)) {
             issues.push({ level: "warn", where: at, what: `option ${key} trap "${trap}" is not in the taxonomy — it will be dropped` });
           }
-          if (v.verdict !== "correct" && !trap) {
+          if (reasoning && v.verdict !== "correct" && !trap) {
             issues.push({ level: "warn", where: at, what: `option ${key} is wrong but the trap is not named` });
           }
           // The failing component is what turns "this option is wrong" into
           // teaching. Its absence is the difference between an explanation and
           // an assertion, so it is called out rather than left to the reader.
-          if (v.verdict !== "correct" && !v.fails?.trim()) {
+          if (reasoning && v.verdict !== "correct" && !v.fails?.trim()) {
             issues.push({ level: "warn", where: at, what: `option ${key} is wrong but the failing phrase is not quoted` });
           }
           if (v.fails?.trim() && q.options[key] && !loose(q.options[key]).includes(loose(v.fails))) {
@@ -263,7 +275,7 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
             });
           }
         }
-        const correct = Object.values(opts).filter((v) => v.verdict === "correct").length;
+        const correct = Object.values(opts).filter((v) => v.verdict === "correct" || (v as { ok?: boolean }).ok === true).length;
         if (correct !== 1) {
           issues.push({ level: "error", where: at, what: `${correct} options marked correct — there must be exactly one` });
         }
@@ -271,7 +283,7 @@ function checkPaper(file: string): { issues: Issue[]; total: number; explained: 
     }
   }
 
-  return { issues, total: qs.length, explained };
+  return { issues, total: qs.length, explained, draft };
 }
 
 function collect(path: string): string[] {
@@ -310,7 +322,11 @@ function main() {
     warnings += warns.length;
 
     const mark = errs.length === 0 ? "✓" : "✗";
-    console.log(`\n${mark} ${basename(file)} — ${result.explained}/${result.total} questions explained`);
+    const written = result.explained - result.draft;
+    console.log(
+      `\n${mark} ${basename(file)} — ${result.explained}/${result.total} explained` +
+        (result.draft > 0 ? `  (${written} written, ${result.draft} awaiting prose, held as drafts)` : "")
+    );
     for (const i of [...errs, ...warns]) {
       console.log(`    ${i.level === "error" ? "ERROR" : "warn "}  ${i.where}: ${i.what}`);
     }

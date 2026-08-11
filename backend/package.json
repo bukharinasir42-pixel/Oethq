@@ -29,7 +29,8 @@
     "paper:check": "ts-node --transpile-only -r tsconfig-paths/register scripts/check-paper.ts",
     "explanations:import": "ts-node --transpile-only -r tsconfig-paths/register scripts/import-explanations.ts",
     "keys:check": "ts-node --transpile-only -r tsconfig-paths/register scripts/check-answer-keys.ts",
-    "explanations:merge": "ts-node --transpile-only -r tsconfig-paths/register scripts/merge-explanations.ts"
+    "explanations:merge": "ts-node --transpile-only -r tsconfig-paths/register scripts/merge-explanations.ts",
+    "keys:expand": "ts-node --transpile-only -r tsconfig-paths/register scripts/expand-answer-keys.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",

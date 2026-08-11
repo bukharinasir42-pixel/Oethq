@@ -37,8 +37,10 @@ function variantsOf(display: string): string[] {
 
   if (measurement) {
     // The space before a unit is the one people leave out, every time.
-    v.add(display.replace(/\s+/g, ""));
+    // Only that space: nobody types "24%or28%Venturimask", so generating it
+    // produces a warning that will never be acted on.
     v.add(display.replace(/(\d)\s+([a-zA-Zµμ%])/g, "$1$2"));
+    if (display.trim().split(/\s+/).length <= 2) v.add(display.replace(/\s+/g, ""));
     v.add(display.replace(/[–—]/g, "-"));
     v.add(display.replace(/[–—-]/g, " to "));
     v.add(display.replace(/≥/g, ">=").replace(/≤/g, "<="));

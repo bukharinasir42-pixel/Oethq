@@ -79,3 +79,71 @@ describe("short answer marking: Listening still wants the whole answer", () => {
     expect(listening("<0.3mL", ["<0.3 mL"])).toBe(true);
   });
 });
+
+describe("short answer marking: where the candidate trained", () => {
+  it.each([
+    ["American spelling", "cerebral edema", ["cerebral oedema"]],
+    ["British spelling against an American key", "cerebral oedema", ["cerebral edema"]],
+    ["anaesthetist", "anesthetist", ["anaesthetist"]],
+    ["-ize for -ise", "stabilize the", ["stabilise the"]],
+    ["sulfate for sulphate", "magnesium sulfate", ["magnesium sulphate"]],
+    ["haemoglobin", "hemoglobin", ["haemoglobin"]],
+    ["the American drug name", "norepinephrine", ["noradrenaline"]],
+    ["the British drug name against an American key", "adrenaline", ["epinephrine"]],
+    ["pethidine as meperidine", "meperidine", ["pethidine"]],
+    ["salbutamol as albuterol", "albuterol", ["salbutamol"]],
+    ["paracetamol as acetaminophen", "acetaminophen", ["paracetamol"]]
+  ])("accepts %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(true);
+  });
+});
+
+describe("short answer marking: word form", () => {
+  it.each([
+    ["a singular for a plural", "leg", ["legs"]],
+    ["a plural for a singular", "arrhythmias", ["arrhythmia"]],
+    ["a plural noun phrase", "blood test", ["blood tests"]],
+    ["the base verb", "deteriorate", ["deteriorates"]],
+    ["the past tense", "deteriorated", ["deteriorates"]],
+    ["the participle", "deteriorating", ["deteriorates"]]
+  ])("accepts %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(true);
+  });
+
+  it("does not collapse words that merely end in s", () => {
+    expect(reading("ga", ["gas"])).toBe(false);
+    expect(reading("sepsi", ["sepsis"])).toBe(false);
+  });
+});
+
+describe("short answer marking: spelling still counts", () => {
+  it.each([
+    ["a misspelled long word", "rhabdomyolisis", ["rhabdomyolysis"]],
+    ["a misspelled short word", "diarhoea", ["diarrhoea"]],
+    ["a dropped letter", "creatinne", ["creatinine"]],
+    ["a swapped letter", "pyridostigmene", ["pyridostigmine"]],
+    ["a different drug entirely", "dobutamine", ["dopamine"]],
+    ["a different word", "urease", ["urea"]]
+  ])("rejects %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(false);
+  });
+});
+
+describe("short answer marking: a comparator written as words", () => {
+  it.each([
+    ["greater than for >", "greater than 6.0 mmol/L", [">6.0 mmol"]],
+    ["more than for >", "more than 6.0 mmol", [">6.0 mmol"]],
+    ["at least for ≥", "at least 26.5 umol", ["≥26.5 µmol"]],
+    ["less than for <", "less than 0.3 mL", ["<0.3 mL"]],
+    ["below for <", "below 0.3 mL", ["<0.3 mL"]],
+    ["the bare figure where the key qualifies it", "80%", ["up to 80%"]],
+    ["an approximation the key does not have", "approximately 25-30%", ["25-30%"]]
+  ])("accepts %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(true);
+  });
+
+  it("still rejects a comparator pointing the other way", () => {
+    expect(reading("more than 0.3 mL", ["<0.3 mL"])).toBe(false);
+    expect(reading("at least 33%", ["<33%"])).toBe(false);
+  });
+});
