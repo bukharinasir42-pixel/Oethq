@@ -186,7 +186,7 @@
    The flagship card's right half. It was empty; the card was already
    this tall, so filling it adds nothing to the length of the page.
    -------------------------------------------------------------------- */
-.crs-flagpanel{display:none}
+.crs-flagpanel{display:flex;flex-direction:column;gap:12px;margin-top:20px}
 @media (min-width:981px){
   .crs-course--flag{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
     grid-template-areas:"tag panel" "h3 panel" "desc panel" "skills panel" "facts panel" "foot foot";
@@ -197,10 +197,7 @@
   .crs-course--flag > .crs-skills{grid-area:skills}
   .crs-course--flag > .crs-facts{grid-area:facts}
   .crs-course--flag > .crs-foot{grid-area:foot}
-  .crs-flagpanel{
-    grid-area:panel;display:flex;flex-direction:column;gap:14px;
-    align-self:center;padding-top:6px;
-  }
+  .crs-flagpanel{grid-area:panel;gap:14px;align-self:center;margin-top:0;padding-top:6px}
 }
 .crs-fp-card{
   border:1px solid rgba(255,255,255,.16);border-radius:14px;
@@ -250,6 +247,18 @@
 @media (max-width:640px){
   .crs-section{padding:52px 0 60px}
   .crs-course{padding:26px 22px 24px}
+  /* Three columns cannot hold a word like "Explained" at this width, so the
+     tiles stack. Two would still break the longest label. */
+  .crs-facts{grid-template-columns:1fr}
+  .crs-fact{padding:11px 14px;display:flex;align-items:baseline;gap:10px}
+  .crs-fact b{white-space:nowrap}
+  .crs-fact span{margin-top:0}
+  /* The demo strips carry the message on a phone as much as anywhere, so they
+     keep their height rather than being squeezed. */
+  .crs-wave{height:30px}
+  .crs-demo{padding:12px 13px}
+  .crs-day{height:30px;font-size:11px}
+  .crs-fp-card{padding:13px 14px}
   .crs-foot{flex-direction:column;align-items:stretch}
   .crs-foot .crs-btn{width:100%}
   /* Cards become a horizontal swipe row on phones — one card tall instead of a long stack. */
