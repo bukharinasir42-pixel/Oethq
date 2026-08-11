@@ -1,17 +1,19 @@
 /**
- * expand-answer-keys.ts — add the abbreviation a paper's own text establishes.
+ * expand-answer-keys.ts — add the abbreviation a paper's own text prints.
  *
  *   npm run keys:expand -- ./papers ./out          write the expanded papers
  *   npm run keys:expand -- ./papers --dry          list what would be added
  *
- * Spelling, drug names, word form and measurement formatting are handled by the
- * marker and need nothing here. Abbreviations cannot be: whether "UTI" answers
- * a question depends on whether THIS paper's passage says "urinary tract
- * infection (UTI)", and the marker never sees the passage.
+ * Part A asks the candidate to write the word they found in the text, so the
+ * only alternative wording that can ever be right is one the text also prints.
+ * A passage that says "electroencephalography (EEG)" has given the candidate
+ * both words, and either is a correct answer. A passage that only ever says
+ * "EEG" has not, and "electroencephalography" is then a synonym: right about
+ * the world, wrong about the task.
  *
- * So the pairs are read out of the paper itself, and only out of the paper.
- * Nothing from a general medical dictionary is added, because an abbreviation
- * the text never uses is an answer the text never supports.
+ * So the pairs are read out of the paper itself, and both forms must appear in
+ * it. Nothing comes from a general medical dictionary. The marker cannot make
+ * this judgement because it never sees the passage, which is why it lives here.
  *
  * Every addition is printed. This edits an answer key, which is the last thing
  * that should change quietly.
@@ -20,40 +22,6 @@ import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "n
 import { basename, extname, join, resolve } from "node:path";
 
 type Pair = { long: string; short: string };
-
-/**
- * Abbreviations every clinician reads without being told.
- *
- * Used ONLY when the abbreviation actually appears in that paper's own text. A
- * paper that never mentions a CT scan does not start accepting "computed
- * tomography" as an answer to something else.
- */
-const STANDARD: Pair[] = [
-  { short: "CT", long: "computed tomography" },
-  { short: "MRI", long: "magnetic resonance imaging" },
-  { short: "ECG", long: "electrocardiogram" },
-  { short: "EEG", long: "electroencephalogram" },
-  { short: "ABG", long: "arterial blood gas" },
-  { short: "UTI", long: "urinary tract infection" },
-  { short: "COPD", long: "chronic obstructive pulmonary disease" },
-  { short: "AKI", long: "acute kidney injury" },
-  { short: "CKD", long: "chronic kidney disease" },
-  { short: "ATN", long: "acute tubular necrosis" },
-  { short: "ICU", long: "intensive care unit" },
-  { short: "ED", long: "emergency department" },
-  { short: "LP", long: "lumbar puncture" },
-  { short: "PEF", long: "peak expiratory flow" },
-  { short: "FVC", long: "forced vital capacity" },
-  { short: "NIV", long: "non-invasive ventilation" },
-  { short: "IV", long: "intravenous" },
-  { short: "GP", long: "general practitioner" },
-  { short: "CVC", long: "central venous catheter" },
-  { short: "DKA", long: "diabetic ketoacidosis" },
-  { short: "CPR", long: "cardiopulmonary resuscitation" },
-  { short: "CRP", long: "C-reactive protein" },
-  { short: "PSA", long: "prostate-specific antigen" },
-  { short: "RRT", long: "renal replacement therapy" }
-];
 
 function plain(v: unknown): string {
   return String(v ?? "")
@@ -140,14 +108,11 @@ function pairsIn(text: string): Pair[] {
     if (initialsMatch(words, abbr)) found.set(abbr.toLowerCase(), { long: words.join(" "), short: abbr });
   }
 
-  for (const p of STANDARD) {
-    if (found.has(p.short.toLowerCase())) continue;
-    const usesShort = new RegExp(`\\b${p.short}\\b`).test(text);
-    const usesLong = new RegExp(`\\b${p.long.replace(/[-\s]/g, "[-\\s]")}\\b`, "i").test(text);
-    if (usesShort || usesLong) found.set(p.short.toLowerCase(), p);
-  }
-
-  return [...found.values()];
+  // Both forms must be literally in the passage, which the "long (ABBR)"
+  // pattern guarantees. Nothing is added from a general medical list: an
+  // abbreviation the text never prints is a word the candidate could not have
+  // read there, and Part A asks them to write what they read.
+  return [...found.values()].filter((p) => new RegExp(`\\b${p.short}\\b`).test(text));
 }
 
 function norm(s: string): string {

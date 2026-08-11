@@ -80,21 +80,49 @@ describe("short answer marking: Listening still wants the whole answer", () => {
   });
 });
 
-describe("short answer marking: where the candidate trained", () => {
+describe("short answer marking: the same word, spelled the other way", () => {
   it.each([
     ["American spelling", "cerebral edema", ["cerebral oedema"]],
     ["British spelling against an American key", "cerebral oedema", ["cerebral edema"]],
     ["anaesthetist", "anesthetist", ["anaesthetist"]],
     ["-ize for -ise", "stabilize the", ["stabilise the"]],
     ["sulfate for sulphate", "magnesium sulfate", ["magnesium sulphate"]],
-    ["haemoglobin", "hemoglobin", ["haemoglobin"]],
+    ["haemoglobin", "hemoglobin", ["haemoglobin"]]
+  ])("accepts %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(true);
+  });
+});
+
+describe("short answer marking: a synonym is a wrong answer", () => {
+  /**
+   * Part A asks the candidate to find a word in the text and write it down, so
+   * the word has to be THE word. These all mean the right thing and none of
+   * them is what the passage says, which is the entire point of the task.
+   *
+   * The drug pairs are the ones that look most like a technicality. They are
+   * not: no passage in the current 22 papers prints "norepinephrine",
+   * "epinephrine", "meperidine" or "albuterol" anywhere. A candidate writing
+   * one has supplied it from their own training, not located it in the text.
+   * Where a passage does print both forms, both belong in that paper's key.
+   */
+  it.each([
     ["the American drug name", "norepinephrine", ["noradrenaline"]],
     ["the British drug name against an American key", "adrenaline", ["epinephrine"]],
     ["pethidine as meperidine", "meperidine", ["pethidine"]],
     ["salbutamol as albuterol", "albuterol", ["salbutamol"]],
-    ["paracetamol as acetaminophen", "acetaminophen", ["paracetamol"]]
-  ])("accepts %s", (_why, user, terms) => {
-    expect(reading(user, terms)).toBe(true);
+    ["paracetamol as acetaminophen", "acetaminophen", ["paracetamol"]],
+    ["a plain synonym", "declines", ["deteriorates"]],
+    ["a close synonym", "worsens", ["deteriorates"]],
+    ["an abbreviation the text does not print", "UTI", ["urinary tract infection"]],
+    ["an expansion the text does not print", "acute tubular necrosis", ["ATN"]],
+    ["a near paraphrase", "kidney failure", ["renal failure"]]
+  ])("rejects %s", (_why, user, terms) => {
+    expect(reading(user, terms)).toBe(false);
+  });
+
+  it("accepts both forms when the paper's key carries both, as it does where the text prints both", () => {
+    expect(reading("EEG", ["EEG", "electroencephalography"])).toBe(true);
+    expect(reading("electroencephalography", ["EEG", "electroencephalography"])).toBe(true);
   });
 });
 

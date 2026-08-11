@@ -1,16 +1,30 @@
 /**
- * answer-variants.ts — the same answer, written the way a different clinician writes it.
+ * answer-variants.ts — the same word, written in a different form.
  *
- * A candidate who reads "cerebral oedema" in the passage and types "cerebral
- * edema" has read it correctly. So has one who types "norepinephrine" for
- * "noradrenaline", or "leg" where the key says "legs". None of those is a
- * reading failure, and marking them wrong tests where somebody trained rather
- * than whether they can read.
+ * Part A asks the candidate to find a word in the text and write it down. The
+ * word has to be THE word: a synonym is a wrong answer even when it means the
+ * same thing, because locating the right word is the whole of what the task
+ * tests. That rule draws the boundary for everything in this file.
  *
- * What is NOT forgiven here is spelling. "rhabdomyolisis" is not
- * "rhabdomyolysis", and no rule below will make it so: every rule is an exact
- * substitution of a known form or a known suffix. Nothing is fuzzy, nothing is
- * a distance measure, and a word that is simply wrong stays wrong.
+ * On the accepted side, and only this side:
+ *
+ *  - **The same word spelled the other way.** "cerebral edema" for "cerebral
+ *    oedema", "stabilize" for "stabilise". One word, two national spellings.
+ *  - **The same word in another grammatical form.** "leg" for "legs",
+ *    "deteriorate" for "deteriorates". The gap dictates the ending and finding
+ *    the word is what was being tested.
+ *
+ * On the rejected side, deliberately:
+ *
+ *  - **A different word.** "declines" is not "deteriorates". "norepinephrine"
+ *    is not "noradrenaline" unless the passage happens to use both, and none of
+ *    the current papers does. Where a text genuinely offers two forms, both are
+ *    in the text, so both belong in that paper's answer key rather than in a
+ *    rule here that cannot see the passage.
+ *  - **A misspelling.** "rhabdomyolisis" is not "rhabdomyolysis". Every rule
+ *    below is an exact substitution of a known form or a known suffix. Nothing
+ *    is fuzzy, nothing is a distance measure, and a word that is simply wrong
+ *    stays wrong.
  */
 
 /**
@@ -87,36 +101,6 @@ const SPELLING_STEMS: Array<[RegExp, string]> = [
 ];
 
 /**
- * The same drug under its other international name.
- *
- * These are not synonyms in the loose sense. They are the same molecule with a
- * British Approved Name and a United States Adopted Name, and a nurse trained
- * in Manila or Chicago learned the second one. Both are correct answers.
- */
-const DRUG_NAMES: Array<[RegExp, string]> = [
-  [/\bnoradrenaline\b/g, "norepinephrine"],
-  [/\badrenaline\b/g, "epinephrine"],
-  [/\bpethidine\b/g, "meperidine"],
-  [/\bsalbutamol\b/g, "albuterol"],
-  [/\bparacetamol\b/g, "acetaminophen"],
-  [/\bfrusemide\b/g, "furosemide"],
-  [/\blignocaine\b/g, "lidocaine"],
-  [/\bamoxycillin\b/g, "amoxicillin"],
-  [/\bcyclosporin\b/g, "ciclosporin"],
-  [/\bglyceryl trinitrate\b/g, "nitroglycerin"],
-  [/\bnitroglycerine\b/g, "nitroglycerin"],
-  [/\bgtn\b/g, "nitroglycerin"],
-  [/\bhydroxycarbamide\b/g, "hydroxyurea"],
-  [/\bsalbutamol sulphate\b/g, "albuterol sulfate"],
-  [/\bpyridostigmine bromide\b/g, "pyridostigmine"],
-  [/\bthiamine\b/g, "thiamin"],
-  [/\bciclosporine\b/g, "ciclosporin"],
-  [/\brifampicin\b/g, "rifampin"],
-  [/\bcolistin\b/g, "colistimethate"],
-  [/\bphytomenadione\b/g, "phytonadione"]
-];
-
-/**
  * One word, reduced to the form it shares with its plural and its tenses.
  *
  * "leg" and "legs" are the same answer; so are "deteriorate", "deteriorates",
@@ -154,7 +138,6 @@ function stemWord(word: string): string {
 export function canonicalPhrase(value: string): string {
   let s = String(value || "").toLowerCase();
   for (const [from, to] of SPELLING_STEMS) s = s.replace(from, to);
-  for (const [from, to] of DRUG_NAMES) s = s.replace(from, to);
   return s
     .split(/\s+/)
     .filter(Boolean)

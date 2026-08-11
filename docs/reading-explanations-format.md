@@ -187,35 +187,64 @@ actionable.
 
 # Answer keys — what the marker accepts
 
-Short answers are marked leniently on **formatting** and strictly on **meaning**.
-A candidate who types `<0.3mL` has answered `<0.3 mL`, and marking that wrong is
-a mark taken off someone preparing for an exam who has no way to tell it was the
-grader rather than them.
+Part A asks the candidate to find a word in the text and write it down. So the
+word has to be **the** word. A synonym is a wrong answer even when it means
+exactly the right thing, because locating the word is the whole of what the
+task tests.
 
-Accepted automatically, on every key, without listing them as terms:
+That one rule draws every line below.
 
-| The key says | The candidate types | Marked |
+## Accepted: the same word, written differently
+
+| The key says | The candidate types | Why |
 |---|---|---|
-| `<0.3 mL` | `<0.3mL`, `0.3 ML`, `<0.3 ml` | correct |
-| `250-500 mL` | `250-500ml`, `250 to 500 mL`, `250–500 mL` | correct |
-| `>6.0 mmol` | `>6.0mmol/L`, `6.0 mmol/l` | correct |
-| `≥26.5 µmol` | `>=26.5 umol`, `26.5 micromol/L` | correct |
-| `15 to 30 minutes` | `15-30 mins`, `15–30 minutes` | correct |
-| `25-30%` | `25 to 30 percent` | correct |
+| `<0.3 mL` | `<0.3mL`, `0.3 ML` | spacing and case |
+| `250-500 mL` | `250-500ml`, `250 to 500 mL` | a range written out |
+| `>6.0 mmol` | `>6.0mmol/L`, `greater than 6.0 mmol` | the comparator in words |
+| `≥26.5 µmol` | `>=26.5 umol`, `at least 26.5 umol` | a typed symbol |
+| `15 to 30 minutes` | `15-30 mins` | an abbreviated unit |
+| `cerebral oedema` | `cerebral edema` | one word, two national spellings |
+| `stabilise` | `stabilize` | the same |
+| `magnesium sulphate` | `magnesium sulfate` | the same |
+| `legs` | `leg` | the same word, another form |
+| `deteriorates` | `deteriorate`, `deteriorated` | the same |
 
-Still wrong, and deliberately so:
+## Rejected, deliberately
 
-| The key says | The candidate types | Marked |
+| The key says | The candidate types | Why |
 |---|---|---|
-| `<0.3 mL` | `>0.3 mL` | wrong — opposite comparator |
-| `<33%` | `33-50%` | wrong — the neighbouring category |
-| `250-500 mL` | `100-200 mL` | wrong |
+| `deteriorates` | `declines`, `worsens` | **a different word** |
+| `noradrenaline` | `norepinephrine` | a different word, and no passage prints it |
+| `urinary tract infection` | `UTI` | not in the text |
+| `rhabdomyolysis` | `rhabdomyolisis` | spelling counts |
+| `urea` | `urease` | a different word |
+| `<0.3 mL` | `>0.3 mL` | the opposite comparator |
+| `<33%` | `33-50%` | the neighbouring category |
 
-A comparator the key has and the candidate omits is accepted, since the question
-normally supplies the direction. Two comparators that **disagree** never are.
+Nothing in the marker is fuzzy. Every rule is an exact substitution of a known
+spelling or a known suffix, so a word that is simply wrong stays wrong.
 
-Reading keeps its substring rule for phrases, so `nebulised ipratropium bromide`
-satisfies a key of `ipratropium bromide`. Listening still wants the whole answer.
+## The one case where two wordings are both right
+
+When the passage itself prints both:
+
+> "...may only be confirmed by **electroencephalography (EEG)**"
+
+Both words are in the text, so a candidate could have read either, and both are
+correct answers. That judgement needs the passage, which the marker never sees,
+so it lives in the answer key:
+
+```bash
+npm run keys:expand -- ./papers ./out
+```
+
+It reads the pairs out of each paper and adds them, **requiring both forms to
+appear literally in that paper's text**. Nothing comes from a general medical
+dictionary: an abbreviation the passage never prints is a word the candidate
+could not have read there. Across the current 22 papers it adds exactly one.
+
+Every addition is printed, because an answer key is the last thing that should
+change quietly.
 
 ## Auditing the keys
 
@@ -223,14 +252,12 @@ satisfies a key of `ipratropium bromide`. Listening still wants the whole answer
 npm run keys:check -- ./papers
 ```
 
-Reports two things:
+- **errors** — a key that rejects its own displayed answer. Every candidate who
+  copies what the review screen shows them would be marked wrong.
+- **warnings** — a realistic retyping the key refuses, and keys with a single
+  accepted wording.
 
-- **errors** — a key that does not accept its own displayed answer. Every
-  candidate who copies what the review screen shows them would be marked wrong.
-- **warnings** — a realistic retyping the key would reject, and keys with only
-  one accepted wording where a synonym plausibly exists.
-
-Formatting is handled by the marker, so a warning here is a genuine content
-question: is there a second correct way to say this? `UTI` for `urinary tract
-infection`, `declines` for `deteriorates`. Those belong in `terms`; spacing and
-unit case do not.
+Since formatting is handled by the marker, a warning here is a content
+question, and it has only one right answer: **does the passage print a second
+wording?** If it does, add it. If it does not, the single wording is correct
+and the warning can be ignored.
