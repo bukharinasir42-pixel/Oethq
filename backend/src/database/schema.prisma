@@ -206,6 +206,7 @@ model User {
 
   visitors          Visitor[]
   chatConversations ChatConversation[]
+  explanationViews  ExplanationView[]
 }
 
 /// One signed-in device. The JWT carries this row's id, so a session can be
@@ -491,6 +492,8 @@ model Test {
   bookletAsset              StorageObject?        @relation("TestBookletAsset", fields: [bookletAssetId], references: [id])
   partBBookletAsset         StorageObject?        @relation("TestPartBBookletAsset", fields: [partBBookletAssetId], references: [id])
   partCBookletAsset         StorageObject?        @relation("TestPartCBookletAsset", fields: [partCBookletAssetId], references: [id])
+  testExplanations          TestExplanation[]
+  explanationViews          ExplanationView[]
 }
 
 /// Legacy per-extract tracks for Listening. New tests use `Test.audioAssetId` as one session audio file.
@@ -777,6 +780,12 @@ model TestAttempt {
   passProbability               Float?
   scaledScore                   Int? // official OET 0–500 (imported tests)
   oetGrade                      OetGrade? // official OET grade A–E (imported tests)
+  /// True when this attempt was started AFTER the student had already opened the
+  /// explanations for this paper. They are welcome to re-sit it as often as they
+  /// like, but a score earned with the answer key already read is not evidence
+  /// of anything — and the Pass Predictor is load-bearing in the 90% claim, so
+  /// it must never be fed one.
+  isPractice                    Boolean        @default(false)
   createdAt                     DateTime       @default(now())
   updatedAt                     DateTime       @updatedAt
 
@@ -1377,4 +1386,83 @@ model ChatLead {
   @@index([createdAt])
   @@index([channel])
   @@index([contactedAt])
+}
+
+// ============================================================================
+// Reading answer explanations — why the answer is the answer
+// ============================================================================
+
+enum ExplanationStatus {
+  /// Drafted, not yet checked by a human. NEVER shown to a student.
+  DRAFT
+  /// Approved by an admin. Visible to students who have submitted the paper.
+  APPROVED
+}
+
+/// One question's explanation, for a Reading test or a Reading past paper.
+///
+/// Stored per (test, question number) rather than inside the test's contentJson
+/// on purpose. contentJson is the paper as imported and is replaced wholesale
+/// when a paper is re-imported; explanations are editorial work that must
+/// survive that. Keying on the question number also means an explanation
+/// written for question 14 stays attached to question 14.
+model TestExplanation {
+  id             String        @id @default(uuid())
+  testId         String
+  questionNumber Int
+  /// Which part the question sits in, so the review screen can group them.
+  part           QuestionPart?
+
+  /// The exact sentence(s) from the passage that the answer comes from, quoted
+  /// verbatim so the review screen can locate and highlight them in the text.
+  evidence       String  @db.Text
+  /// Part A only: which of the four texts (A–D) the evidence is in.
+  evidenceLetter String?
+  /// Why that evidence proves the answer — the actual teaching.
+  reasoning      String  @db.Text
+  /// Per-option verdicts for an MCQ:
+  /// [{ "key": "A", "verdict": "correct" | "distractor" | "partial", "why": "…" }]
+  /// A PARTIAL distractor is the dangerous one: true in the passage, but it does
+  /// not answer the question that was asked. Naming that difference is most of
+  /// the value of an explanation at this level.
+  options        Json?
+  /// What the question is testing — "paraphrase", "opinion vs fact", "scanning".
+  skillTag       String?
+
+  status       ExplanationStatus @default(DRAFT)
+  /// Which model drafted it, so a bad batch can be traced and re-run.
+  model        String?
+  generatedAt  DateTime?
+  approvedAt   DateTime?
+  approvedById String?
+  /// Set when an admin edited the text by hand, so a regenerate does not
+  /// silently overwrite human work.
+  editedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, questionNumber])
+  @@index([testId, status])
+}
+
+/// Records that a student has opened the explanations for a paper.
+///
+/// The moment this exists, every LATER attempt at that paper is practice. Kept
+/// as its own row rather than a flag on the attempt because the student may
+/// never re-sit it, and because it is the act of looking that matters, not the
+/// attempt it happened during.
+model ExplanationView {
+  id       String   @id @default(uuid())
+  userId   String
+  testId   String
+  viewedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, testId])
+  @@index([testId])
 }

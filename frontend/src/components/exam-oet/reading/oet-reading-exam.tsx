@@ -80,10 +80,32 @@ const qRange = (nums: number[]): string => {
 
 /* ---- passage HTML builders (static per content — fed to memoized panes) ---- */
 
+/**
+ * Render one text's blocks.
+ *
+ * Part A is a scanning task, and structure is what a student scans. A list of
+ * four contraindications rendered as one paragraph of prose is measurably
+ * harder to scan than the real paper, so headings, lists and callouts are
+ * rendered as headings, lists and callouts. No wording is altered anywhere —
+ * this only restores the shape the source document already had.
+ */
 function buildBlocksHtml(blocks: OetTextBlock[]): string {
   return blocks
     .map((b) => {
       if (b.type === "p") return `<p>${b.html}</p>`;
+
+      if (b.type === "heading") return `<h3 class="pa-sub">${b.text}</h3>`;
+
+      if (b.type === "list") {
+        const tag = b.ordered ? "ol" : "ul";
+        const items = b.items.map((i) => `<li>${i}</li>`).join("");
+        return `<${tag} class="pa-list${b.ordered ? " ord" : ""}">${items}</${tag}>`;
+      }
+
+      if (b.type === "note") {
+        return `<div class="pa-note">${b.label ? `<span class="pa-note-label">${b.label}</span>` : ""}<div class="pa-note-body">${b.html}</div></div>`;
+      }
+
       const head = b.head.map((h) => `<th>${h}</th>`).join("");
       const rows = b.rows
         .map(
