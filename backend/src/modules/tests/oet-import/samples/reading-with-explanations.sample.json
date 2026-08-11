@@ -151,7 +151,11 @@
           "evidence": "Historically, thalassaemia was most common in a belt stretching from the Mediterranean and Africa to Southeast Asia.",
           "evidenceLetter": "A",
           "reasoning": "The question asks why thalassaemia became common in certain populations, so you are scanning for geography and cause. Text A is the only text that discusses where the condition arose and why. Texts B, C and D deal with diagnosis, chelating agents and transfusion, so a fast scan of the four headings should have sent you to A before you read a word of the body.",
-          "skillTag": "scanning by topic"
+          "skillTag": "scanning by topic",
+          "stemFocus": "In which text is there information about WHY thalassaemia became common, not where it is common now?",
+          "questionType": "fact",
+          "difficulty": "C1",
+          "lesson": "Skim the four headings before you read a word of the body. Part A is located, not comprehended."
         }
       },
       {
@@ -175,7 +179,11 @@
           "evidence": "On the blood count, the red cells of an affected person are typically small (microcytic) and pale (hypochromic): the mean corpuscular volume (MCV) is usually below 80 fL and the mean corpuscular haemoglobin (MCH) below 27 pg.",
           "evidenceLetter": "B",
           "reasoning": "The question asks about blood-test findings that point to a carrier, so the target is numbers from a blood count. Text B is the diagnosis text and gives the MCV and MCH thresholds directly. Candidates lose this one by reading Text A first because it mentions the word carrier, but Text A explains inheritance, not test results.",
-          "skillTag": "scanning for a figure"
+          "skillTag": "scanning for a figure",
+          "stemFocus": "Which text carries the BLOOD-TEST findings that point to a carrier, not the inheritance pattern?",
+          "questionType": "detail",
+          "difficulty": "C2",
+          "lesson": "A stem naming a test result sends you to the diagnosis text, not to the text that happens to share a keyword."
         }
       },
       {
@@ -407,13 +415,20 @@
             },
             "B": {
               "verdict": "distractor",
-              "why": "The automatic system is mentioned, but the memo says it does not replace manual checks. Nothing is being introduced."
+              "why": "The automatic system is mentioned, but the memo says it does not replace manual checks. Nothing is being introduced.",
+              "trap": "function_mismatch"
             },
             "C": {
               "verdict": "partial",
-              "why": "The memo does describe what to do if temperatures go out of range, so this feels supported. But it never says any medication has actually been compromised, and the question asks for the purpose of the memo, not for one instruction inside it."
+              "why": "The memo does describe what to do if temperatures go out of range, so this feels supported. But it never says any medication has actually been compromised, and the question asks for the purpose of the memo, not for one instruction inside it.",
+              "trap": "true_not_asked"
             }
-          }
+          },
+          "stemFocus": "What is the main PURPOSE of this memo, not what one instruction inside it says?",
+          "questionType": "purpose",
+          "difficulty": "C1",
+          "counterfactual": "If the question had asked what staff must do when a temperature goes out of range, option C would have been correct.",
+          "lesson": "Read the purpose of a Part B extract from its verbs. Reminded means the rule already exists."
         }
       },
       {
@@ -518,7 +533,8 @@
               "options": {
                 "A": {
                   "verdict": "partial",
-                  "why": "This is stated later in the passage and is true, but it is not what this question asks about."
+                  "why": "This is stated later in the passage and is true, but it is not what this question asks about.",
+                  "trap": "true_not_asked"
                 },
                 "B": {
                   "verdict": "correct",
@@ -526,13 +542,20 @@
                 },
                 "C": {
                   "verdict": "distractor",
-                  "why": "The passage does not support this, and it reverses the relationship described."
+                  "why": "The passage does not support this, and it reverses the relationship described.",
+                  "trap": "wrong_referent"
                 },
                 "D": {
                   "verdict": "distractor",
-                  "why": "The passage does not support this, and it reverses the relationship described."
+                  "why": "The passage does not support this, and it reverses the relationship described.",
+                  "trap": "wrong_referent"
                 }
-              }
+              },
+              "stemFocus": "What does the comparison with infrastructure chiefly EMPHASISE, not what the passage says about brain health generally?",
+              "questionType": "inference",
+              "difficulty": "C2",
+              "counterfactual": "If the question had asked what the passage reports about the burden of illness, option A would have been correct.",
+              "lesson": "Match the proposition, not the vocabulary. The correct Part C option almost never repeats the words of the text."
             }
           },
           {

@@ -283,6 +283,57 @@ export class ExplanationsService {
     return { ok: true };
   }
 
+  /**
+   * A paper as an import-shaped JSON file, with its explanations merged back
+   * into the questions they belong to.
+   *
+   * The round trip is the point: export a paper, add or improve explanations in
+   * the file, re-import it. Without this the only copy of a paper in the import
+   * format is whatever file happened to be used to create it, which after a year
+   * of edits is nobody's idea of a source of truth.
+   */
+  async exportPaper(testId: string) {
+    const test = await this.prisma.test.findUnique({
+      where: { id: testId },
+      select: { id: true, type: true, title: true, description: true, contentJson: true }
+    });
+    if (!test?.contentJson) {
+      throw Object.assign(new Error("That paper has no imported content to export."), { statusCode: 404 });
+    }
+
+    const rows = await this.prisma.testExplanation.findMany({ where: { testId } });
+    const byNumber = new Map(rows.map((r) => [r.questionNumber, r]));
+
+    // Deep clone so the stored contentJson is never mutated by this read path.
+    const content = JSON.parse(JSON.stringify(test.contentJson)) as Record<string, unknown>;
+
+    const attach = (q: Record<string, unknown>) => {
+      const row = byNumber.get(Number(q.n));
+      if (!row) return;
+      q.explanation = {
+        evidence: row.evidence,
+        ...(row.evidenceLetter ? { evidenceLetter: row.evidenceLetter } : {}),
+        reasoning: row.reasoning,
+        ...(row.stemFocus ? { stemFocus: row.stemFocus } : {}),
+        ...(row.questionType ? { questionType: row.questionType } : {}),
+        ...(row.difficulty ? { difficulty: row.difficulty } : {}),
+        ...(row.counterfactual ? { counterfactual: row.counterfactual } : {}),
+        ...(row.lesson ? { lesson: row.lesson } : {}),
+        ...(row.skillTag ? { skillTag: row.skillTag } : {}),
+        ...(row.options ? { options: row.options } : {})
+      };
+    };
+
+    const partA = content.partA as { questions?: Array<Record<string, unknown>> } | undefined;
+    partA?.questions?.forEach(attach);
+    const partB = content.partB as { items?: Array<Record<string, unknown>> } | undefined;
+    partB?.items?.forEach(attach);
+    const partC = content.partC as { texts?: Array<{ questions?: Array<Record<string, unknown>> }> } | undefined;
+    partC?.texts?.forEach((t) => t.questions?.forEach(attach));
+
+    return { content, explanationCount: rows.length, title: test.title };
+  }
+
   /** Reading papers only — Listening explanations are not in scope. */
   async assertReading(testId: string) {
     const test = await this.prisma.test.findUnique({

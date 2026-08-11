@@ -153,6 +153,25 @@ export function createExplanationsRouter(c: AppContainer): Router {
     })
   );
 
+  /**
+   * Download a paper as the import JSON, explanations included.
+   *
+   * Served as a file download so a non-technical admin can round-trip a paper
+   * without touching a terminal.
+   */
+  r.get(
+    "/admin/oet-tests/:id/export",
+    auth,
+    admin,
+    asyncHandler(async (req, res) => {
+      const out = await svc.exportPaper(req.params.id);
+      const safe = out.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "paper";
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${safe}.json"`);
+      res.send(JSON.stringify(out.content, null, 2));
+    })
+  );
+
   r.get(
     "/admin/oet-tests/:id/explanations",
     auth,
